@@ -1,3 +1,9 @@
+# nowCRM
+
+**nowCRM** - your open source CRM with multichannel outreach capabilities and efficient data management at scale.
+
+
+
 # nowCRM Developer Guide
 
 **nowCRM** is the central customer relationship management platform developed by **nowtec solutions AG**.  
