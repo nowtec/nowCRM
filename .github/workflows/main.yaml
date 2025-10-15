@@ -38,7 +38,7 @@ jobs:
   notify_success:
     name: Send Success Notification
     if: github.event.pull_request.merged && success() 
-    needs: [create_release, build_nowcrm, build_strapi, build_nowbi, build_nowwiki, build_nowjobs, build_members, build_enricher, build_journeys, build_composer, build_nowscraper, build_dal, build_docs]  # Include all build jobs
+    needs: [create_release]  # Include all build jobs
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram Success Notification
