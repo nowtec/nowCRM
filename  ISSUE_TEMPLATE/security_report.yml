@@ -1,0 +1,16 @@
+name: "Report a security vulnerability"
+description: "Please review our security policy before submitting sensitive details"
+title: "[Security]: "
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Important:**  
+        Do **not** disclose security issues publicly.  
+        Please email tech@nowtec.solutions with full details instead.  
+        You may use this form only for non-sensitive coordination.
+  - type: textarea
+    attributes:
+      label: "Brief summary (non-sensitive)"
+      placeholder: "Example: Potential XSS risk in Strapi admin panel."
