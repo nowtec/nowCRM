@@ -7,7 +7,7 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "generate-index": "node --loader ts-node/esm scripts/generate_index.ts",
+    "generate-index": "node --loader ts-node/esm scripts/generate-index.ts",
     "lint": "biome check",
     "lint:fix": "biome check --fix --unsafe",
     "format": "biome format --fix"

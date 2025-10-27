@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "your open source CRM with multichannel outreach capabilities and efficient data management at scale.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:libs": "pnpm --filter './libs/*' run build",
+    "build:apps": "pnpm --filter './apps/*' run build",
+    "build:all": "pnpm -r run build",
+    "generate-index:services": "pnpm --filter @nowcrm/services run generate-index"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.17.1",
+  "packageManager": "pnpm@10.19.0",
   "workspaces": [
     "apps/*",
     "libs/*"
