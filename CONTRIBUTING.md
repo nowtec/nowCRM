@@ -34,53 +34,38 @@ Before opening a new issue, please:
    git checkout -b feature/your-feature-name
    ```
 
-4. **Install Dependencies**
+4. **Run the Makefile**
 
    ```bash
-   yarn install
+   make -f Makefile
    ```
 
-5. **Setup Environment**
-   Copy `.env.sample` → `.env` for each service (`nowCRM`, `composer`, `dal`, `strapi-app`).
-   Adjust URLs, credentials, and ports if needed.
-
-6. **Run Locally**
+5. **Test and Lint**
 
    ```bash
-   docker-compose -f docker-compose-dev.yaml up redis strapi
-   yarn dev
+   pnpm lint:fix && pnpm test
    ```
 
-7. **Test and Lint**
-
-   ```bash
-   yarn lint:fix
-   yarn test
-   ```
-
-8. **Commit Changes**
+6. **Commit Changes**
 
    ```bash
    git commit -m "feat: add message queue monitoring dashboard"
    ```
 
-9. **Push and Open a Pull Request**
+7. **Push and Open a Pull Request**
 
    ```bash
    git push origin feature/your-feature-name
    ```
 
    Then go to the main repository and open a PR.
-   Please include:
+   Before creating the PR, read and use [the Template](./PULL_REQUEST_TEMPLATE.md).
 
-   * A short description of the change
-   * Setup or testing notes for reviewers
+8. **Code Review**
+   A maintainer will review your PR and may request small adjustments before merging.
 
-10. **Code Review**
-    A maintainer will review your PR and may request small adjustments before merging.
-
-11. **Merge**
-    Once approved, your PR will be merged into the main branch.
+9. **Merge**
+   Once approved, your PR will be merged into the main branch.
 
 ---
 
@@ -95,8 +80,9 @@ Before opening a new issue, please:
   feat: implement contact search filter
   fix: handle missing Redis connection gracefully
   chore: update Docker dev configuration
+  docs: changes in documentation
   ```
-* Run `yarn build` before pushing for any service you changed.
+* Run `pnpm build` before pushing for any service you changed.
 
 ---
 
@@ -104,9 +90,9 @@ Before opening a new issue, please:
 
 If you find a bug or want to propose an improvement, please [create an issue](https://github.com/nowtec/nowCRM/issues/new) and describe:
 
-* Expected vs actual behavior
-* Steps to reproduce
-* Environment details (Node version, OS, affected service)
+* Expected vs. actual behavior.
+* Steps to reproduce.
+* Environment details (Node version, OS, affected service).
 
 ---
 

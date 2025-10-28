@@ -1,46 +1,33 @@
 # Pull Request
 
 Thank you for contributing to **nowCRM**!  
-Please complete the checklist below before submitting your PR.
+Please complete this template before submitting your PR.
 
 ---
 
-##  Summary
-
-<!--
-Briefly describe the purpose of this PR.
-Example:
-"Adds contact segmentation by tags and improves DAL queue visibility."
--->
+## Summary
+<!-- Briefly describe what this PR does.  
+Example: "Implements contact filter and improves DAL queue handling." -->
 
 ---
 
-##  Related Issues / Tickets
-
-<!--
-List related GitHub issues or internal tickets.
-Example: Closes #123 or Related to NOWCRM-456
--->
+## Related Issues / Tickets
+<!-- Example: Closes #123 or Related to NOWCRM-456 -->
 
 ---
 
-##  Type of Change
+## Type of Change
+<!-- Use the correct prefix for your branch -->
 
-<!-- Select one or more by marking with [x] -->
-- [ ]  Bug fix
-- [ ]  New feature
-- [ ]  Refactor / technical chore
-- [ ]  Documentation update
-- [ ]  Configuration / build change
+- **feat** – New feature  
+- **fix** – Bug fix  
+- **chore** – Config change or technical chore  
+- **docs** – Documentation update  
 
 ---
 
-##  Description of Changes
-
-<!--
-Explain what was changed and why.
-Include architectural or breaking-impact notes if needed.
--->
+## Description
+<!-- What and why — include any relevant technical notes or breaking changes. -->
 
 ---
 
