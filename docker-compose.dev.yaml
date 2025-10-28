@@ -1,0 +1,281 @@
+name: "nowcrm"
+
+services:
+  dbdt:
+    container_name: strapidb
+    image: postgres:15.4
+    restart: always
+    command: -c 'max_connections=500'
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${STRAPI_DATABASE_NAME}
+      POSTGRES_PASSWORD: ${STRAPI_DATABASE_PASSWORD}
+      POSTGRES_USER: ${STRAPI_DATABASE_USERNAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - my_net
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - my_net
+
+  strapi:
+    container_name: strapi
+    image: nowtecstrapi
+    build: ./strapi-app/
+    restart: unless-stopped
+    ports:
+      - "1337:1337"
+    environment:
+      DATABASE_HOST: dbdt
+      STRAPI_ADMIN_JWT_SECRET: ${STRAPI_ADMIN_JWT_SECRET}
+      STRAPI_API_TOKEN_SALT: ${STRAPI_API_TOKEN_SALT}
+      STRAPI_APP_KEYS: ${STRAPI_APP_KEYS}
+      STRAPI_AWS_ACCESS_KEY_ID: ${STRAPI_AWS_ACCESS_KEY_ID}
+      STRAPI_AWS_ACCESS_SECRET: ${STRAPI_AWS_ACCESS_SECRET}
+      STRAPI_AWS_ACL: ${STRAPI_AWS_ACL}
+      STRAPI_AWS_BUCKET: ${STRAPI_AWS_BUCKET}
+      STRAPI_AWS_REGION: ${STRAPI_AWS_REGION}
+      STRAPI_AWS_SIGNED_URL_EXPIRES: ${STRAPI_AWS_SIGNED_URL_EXPIRES}
+      STRAPI_BACKEND_ORIGIN: ${STRAPI_BACKEND_ORIGIN}
+      STRAPI_DATABASE_CLIENT: ${STRAPI_DATABASE_CLIENT}
+      STRAPI_DATABASE_NAME: ${STRAPI_DATABASE_NAME}
+      STRAPI_DATABASE_PASSWORD: ${STRAPI_DATABASE_PASSWORD}
+      STRAPI_DATABASE_PORT: ${STRAPI_DATABASE_PORT}
+      STRAPI_DATABASE_RDS: ${STRAPI_DATABASE_RDS}
+      STRAPI_DATABASE_USERNAME: ${STRAPI_DATABASE_USERNAME}
+      STRAPI_FOR_MEMBERSPACE_EMAIL_IDENTITY: ${STRAPI_FOR_MEMBERSPACE_EMAIL_IDENTITY}
+      STRAPI_NEXT_PUBLIC_FEATURE_FOR_MEMBERSPACE: ${STRAPI_NEXT_PUBLIC_FEATURE_FOR_MEMBERSPACE}
+      STRAPI_N8N_LN_CERTIFICATE_WEBHOOK: ${STRAPI_N8N_LN_CERTIFICATE_WEBHOOK}
+      STRAPI_N8N_LN_NAVIGATOR_WEBHOOK: ${STRAPI_N8N_LN_NAVIGATOR_WEBHOOK}
+      STRAPI_N8N_NOWBI_SETUP_WEBHOOK: ${STRAPI_N8N_NOWBI_SETUP_WEBHOOK}
+      STRAPI_N8N_UPDATE_STRAPI_API_WEBHOOK: ${STRAPI_N8N_UPDATE_STRAPI_API_WEBHOOK}
+      STRAPI_N8N_WEBHOOK_BASIC_AUTH_PASSWORD: ${STRAPI_N8N_WEBHOOK_BASIC_AUTH_PASSWORD}
+      STRAPI_N8N_WEBHOOK_BASIC_AUTH_USERNAME: ${STRAPI_N8N_WEBHOOK_BASIC_AUTH_USERNAME}
+      STRAPI_ORGANIZATON_EMAIL_STRAPI: ${STRAPI_ORGANIZATON_EMAIL_STRAPI}
+      STRAPI_REDIS_HOST: ${STRAPI_REDIS_HOST}
+      STRAPI_REDIS_PORT: ${STRAPI_REDIS_PORT}
+      STRAPI_SMTP_DEFAULT_FROM: ${STRAPI_SMTP_DEFAULT_FROM}
+      STRAPI_SMTP_DEFAULT_TO: ${STRAPI_SMTP_DEFAULT_TO}
+      STRAPI_SMTP_HOST: ${STRAPI_SMTP_HOST}
+      STRAPI_SMTP_PASS: ${STRAPI_SMTP_PASS}
+      STRAPI_SMTP_PORT: ${STRAPI_SMTP_PORT}
+      STRAPI_SMTP_SENDER: ${STRAPI_SMTP_SENDER}
+      STRAPI_SMTP_USER: ${STRAPI_SMTP_USER}
+      STRAPI_STANDART_EMAIL_STRAPI: ${STRAPI_STANDART_EMAIL_STRAPI}
+    volumes:
+      - ./strapi-app/src:/opt/app/src
+    depends_on:
+      - dbdt
+    networks:
+      - my_net
+
+  nowcrm:
+    container_name: nowcrm
+    image: nowcrm
+    build: ./contactsapp/
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      AUTH_SECRET: ${CRM_AUTH_SECRET}
+      AUTH_TRUST_HOST: ${CRM_AUTH_TRUST_HOST}
+      AUTH_URL: ${CRM_AUTH_URL}
+      CRM_BASE_URL: ${CRM_BASE_URL}
+      CRM_COMPOSER_API_URL: ${CRM_COMPOSER_API_URL}
+      CRM_DAL_API_URL: ${CRM_COMPOSER_DAL_URL}
+      CRM_STRAPI_API_TOKEN: ${CRM_STRAPI_API_TOKEN}
+      CRM_STRAPI_API_URL: ${CRM_STRAPI_API_URL}
+    depends_on:
+      - strapi
+    networks:
+      - my_net
+
+  journeys:
+    container_name: journeys
+    image: journeys
+    build: ./journeys/
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      JOURNEYS_BASIC_AUTH_PASSWORD: ${JOURNEYS_BASIC_AUTH_PASSWORD}
+      JOURNEYS_BASIC_AUTH_USERNAME: ${JOURNEYS_BASIC_AUTH_USERNAME}
+      JOURNEYS_CHECK_TIME: ${JOURNEYS_CHECK_TIME}
+      JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      JOURNEYS_COMPOSER_BASE_URL: ${JOURNEYS_COMPOSER_BASE_URL}
+      JOURNEYS_CORS_ORIGIN: ${JOURNEYS_CORS_ORIGIN}
+      JOURNEYS_HOST: ${JOURNEYS_HOST}
+      JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: ${JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS}
+      JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS: ${JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS}
+      JOURNEYS_MINUTE_TO_LAUNCH: ${JOURNEYS_MINUTE_TO_LAUNCH}
+      JOURNEYS_PORT: ${JOURNEYS_PORT}
+      JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
+      JOURNEYS_REDIS_PASSWORD: ${JOURNEYS_REDIS_PASSWORD}
+      JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
+      JOURNEYS_SESSION_SECRET: ${JOURNEYS_SESSION_SECRET}
+      JOURNEYS_STRAPI_API_TOKEN: ${JOURNEYS_STRAPI_API_TOKEN}
+      JOURNEYS_STRAPI_API_URL: ${JOURNEYS_STRAPI_API_URL}
+      NODE_ENV: ${NODE_ENV}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      SHARED_COMPOSER_URL: ${SHARED_COMPOSER_URL}
+      SHARED_STRAPI_URL: ${SHARED_STRAPI_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - my_net
+
+  composer:
+    container_name: composer
+    image: composer
+    build: ./composer/
+    restart: unless-stopped
+    ports:
+      - "3020:3000"
+    environment:
+      COMPOSER_ANTHROPIC_KEY: ${COMPOSER_ANTHROPIC_KEY}
+      COMPOSER_BASIC_AUTH_PASSWORD: ${COMPOSER_BASIC_AUTH_PASSWORD}
+      COMPOSER_BASIC_AUTH_USERNAME: ${COMPOSER_BASIC_AUTH_USERNAME}
+      COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS: ${COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      COMPOSER_CORS_ORIGIN: ${COMPOSER_CORS_ORIGIN}
+      COMPOSER_CRM_REDIRECT_HEALTH_CHECK: ${COMPOSER_CRM_REDIRECT_HEALTH_CHECK}
+      COMPOSER_CUSTOMER_IDENTITY: ${COMPOSER_CUSTOMER_IDENTITY}
+      COMPOSER_HOST: ${COMPOSER_HOST}
+      COMPOSER_OPENAI_API_KEY: ${COMPOSER_OPENAI_API_KEY}
+      COMPOSER_PORT: ${COMPOSER_PORT}
+      COMPOSER_REDIS_HOST: ${COMPOSER_REDIS_HOST}
+      COMPOSER_REDIS_PASSWORD: ${COMPOSER_REDIS_PASSWORD}
+      COMPOSER_REDIS_PORT: ${COMPOSER_REDIS_PORT}
+      COMPOSER_SESSION_SECRET: ${COMPOSER_SESSION_SECRET}
+      COMPOSER_SMTP_HOST: ${COMPOSER_SMTP_HOST}
+      COMPOSER_SMTP_PASS: ${COMPOSER_SMTP_PASS}
+      COMPOSER_SMTP_PORT: ${COMPOSER_SMTP_PORT}
+      COMPOSER_SMTP_USER: ${COMPOSER_SMTP_USER}
+      COMPOSER_STRAPI_API_TOKEN: ${COMPOSER_STRAPI_API_TOKEN}
+      COMPOSER_STRAPI_API_URL: ${COMPOSER_STRAPI_API_URL}
+      CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
+      NODE_ENV: ${NODE_ENV}
+      SHARED_COMPOSER_URL: ${SHARED_COMPOSER_URL}
+      SHARED_STRAPI_URL: ${SHARED_STRAPI_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - my_net
+
+  dal:
+    container_name: dal
+    build: ./dal
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    environment:
+      DAL_BASIC_AUTH_PASSWORD: ${DAL_BASIC_AUTH_PASSWORD}
+      DAL_BASIC_AUTH_USERNAME: ${DAL_BASIC_AUTH_USERNAME}
+      DAL_CHECK_TIME: ${DAL_CHECK_TIME}
+      DAL_COMMON_RATE_LIMIT_MAX_REQUESTS: ${DAL_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      DAL_CORS_ORIGIN: ${DAL_CORS_ORIGIN}
+      DAL_DATABASE_CLIENT: ${DAL_DATABASE_CLIENT}
+      DAL_DATABASE_HOST: ${DAL_DATABASE_HOST}
+      DAL_DATABASE_NAME: ${DAL_DATABASE_NAME}
+      DAL_DATABASE_PASSWORD: ${DAL_DATABASE_PASSWORD}
+      DAL_DATABASE_PORT: ${DAL_DATABASE_PORT}
+      DAL_DATABASE_RDS: ${DAL_DATABASE_RDS}
+      DAL_DATABASE_SSL_SELF: ${DAL_DATABASE_SSL_SELF}
+      DAL_DATABASE_USERNAME: ${DAL_DATABASE_USERNAME}
+      DAL_HOST: ${DAL_HOST}
+      DAL_JOB_COMPLETED_LIFE_TIME_DAYS: ${DAL_JOB_COMPLETED_LIFE_TIME_DAYS}
+      DAL_JOB_CONCURRENCY: ${DAL_JOB_CONCURRENCY}
+      DAL_JOB_FAIL_LIFE_TIME_DAYS: ${DAL_JOB_FAIL_LIFE_TIME_DAYS}
+      DAL_MINUTE_TO_LAUNCH: ${DAL_MINUTE_TO_LAUNCH}
+      DAL_PORT: ${DAL_PORT}
+      DAL_REDIS_HOST: ${DAL_REDIS_HOST}
+      DAL_REDIS_PASSWORD: ${DAL_REDIS_PASSWORD}
+      DAL_REDIS_PORT: ${DAL_REDIS_PORT}
+      DAL_SESSION_SECRET: ${DAL_SESSION_SECRET}
+      DAL_SMTP_FROM: ${DAL_SMTP_FROM}
+      DAL_SMTP_HOST: ${DAL_SMTP_HOST}
+      DAL_SMTP_PASS: ${DAL_SMTP_PASS}
+      DAL_SMTP_PORT: ${DAL_SMTP_PORT}
+      DAL_SMTP_USER: ${DAL_SMTP_USER}
+      DAL_STRAPI_API_TOKEN: ${DAL_STRAPI_API_TOKEN}
+      DAL_STRAPI_API_URL: ${DAL_STRAPI_API_URL}
+      DAL_WORKER_COUNT: ${DAL_WORKER_COUNT}
+      NODE_ENV: ${NODE_ENV}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - my_net
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:4.1.2-management
+    restart: always
+    command: >
+      bash -c "
+      cp /custom_plugins/rabbitmq_delayed_message_exchange-4.1.0.ez /opt/rabbitmq/plugins/ &&
+      rabbitmq-plugins enable rabbitmq_delayed_message_exchange &&
+      rabbitmq-plugins enable rabbitmq_management &&
+      rabbitmq-server"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq:/custom_plugins
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - my_net
+
+  mailpit:
+    container_name: mailpit
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - my_net
+
+volumes:
+  postgres-data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  my_net:
+    external: true
