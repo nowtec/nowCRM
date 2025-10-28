@@ -1,0 +1,70 @@
+{
+  "kind": "collectionType",
+  "collectionName": "expenses",
+  "info": {
+    "singularName": "expense",
+    "pluralName": "expenses",
+    "displayName": "Expense",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "document_number": {
+      "type": "biginteger"
+    },
+    "vendor": {
+      "type": "text"
+    },
+    "title": {
+      "type": "text"
+    },
+    "currency_code": {
+      "type": "string"
+    },
+    "net": {
+      "type": "float"
+    },
+    "gross": {
+      "type": "float"
+    },
+    "external_id": {
+      "type": "biginteger"
+    },
+    "expense_created_at": {
+      "type": "datetime"
+    },
+    "firstname_suffix": {
+      "type": "string"
+    },
+    "lastname_company": {
+      "type": "string"
+    },
+    "paid_on": {
+      "type": "date"
+    },
+    "booking_account_id": {
+      "type": "integer"
+    },
+    "project_id": {
+      "type": "integer"
+    },
+    "chargeable_customer_id": {
+      "type": "integer"
+    },
+    "transaction_id": {
+      "type": "integer"
+    },
+    "invoice_id": {
+      "type": "integer"
+    },
+    "expense_id": {
+      "type": "text"
+    },
+    "project_uuid": {
+      "type": "text"
+    }
+  }
+}

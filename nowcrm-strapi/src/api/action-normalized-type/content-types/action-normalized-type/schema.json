@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "action_normalized_types",
+  "info": {
+    "singularName": "action-normalized-type",
+    "pluralName": "action-normalized-types",
+    "displayName": "ActionNormalizedType",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "actions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::action.action",
+      "mappedBy": "action_normalized_type"
+    }
+  }
+}

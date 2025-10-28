@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "campaign_categories",
+  "info": {
+    "singularName": "campaign-category",
+    "pluralName": "campaign-categories",
+    "displayName": "Campaign Category",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "campaigns": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::campaign.campaign",
+      "mappedBy": "campaign_category"
+    }
+  }
+}

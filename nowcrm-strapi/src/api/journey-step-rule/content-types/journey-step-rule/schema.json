@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "journey_step_rules",
+  "info": {
+    "singularName": "journey-step-rule",
+    "pluralName": "journey-step-rules",
+    "displayName": "JourneyStepRule",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "condition": {
+      "type": "text"
+    },
+    "condition_entity": {
+      "type": "text"
+    },
+    "condition_operator": {
+      "type": "text"
+    },
+    "condition_value": {
+      "type": "text"
+    },
+    "journey_step_rule_scores": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::journey-step-rule-score.journey-step-rule-score",
+      "mappedBy": "journey_step_rule"
+    },
+    "journey_step_connection": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::journey-step-connection.journey-step-connection",
+      "inversedBy": "journey_step_rules"
+    },
+    "label": {
+      "type": "text"
+    },
+    "ready_condition": {
+      "type": "text"
+    },
+    "additional_condition": {
+      "type": "string"
+    },
+    "additional_data": {
+      "type": "json"
+    }
+  }
+}

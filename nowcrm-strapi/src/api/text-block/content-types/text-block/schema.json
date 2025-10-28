@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "text_blocks",
+  "info": {
+    "singularName": "text-block",
+    "pluralName": "text-blocks",
+    "displayName": "TextBlock",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    },
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "text": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    }
+  }
+}

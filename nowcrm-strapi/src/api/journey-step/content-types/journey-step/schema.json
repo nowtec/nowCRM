@@ -1,0 +1,84 @@
+{
+  "kind": "collectionType",
+  "collectionName": "journey_steps",
+  "info": {
+    "singularName": "journey-step",
+    "pluralName": "journey-steps",
+    "displayName": "JourneyStep",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::contact.contact",
+      "inversedBy": "journey_steps"
+    },
+    "composition": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::composition.composition"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    },
+    "journey_passed_steps": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::journey-passed-step.journey-passed-step",
+      "mappedBy": "journey_step"
+    },
+    "journey": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::journey.journey",
+      "inversedBy": "journey_steps"
+    },
+    "connections_to_this_step": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::journey-step-connection.journey-step-connection",
+      "mappedBy": "target_step"
+    },
+    "connections_from_this_step": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::journey-step-connection.journey-step-connection",
+      "mappedBy": "source_step"
+    },
+    "identity": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::identity.identity"
+    },
+    "timing": {
+      "type": "json"
+    },
+    "additional_data": {
+      "type": "json"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "trigger",
+        "scheduler-trigger",
+        "channel",
+        "wait"
+      ],
+      "default": "channel"
+    }
+  }
+}

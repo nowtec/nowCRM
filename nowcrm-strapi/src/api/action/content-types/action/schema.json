@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "actions",
+  "info": {
+    "singularName": "action",
+    "pluralName": "actions",
+    "displayName": "Action",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "action_type": {
+      "type": "string"
+    },
+    "entity": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "actions"
+    },
+    "score_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::score-item.score-item",
+      "mappedBy": "action"
+    },
+    "payload": {
+      "type": "json"
+    },
+    "journey_step": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::journey-step.journey-step"
+    },
+    "effort": {
+      "type": "string"
+    },
+    "partnership": {
+      "type": "string"
+    },
+    "action_normalized_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::action-normalized-type.action-normalized-type",
+      "inversedBy": "actions"
+    },
+    "campaign": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::campaign.campaign",
+      "inversedBy": "actions"
+    }
+  }
+}

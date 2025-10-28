@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "campaigns",
+  "info": {
+    "singularName": "campaign",
+    "pluralName": "campaigns",
+    "displayName": "Campaign",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "campaign_category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::campaign-category.campaign-category",
+      "inversedBy": "campaigns"
+    },
+    "donation_transactions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::donation-transaction.donation-transaction",
+      "mappedBy": "campaign"
+    },
+    "compositions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::composition.composition",
+      "mappedBy": "campaign"
+    },
+    "journeys": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::journey.journey",
+      "mappedBy": "campaign"
+    },
+    "actions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::action.action",
+      "mappedBy": "campaign"
+    }
+  }
+}

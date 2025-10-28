@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "bills",
+  "info": {
+    "singularName": "bill",
+    "pluralName": "bills",
+    "displayName": "Bill",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "text"
+    },
+    "net": {
+      "type": "float"
+    },
+    "gross": {
+      "type": "float"
+    },
+    "pending_amount": {
+      "type": "float"
+    },
+    "bill_created_at": {
+      "type": "datetime"
+    },
+    "external_id": {
+      "type": "biginteger"
+    },
+    "vendor_ref": {
+      "type": "string"
+    },
+    "firstname_suffix": {
+      "type": "string"
+    },
+    "lastname_company": {
+      "type": "string"
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "currency_code": {
+      "type": "string"
+    },
+    "bill_date": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string"
+    },
+    "booking_account_ids": {
+      "type": "biginteger"
+    },
+    "document_number": {
+      "type": "biginteger"
+    },
+    "bill_id": {
+      "type": "string"
+    },
+    "document_no": {
+      "type": "text"
+    },
+    "bill_date_created": {
+      "type": "date"
+    },
+    "bill_due_date": {
+      "type": "date"
+    }
+  }
+}

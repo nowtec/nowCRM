@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "now_wiki_packages",
+  "info": {
+    "singularName": "now-wiki-package",
+    "pluralName": "now-wiki-packages",
+    "displayName": "NowWikiPackage",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "price_monthly": {
+      "type": "decimal"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "price_anually": {
+      "type": "decimal"
+    }
+  }
+}

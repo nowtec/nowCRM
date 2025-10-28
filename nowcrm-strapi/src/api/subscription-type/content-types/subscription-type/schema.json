@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "subscription_types",
+  "info": {
+    "singularName": "subscription-type",
+    "pluralName": "subscription-types",
+    "displayName": "SubscriptionType"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "subscriptions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::subscription.subscription",
+      "mappedBy": "subscription_type"
+    }
+  }
+}

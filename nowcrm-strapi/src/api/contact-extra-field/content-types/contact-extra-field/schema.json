@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_extra_fields",
+  "info": {
+    "singularName": "contact-extra-field",
+    "pluralName": "contact-extra-fields",
+    "displayName": "ContactExtraField",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "value": {
+      "type": "text"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "contact_extra_fields"
+    }
+  }
+}

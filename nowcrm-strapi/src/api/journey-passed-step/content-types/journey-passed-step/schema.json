@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "journey_passed_steps",
+  "info": {
+    "singularName": "journey-passed-step",
+    "pluralName": "journey-passed-steps",
+    "displayName": "JourneyPassedStep",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "journey_passed_steps"
+    },
+    "journey_step": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::journey-step.journey-step",
+      "inversedBy": "journey_passed_steps"
+    },
+    "journey": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::journey.journey",
+      "inversedBy": "journey_passed_steps"
+    },
+    "composition": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::composition.composition"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    }
+  }
+}

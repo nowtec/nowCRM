@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ranks",
+  "info": {
+    "singularName": "rank",
+    "pluralName": "ranks",
+    "displayName": "Rank",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::contact.contact",
+      "inversedBy": "ranks"
+    }
+  }
+}

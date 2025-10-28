@@ -1,0 +1,60 @@
+{
+  "kind": "collectionType",
+  "collectionName": "account_bexios",
+  "info": {
+    "singularName": "account-bexio",
+    "pluralName": "account-bexios",
+    "displayName": "AccountBexio"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "owner": {
+      "type": "string"
+    },
+    "owner_address": {
+      "type": "string"
+    },
+    "owner_city": {
+      "type": "string"
+    },
+    "owner_zip": {
+      "type": "integer"
+    },
+    "bank_name": {
+      "type": "string"
+    },
+    "iban_nr": {
+      "type": "string"
+    },
+    "bank_account_nr": {
+      "type": "integer"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "bc_nr": {
+      "type": "integer"
+    },
+    "currency_id": {
+      "type": "integer"
+    },
+    "account_id": {
+      "type": "integer"
+    },
+    "type": {
+      "type": "string"
+    },
+    "bank_nr": {
+      "type": "text"
+    },
+    "qr_invoice_iban": {
+      "type": "string"
+    },
+    "invoice_mode": {
+      "type": "string"
+    }
+  }
+}

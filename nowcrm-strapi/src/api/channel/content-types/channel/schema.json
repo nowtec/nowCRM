@@ -1,0 +1,59 @@
+{
+  "kind": "collectionType",
+  "collectionName": "channels",
+  "info": {
+    "singularName": "channel",
+    "pluralName": "channels",
+    "displayName": "Channel",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "composition_prompt": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::composition-prompt.composition-prompt",
+      "mappedBy": "channel"
+    },
+    "editor_text_type": {
+      "type": "enumeration",
+      "enum": [
+        "html",
+        "text"
+      ]
+    },
+    "removeHtml": {
+      "type": "boolean"
+    },
+    "max_content_lenght": {
+      "type": "integer"
+    },
+    "file_upload_type": {
+      "type": "enumeration",
+      "enum": [
+        "image",
+        "all",
+        "none"
+      ]
+    },
+    "throttle": {
+      "type": "integer"
+    },
+    "max_sending_quota": {
+      "type": "integer"
+    },
+    "max_sending_rate": {
+      "type": "integer"
+    }
+  }
+}

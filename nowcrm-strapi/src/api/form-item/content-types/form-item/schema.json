@@ -1,0 +1,72 @@
+{
+  "kind": "collectionType",
+  "collectionName": "form_items",
+  "info": {
+    "singularName": "form-item",
+    "pluralName": "form-items",
+    "displayName": "FormItem",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "text",
+        "email",
+        "number",
+        "text_area",
+        "checkbox",
+        "select",
+        "date",
+        "single_choice",
+        "multi_choice",
+        "attachment",
+        "multi_checkbox"
+      ]
+    },
+    "label": {
+      "type": "string"
+    },
+    "form": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::form.form",
+      "inversedBy": "form_items"
+    },
+    "options": {
+      "type": "json"
+    },
+    "videoask_option_id": {
+      "type": "string"
+    },
+    "video_question_id": {
+      "type": "text"
+    },
+    "videoask_question_label": {
+      "type": "string"
+    },
+    "videoask_option_label": {
+      "type": "string"
+    },
+    "rank": {
+      "type": "biginteger"
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "hidden": {
+      "type": "boolean"
+    }
+  }
+}

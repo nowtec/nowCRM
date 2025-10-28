@@ -1,0 +1,88 @@
+{
+  "kind": "collectionType",
+  "collectionName": "invoices",
+  "info": {
+    "singularName": "invoice",
+    "pluralName": "invoices",
+    "displayName": "Invoice",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "document_number": {
+      "type": "string"
+    },
+    "gross": {
+      "type": "float"
+    },
+    "net": {
+      "type": "float"
+    },
+    "taxes": {
+      "type": "float"
+    },
+    "received_payments": {
+      "type": "float"
+    },
+    "remaining_payments": {
+      "type": "float"
+    },
+    "total": {
+      "type": "float"
+    },
+    "contact_address": {
+      "type": "text"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "project_id": {
+      "type": "integer"
+    },
+    "contact_id": {
+      "type": "integer"
+    },
+    "contact_sub_id": {
+      "type": "integer"
+    },
+    "user_id": {
+      "type": "integer"
+    },
+    "payment_type_id": {
+      "type": "integer"
+    },
+    "currency_id": {
+      "type": "integer"
+    },
+    "bank_account_id": {
+      "type": "integer"
+    },
+    "language_id": {
+      "type": "integer"
+    },
+    "credit_vouchers": {
+      "type": "float"
+    },
+    "is_valid_from": {
+      "type": "date"
+    },
+    "is_valid_to": {
+      "type": "date"
+    },
+    "kb_item_status_id": {
+      "type": "integer"
+    },
+    "esr_id": {
+      "type": "integer"
+    },
+    "qr_invoice_id": {
+      "type": "integer"
+    }
+  }
+}

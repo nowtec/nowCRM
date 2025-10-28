@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_relationships",
+  "info": {
+    "singularName": "contact-relationship",
+    "pluralName": "contact-relationships",
+    "displayName": "ContactRelationship"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "description": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "nature_of_relation": {
+      "type": "string"
+    },
+    "contact_from": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "contact_relationships"
+    },
+    "contact_to": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "contact_relationships"
+    }
+  }
+}

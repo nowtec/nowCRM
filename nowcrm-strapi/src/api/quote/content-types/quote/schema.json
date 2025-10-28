@@ -1,0 +1,79 @@
+{
+  "kind": "collectionType",
+  "collectionName": "quotes",
+  "info": {
+    "singularName": "quote",
+    "pluralName": "quotes",
+    "displayName": "Quote",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "external_id": {
+      "type": "integer"
+    },
+    "title": {
+      "type": "text"
+    },
+    "document_nr": {
+      "type": "string"
+    },
+    "contact_id": {
+      "type": "integer"
+    },
+    "contact_sub_id": {
+      "type": "integer"
+    },
+    "user_id": {
+      "type": "integer"
+    },
+    "project_id": {
+      "type": "integer"
+    },
+    "language_id": {
+      "type": "integer"
+    },
+    "logopaper_id": {
+      "type": "integer"
+    },
+    "bank_account_id": {
+      "type": "integer"
+    },
+    "currency_id": {
+      "type": "integer"
+    },
+    "payment_type_id": {
+      "type": "integer"
+    },
+    "total_gross": {
+      "type": "decimal"
+    },
+    "total_net": {
+      "type": "decimal"
+    },
+    "total": {
+      "type": "decimal"
+    },
+    "is_valid_from": {
+      "type": "date"
+    },
+    "is_valid_until": {
+      "type": "date"
+    },
+    "contact_address": {
+      "type": "text"
+    },
+    "delivery_address": {
+      "type": "text"
+    },
+    "quote_updated_at": {
+      "type": "datetime"
+    },
+    "kb_item_status_id": {
+      "type": "integer"
+    }
+  }
+}

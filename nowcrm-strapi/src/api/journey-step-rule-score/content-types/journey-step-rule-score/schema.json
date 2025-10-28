@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "journey_step_rule_scores",
+  "info": {
+    "singularName": "journey-step-rule-score",
+    "pluralName": "journey-step-rule-scores",
+    "displayName": "JourneyStepRuleScore"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "text"
+    },
+    "value": {
+      "type": "text"
+    },
+    "journey_step_rule": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::journey-step-rule.journey-step-rule",
+      "inversedBy": "journey_step_rule_scores"
+    }
+  }
+}

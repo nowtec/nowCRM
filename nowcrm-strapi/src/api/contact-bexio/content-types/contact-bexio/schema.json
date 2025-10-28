@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_bexios",
+  "info": {
+    "singularName": "contact-bexio",
+    "pluralName": "contact-bexios",
+    "displayName": "ContactBexio"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "postcode": {
+      "type": "integer"
+    },
+    "city": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "phone": {
+      "type": "integer"
+    },
+    "url": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "contact_type_id": {
+      "type": "integer"
+    },
+    "salutation_id": {
+      "type": "integer"
+    },
+    "country_id": {
+      "type": "integer"
+    },
+    "language_id": {
+      "type": "integer"
+    },
+    "contact_group_ids": {
+      "type": "integer"
+    },
+    "user_id": {
+      "type": "integer"
+    },
+    "owner_id": {
+      "type": "integer"
+    }
+  }
+}

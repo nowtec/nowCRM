@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notifications",
+  "info": {
+    "singularName": "notification",
+    "pluralName": "notifications",
+    "displayName": "Notification",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "task": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::task.task"
+    },
+    "due_date": {
+      "type": "date"
+    },
+    "seen": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

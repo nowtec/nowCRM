@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "settings",
+  "info": {
+    "singularName": "setting",
+    "pluralName": "settings",
+    "displayName": "setting",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "subscription": {
+      "type": "enumeration",
+      "enum": [
+        "verify",
+        "ignore"
+      ],
+      "default": "verify"
+    },
+    "subscription_journeys": {
+      "type": "enumeration",
+      "enum": [
+        "verify",
+        "ignore"
+      ],
+      "default": "ignore"
+    },
+    "unsubscribe_text": {
+      "type": "text"
+    },
+    "setting_credentials": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::setting-credential.setting-credential",
+      "mappedBy": "setting"
+    }
+  }
+}

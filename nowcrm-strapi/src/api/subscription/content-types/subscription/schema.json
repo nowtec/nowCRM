@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "subscriptions",
+  "info": {
+    "singularName": "subscription",
+    "pluralName": "subscriptions",
+    "displayName": "Subscription",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    },
+    "subscription_type": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::subscription-type.subscription-type",
+      "inversedBy": "subscriptions"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "subscriptions"
+    },
+    "subscribed_at": {
+      "type": "datetime"
+    },
+    "unsubscribed_at": {
+      "type": "datetime"
+    },
+    "active": {
+      "type": "boolean"
+    },
+    "unsubscribe_token": {
+      "type": "uid"
+    },
+    "consent": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::consent.consent"
+    },
+    "period": {
+      "type": "integer"
+    }
+  }
+}

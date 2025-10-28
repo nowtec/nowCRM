@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "donation_subscriptions",
+  "info": {
+    "singularName": "donation-subscription",
+    "pluralName": "donation-subscriptions",
+    "displayName": "DonationSubscription"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "donation_subscriptions"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "payment_provider": {
+      "type": "string"
+    },
+    "interval": {
+      "type": "string"
+    },
+    "subscription_token": {
+      "type": "string"
+    },
+    "raw_data": {
+      "type": "text"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vat_periods",
+  "info": {
+    "singularName": "vat-period",
+    "pluralName": "vat-periods",
+    "displayName": "VatPeriod"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "external_id": {
+      "type": "integer"
+    },
+    "start": {
+      "type": "date"
+    },
+    "end": {
+      "type": "date"
+    },
+    "type": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "closed_at": {
+      "type": "date"
+    }
+  }
+}

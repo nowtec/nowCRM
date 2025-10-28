@@ -1,0 +1,71 @@
+{
+  "kind": "collectionType",
+  "collectionName": "donation_transactions",
+  "info": {
+    "singularName": "donation-transaction",
+    "pluralName": "donation-transactions",
+    "displayName": "DonationTransaction",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "donation_transactions"
+    },
+    "card_holder_name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "payment_provider": {
+      "type": "string"
+    },
+    "user_ip": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "epp_transaction_id": {
+      "type": "string"
+    },
+    "raw_data": {
+      "type": "text"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "campaign_name": {
+      "type": "string"
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "campaign": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::campaign.campaign",
+      "inversedBy": "donation_transactions"
+    }
+  }
+}

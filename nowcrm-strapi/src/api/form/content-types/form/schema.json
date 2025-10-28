@@ -1,0 +1,92 @@
+{
+  "kind": "collectionType",
+  "collectionName": "forms",
+  "info": {
+    "singularName": "form",
+    "pluralName": "forms",
+    "displayName": "Form",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "submit_confirm_text": {
+      "type": "text"
+    },
+    "submission_success_text": {
+      "type": "text"
+    },
+    "form_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::form-item.form-item",
+      "mappedBy": "form"
+    },
+    "active": {
+      "type": "boolean",
+      "default": false
+    },
+    "slug": {
+      "type": "text"
+    },
+    "cover": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "webhook_url": {
+      "type": "text"
+    },
+    "submit_text": {
+      "type": "text"
+    },
+    "brand_color": {
+      "type": "text"
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "keep_contact": {
+      "type": "boolean",
+      "default": true
+    },
+    "google_sheets_url": {
+      "type": "text"
+    },
+    "excel_url": {
+      "type": "text"
+    },
+    "override_contact": {
+      "type": "boolean"
+    },
+    "form_view": {
+      "type": "boolean"
+    }
+  }
+}

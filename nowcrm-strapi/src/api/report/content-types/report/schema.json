@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reports",
+  "info": {
+    "singularName": "report",
+    "pluralName": "reports",
+    "displayName": "Report",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "ref_class": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "ref_id": {
+      "type": "integer"
+    },
+    "date": {
+      "type": "datetime"
+    },
+    "debit_account_id": {
+      "type": "integer"
+    },
+    "credit_account_id": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "currency_id": {
+      "type": "integer"
+    },
+    "ref_uuid": {
+      "type": "string"
+    }
+  }
+}

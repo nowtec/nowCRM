@@ -1,0 +1,66 @@
+{
+  "kind": "collectionType",
+  "collectionName": "manual_entries",
+  "info": {
+    "singularName": "manual-entry",
+    "pluralName": "manual-entries",
+    "displayName": "ManualEntry"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "external_id": {
+      "type": "integer"
+    },
+    "type": {
+      "type": "string"
+    },
+    "booking_type": {
+      "type": "string"
+    },
+    "date": {
+      "type": "date"
+    },
+    "reference_nr": {
+      "type": "integer"
+    },
+    "created_by_user_id": {
+      "type": "integer"
+    },
+    "edited_by_user_id": {
+      "type": "integer"
+    },
+    "locked_info": {
+      "type": "string"
+    },
+    "is_locked": {
+      "type": "boolean"
+    },
+    "description": {
+      "type": "text"
+    },
+    "entry": {
+      "type": "json"
+    },
+    "debit_account_id": {
+      "type": "integer"
+    },
+    "credit_account_id": {
+      "type": "integer"
+    },
+    "amount": {
+      "type": "decimal"
+    },
+    "currency_factor": {
+      "type": "integer"
+    },
+    "ref_class": {
+      "type": "string"
+    },
+    "ref_id": {
+      "type": "integer"
+    }
+  }
+}

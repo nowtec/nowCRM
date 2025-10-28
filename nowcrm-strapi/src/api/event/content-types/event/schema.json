@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "events",
+  "info": {
+    "singularName": "event",
+    "pluralName": "events",
+    "displayName": "Event",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "action": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "text"
+    },
+    "source": {
+      "type": "string"
+    },
+    "external_id": {
+      "type": "text"
+    },
+    "status": {
+      "type": "string"
+    },
+    "destination": {
+      "type": "string"
+    },
+    "pinpoint_campaign_id": {
+      "type": "string"
+    },
+    "composition": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::composition.composition"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "events"
+    },
+    "title": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    },
+    "step_id": {
+      "type": "text"
+    },
+    "composition_item": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::composition-item.composition-item"
+    }
+  }
+}

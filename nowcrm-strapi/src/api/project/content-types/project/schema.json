@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "projects",
+  "info": {
+    "singularName": "project",
+    "pluralName": "projects",
+    "displayName": "Project",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "number": {
+      "type": "biginteger"
+    },
+    "name": {
+      "type": "text"
+    },
+    "start_date": {
+      "type": "datetime"
+    },
+    "end_date": {
+      "type": "datetime"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "uuid": {
+      "type": "text"
+    },
+    "pr_state_id": {
+      "type": "integer"
+    },
+    "pr_project_type_id": {
+      "type": "integer"
+    },
+    "contact_id": {
+      "type": "integer"
+    },
+    "contact_sub_id": {
+      "type": "integer"
+    },
+    "timesheets": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::timesheet.timesheet",
+      "mappedBy": "project"
+    }
+  }
+}

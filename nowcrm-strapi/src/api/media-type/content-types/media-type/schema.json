@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "media_types",
+  "info": {
+    "singularName": "media-type",
+    "pluralName": "media-types",
+    "displayName": "MediaType",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::contact.contact",
+      "mappedBy": "media_types"
+    }
+  }
+}

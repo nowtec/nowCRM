@@ -1,0 +1,109 @@
+{
+  "kind": "collectionType",
+  "collectionName": "courses",
+  "info": {
+    "singularName": "course",
+    "pluralName": "courses",
+    "displayName": "Course",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "file": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "submission": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::submision.submision",
+      "inversedBy": "courses"
+    },
+    "title": {
+      "type": "string"
+    },
+    "date_from": {
+      "type": "date"
+    },
+    "date_until": {
+      "type": "date"
+    },
+    "hours_reported": {
+      "type": "float"
+    },
+    "course_leader": {
+      "type": "string"
+    },
+    "hours_accepted": {
+      "type": "float",
+      "default": 0
+    },
+    "is_processed": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "course_year": {
+      "type": "string"
+    },
+    "info_message": {
+      "type": "text"
+    },
+    "error_message": {
+      "type": "text"
+    },
+    "raw_text": {
+      "type": "text"
+    },
+    "ai_course_title": {
+      "type": "string"
+    },
+    "ai_course_leader": {
+      "type": "string"
+    },
+    "ai_course_date": {
+      "type": "string"
+    },
+    "feedback": {
+      "type": "text"
+    },
+    "is_admin_checked": {
+      "type": "boolean",
+      "default": false
+    },
+    "file_urls": {
+      "type": "customField",
+      "customField": "plugin::reports.file-link-formatter"
+    },
+    "action_required": {
+      "type": "string"
+    },
+    "original_member": {
+      "type": "customField",
+      "customField": "plugin::reports.original-member-formatter"
+    },
+    "second_opinion_needed": {
+      "type": "boolean",
+      "default": false
+    },
+    "assigned_to": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "courses"
+    },
+    "comments_on_second_opinion": {
+      "type": "text"
+    }
+  }
+}

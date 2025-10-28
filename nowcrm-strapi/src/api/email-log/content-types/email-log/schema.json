@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "email_logs",
+  "info": {
+    "singularName": "email-log",
+    "pluralName": "email-logs",
+    "displayName": "EmailLog"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "to": {
+      "type": "string"
+    },
+    "from": {
+      "type": "string"
+    },
+    "body": {
+      "type": "text"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "submission": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::submision.submision",
+      "inversedBy": "email_logs"
+    }
+  }
+}

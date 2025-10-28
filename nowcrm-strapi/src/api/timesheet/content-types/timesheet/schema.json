@@ -1,0 +1,67 @@
+{
+  "kind": "collectionType",
+  "collectionName": "timesheets",
+  "info": {
+    "singularName": "timesheet",
+    "pluralName": "timesheets",
+    "displayName": "Timesheet",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "text": {
+      "type": "text"
+    },
+    "date": {
+      "type": "date"
+    },
+    "start": {
+      "type": "datetime"
+    },
+    "end": {
+      "type": "datetime"
+    },
+    "user_id": {
+      "type": "integer"
+    },
+    "client_service_id": {
+      "type": "integer"
+    },
+    "allowable_bill": {
+      "type": "boolean"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "sub_contact_id": {
+      "type": "integer"
+    },
+    "pr_project_id": {
+      "type": "integer"
+    },
+    "running": {
+      "type": "boolean"
+    },
+    "user_bexio": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::user-bexio.user-bexio",
+      "inversedBy": "timesheets"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "timesheets"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "duration_time": {
+      "type": "decimal"
+    }
+  }
+}

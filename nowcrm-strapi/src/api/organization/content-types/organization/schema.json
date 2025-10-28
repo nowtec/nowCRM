@@ -1,0 +1,162 @@
+{
+  "kind": "collectionType",
+  "collectionName": "organizations",
+  "info": {
+    "singularName": "organization",
+    "pluralName": "organizations",
+    "displayName": "Organization",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "unique": true,
+      "required": true
+    },
+    "email": {
+      "type": "email"
+    },
+    "address_line1": {
+      "type": "string"
+    },
+    "contact_person": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::contact.contact",
+      "mappedBy": "organization"
+    },
+    "frequency": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::frequency.frequency"
+    },
+    "media_type": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::media-type.media-type"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "organization_type": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::organization-type.organization-type"
+    },
+    "twitter_url": {
+      "type": "string"
+    },
+    "facebook_url": {
+      "type": "string"
+    },
+    "whatsapp_channel": {
+      "type": "string"
+    },
+    "linkedin_url": {
+      "type": "string"
+    },
+    "telegram_url": {
+      "type": "string"
+    },
+    "telegram_channel": {
+      "type": "string"
+    },
+    "instagram_url": {
+      "type": "string"
+    },
+    "tiktok_url": {
+      "type": "string"
+    },
+    "whatsapp_phone": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "jobs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::job.job",
+      "mappedBy": "organization"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "embeddable_reports": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::embeddable-report.embeddable-report",
+      "mappedBy": "organization"
+    },
+    "canton": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
+    "users": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "organizations"
+    },
+    "books": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::book.book",
+      "mappedBy": "organization"
+    },
+    "locale": {
+      "type": "string"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "new",
+        "existed"
+      ]
+    },
+    "sources": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::source.source",
+      "mappedBy": "organizations"
+    },
+    "industry": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::industry.industry",
+      "inversedBy": "organizations"
+    },
+    "city": {
+      "type": "string"
+    },
+    "company_size": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tag.tag"
+    }
+  }
+}

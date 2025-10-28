@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "search_histories",
+  "info": {
+    "singularName": "search-history",
+    "pluralName": "search-histories",
+    "displayName": "SearchHistory",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "contacts",
+        "organizations"
+      ]
+    },
+    "filters": {
+      "type": "json"
+    },
+    "query": {
+      "type": "json"
+    }
+  }
+}

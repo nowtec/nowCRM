@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "survey_items",
+  "info": {
+    "singularName": "survey-item",
+    "pluralName": "survey-items",
+    "displayName": "SurveyItem",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "question": {
+      "type": "string"
+    },
+    "answer": {
+      "type": "text"
+    },
+    "survey": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::survey.survey",
+      "inversedBy": "survey_items"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "survey_items"
+    },
+    "videoask_option_id": {
+      "type": "text"
+    },
+    "videoask_question_id": {
+      "type": "string"
+    },
+    "file": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": false
+    }
+  }
+}

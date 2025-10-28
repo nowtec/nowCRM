@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "compositions",
+  "info": {
+    "singularName": "composition",
+    "pluralName": "compositions",
+    "displayName": "Composition",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "category": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string",
+      "default": "en"
+    },
+    "persona": {
+      "type": "string"
+    },
+    "reference_prompt": {
+      "type": "text"
+    },
+    "reference_result": {
+      "type": "text"
+    },
+    "composition_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::composition-item.composition-item",
+      "mappedBy": "composition"
+    },
+    "name": {
+      "type": "text"
+    },
+    "status": {
+      "type": "text"
+    },
+    "add_unsubscribe": {
+      "type": "boolean",
+      "default": false
+    },
+    "model": {
+      "type": "text"
+    },
+    "subject": {
+      "type": "text"
+    },
+    "campaign": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::campaign.campaign",
+      "inversedBy": "compositions"
+    }
+  }
+}

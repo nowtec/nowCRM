@@ -1,0 +1,76 @@
+{
+  "kind": "collectionType",
+  "collectionName": "orders",
+  "info": {
+    "singularName": "order",
+    "pluralName": "orders",
+    "displayName": "Order",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "document": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "gross": {
+      "type": "float"
+    },
+    "net": {
+      "type": "float"
+    },
+    "taxes": {
+      "type": "float"
+    },
+    "total": {
+      "type": "float"
+    },
+    "contact_address": {
+      "type": "text"
+    },
+    "delivery_address": {
+      "type": "text"
+    },
+    "external_id": {
+      "type": "integer"
+    },
+    "contact_id": {
+      "type": "integer"
+    },
+    "contact_sub_id": {
+      "type": "integer"
+    },
+    "user_id": {
+      "type": "integer"
+    },
+    "project_id": {
+      "type": "integer"
+    },
+    "logopaper_id": {
+      "type": "integer"
+    },
+    "language_id": {
+      "type": "integer"
+    },
+    "bank_account_id": {
+      "type": "integer"
+    },
+    "currency_id": {
+      "type": "integer"
+    },
+    "payment_type_id": {
+      "type": "integer"
+    },
+    "is_valid_from": {
+      "type": "date"
+    },
+    "viewed_by_client_at": {
+      "type": "date"
+    }
+  }
+}

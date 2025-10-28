@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "account_accounting_bexios",
+  "info": {
+    "singularName": "account-accounting-bexio",
+    "pluralName": "account-accounting-bexios",
+    "displayName": "AccountAccountingBexio"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "external_id": {
+      "type": "integer"
+    },
+    "uuid": {
+      "type": "string"
+    },
+    "account_no": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "account_type": {
+      "type": "integer"
+    },
+    "tax_id": {
+      "type": "integer"
+    },
+    "fibu_account_group_id": {
+      "type": "integer"
+    },
+    "is_active": {
+      "type": "boolean"
+    },
+    "is_locked": {
+      "type": "boolean"
+    }
+  }
+}

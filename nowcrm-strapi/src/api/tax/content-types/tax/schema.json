@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "taxes",
+  "info": {
+    "singularName": "tax",
+    "pluralName": "taxes",
+    "displayName": "Tax"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "external_id": {
+      "type": "integer"
+    },
+    "uuid": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "digit": {
+      "type": "integer"
+    },
+    "type": {
+      "type": "string"
+    },
+    "account_id": {
+      "type": "integer"
+    },
+    "value": {
+      "type": "decimal"
+    },
+    "start_year": {
+      "type": "integer"
+    },
+    "end_year": {
+      "type": "integer"
+    },
+    "is_active": {
+      "type": "boolean"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "start_month": {
+      "type": "integer"
+    },
+    "end_month": {
+      "type": "integer"
+    }
+  }
+}

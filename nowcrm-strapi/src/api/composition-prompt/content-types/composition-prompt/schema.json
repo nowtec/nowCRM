@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "composition_prompts",
+  "info": {
+    "singularName": "composition-prompt",
+    "pluralName": "composition-prompts",
+    "displayName": "CompositionPrompt",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "prompt": {
+      "type": "text"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel",
+      "inversedBy": "composition_prompt"
+    },
+    "name": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rules",
+  "info": {
+    "singularName": "rule",
+    "pluralName": "rules",
+    "displayName": "Rule",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "text": {
+      "type": "text"
+    },
+    "info_message": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    },
+    "valid_hours": {
+      "type": "decimal"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "special case",
+        "error",
+        "information"
+      ]
+    },
+    "maximum": {
+      "type": "boolean"
+    },
+    "action_required": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "composition_templates",
+  "info": {
+    "singularName": "composition-template",
+    "pluralName": "composition-templates",
+    "displayName": "CompositionTemplate",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "composition_template_group": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::composition-template-group.composition-template-group",
+      "inversedBy": "composition_templates"
+    },
+    "content": {
+      "type": "text"
+    }
+  }
+}

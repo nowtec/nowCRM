@@ -1,0 +1,64 @@
+# --------------------------
+# Stage 1: Build Strapi
+# --------------------------
+FROM node:18-bullseye AS build
+
+# Install system dependencies for Sharp, SWC, and native modules
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  gcc \
+  g++ \
+  python3 \
+  autoconf \
+  automake \
+  zlib1g-dev \
+  libpng-dev \
+  libvips-dev \
+  bash \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set working directory for the app
+WORKDIR /opt/app
+
+# Copy dependency metadata first (for caching)
+COPY package.json pnpm-lock.yaml ./
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Install dependencies (frozen lockfile for reproducible builds)
+RUN pnpm install --frozen-lockfile
+
+# Copy all source code
+COPY . .
+
+# Build Strapi (this runs admin build + compiles backend)
+RUN pnpm build
+
+# Remove dev dependencies to reduce image size
+RUN pnpm prune --prod
+
+
+# --------------------------
+# Stage 2: Runtime Image
+# --------------------------
+FROM node:18-bullseye
+
+# Install runtime libraries needed for Sharp
+RUN apt-get update && apt-get install -y \
+  libvips-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/app
+
+# Copy production app and node_modules from build stage
+COPY --from=build /opt/app ./
+
+# Ensure pnpm binaries are in PATH
+ENV NODE_ENV=production
+ENV PATH=/opt/app/node_modules/.bin:$PATH
+
+EXPOSE 1337
+
+# Start Strapi in production mode
+CMD ["pnpm", "start"]

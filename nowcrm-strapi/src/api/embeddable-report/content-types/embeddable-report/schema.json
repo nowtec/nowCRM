@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "embeddable_reports",
+  "info": {
+    "singularName": "embeddable-report",
+    "pluralName": "embeddable-reports",
+    "displayName": "EmbeddableReport",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "description": {
+      "type": "text"
+    },
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "inversedBy": "embeddable_reports"
+    },
+    "title": {
+      "type": "string"
+    },
+    "html_content": {
+      "type": "richtext"
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "jobs",
+  "info": {
+    "singularName": "job",
+    "pluralName": "jobs",
+    "displayName": "Job",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "link": {
+      "type": "text"
+    },
+    "pubDate": {
+      "type": "string"
+    },
+    "content": {
+      "type": "text"
+    },
+    "contentSnippet": {
+      "type": "text"
+    },
+    "isoDate": {
+      "type": "datetime"
+    },
+    "guid": {
+      "type": "string"
+    },
+    "company": {
+      "type": "string"
+    },
+    "employment_type": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "street": {
+      "type": "string"
+    },
+    "formatted_address": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::organization.organization",
+      "inversedBy": "jobs"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_interests",
+  "info": {
+    "singularName": "contact-interest",
+    "pluralName": "contact-interests",
+    "displayName": "ContactInterest"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    }
+  }
+}

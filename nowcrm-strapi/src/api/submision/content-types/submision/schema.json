@@ -1,0 +1,126 @@
+{
+  "kind": "collectionType",
+  "collectionName": "submisions",
+  "info": {
+    "singularName": "submision",
+    "pluralName": "submisions",
+    "displayName": "Submission",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "New",
+        "AI Reviewed",
+        "Submission NOT OK",
+        "MAR - Missing certificates",
+        "MAR - Missing hours",
+        "On Hold",
+        "Follow-Up",
+        "Finished"
+      ]
+    },
+    "error_message": {
+      "type": "text"
+    },
+    "info_message": {
+      "type": "text",
+      "default": "Neue Einreichung"
+    },
+    "action_required": {
+      "type": "enumeration",
+      "enum": [
+        "Dokument XY unleserlich / Document XY illisible / Documento XY illeggibile / Document XY unreadable",
+        "Dokumente unleserlich / Documents illisibles / Documenti illeggibili / Documents unreadable",
+        "Teilnahmebestätigung fehlt  / Confirmation de participation mangquente / Conferma di partecipazione mancante / Confirmation of participation missing ",
+        "fehlende Inhaltsangabe/Kursausschreibung // Résumé/description du cours manquante Sommario/descrizione del corso mancante // Missing summary/course description"
+      ]
+    },
+    "on_hold_until": {
+      "type": "date"
+    },
+    "name": {
+      "type": "string"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "submissions"
+    },
+    "hours_required": {
+      "type": "float"
+    },
+    "remarks": {
+      "type": "string"
+    },
+    "courses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::course.course",
+      "mappedBy": "submission"
+    },
+    "hours_accepted": {
+      "type": "float"
+    },
+    "carry_forward": {
+      "type": "float"
+    },
+    "published_date": {
+      "type": "datetime"
+    },
+    "is_processed": {
+      "type": "boolean",
+      "default": false
+    },
+    "comments": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string"
+    },
+    "hours_reported": {
+      "type": "float"
+    },
+    "email_logs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::email-log.email-log",
+      "mappedBy": "submission"
+    },
+    "assigned_to_contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "submissions"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "follow_up_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "send_email": {
+      "type": "customField",
+      "customField": "plugin::reports.quick-email-sender"
+    },
+    "admin_checked_status": {
+      "type": "enumeration",
+      "enum": [
+        "All Courses Checked",
+        "None Courses checked",
+        "At Least One Not Checked",
+        "No courses submitted"
+      ]
+    },
+    "recalculate_hours": {
+      "type": "boolean"
+    }
+  }
+}

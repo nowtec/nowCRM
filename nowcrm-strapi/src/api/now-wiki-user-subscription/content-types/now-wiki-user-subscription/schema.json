@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "now_wiki_user_subscriptions",
+  "info": {
+    "singularName": "now-wiki-user-subscription",
+    "pluralName": "now-wiki-user-subscriptions",
+    "displayName": "NowWikiUserSubscription",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "start_date": {
+      "type": "datetime"
+    },
+    "end_date": {
+      "type": "datetime"
+    },
+    "status": {
+      "type": "string"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "now_wiki_user_subscriptions"
+    },
+    "now_wiki_package": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::now-wiki-package.now-wiki-package"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "composition_items",
+  "info": {
+    "singularName": "composition-item",
+    "pluralName": "composition-items",
+    "displayName": "Composition_item",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "additional_prompt": {
+      "type": "text"
+    },
+    "result": {
+      "type": "text"
+    },
+    "publication_date": {
+      "type": "date"
+    },
+    "attached_files": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    },
+    "composition": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::composition.composition",
+      "inversedBy": "composition_items"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "Published",
+        "Not published",
+        "Scheduled",
+        "None"
+      ],
+      "default": "Not published"
+    }
+  }
+}

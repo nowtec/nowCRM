@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_bexios",
+  "info": {
+    "singularName": "user-bexio",
+    "pluralName": "user-bexios",
+    "displayName": "UserBexio"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "external_id": {
+      "type": "integer"
+    },
+    "salutation_type": {
+      "type": "integer"
+    },
+    "firstname": {
+      "type": "string"
+    },
+    "lastname": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "timesheets": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::timesheet.timesheet",
+      "mappedBy": "user_bexio"
+    }
+  }
+}

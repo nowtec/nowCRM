@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "setting_credentials",
+  "info": {
+    "singularName": "setting-credential",
+    "pluralName": "setting-credentials",
+    "displayName": "Setting_Credential",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "text"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "active",
+        "invalid",
+        "disconnected"
+      ]
+    },
+    "access_token": {
+      "type": "text"
+    },
+    "refresh_token": {
+      "type": "text"
+    },
+    "client_id": {
+      "type": "text"
+    },
+    "client_secret": {
+      "type": "text"
+    },
+    "wp_url": {
+      "type": "text"
+    },
+    "wp_app_password": {
+      "type": "text"
+    },
+    "setting": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::setting.setting",
+      "inversedBy": "setting_credentials"
+    },
+    "error_message": {
+      "type": "text"
+    },
+    "organization_urn": {
+      "type": "text"
+    },
+    "twitter_app_key": {
+      "type": "text"
+    },
+    "twitter_app_secret": {
+      "type": "text"
+    },
+    "twitter_access_token": {
+      "type": "text"
+    },
+    "twitter_access_secret": {
+      "type": "text"
+    }
+  }
+}

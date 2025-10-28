@@ -1,0 +1,38 @@
+{
+  "kind": "collectionType",
+  "collectionName": "surveys",
+  "info": {
+    "singularName": "survey",
+    "pluralName": "surveys",
+    "displayName": "Survey",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "form_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "contact": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "surveys"
+    },
+    "survey_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::survey-item.survey-item",
+      "mappedBy": "survey"
+    }
+  }
+}

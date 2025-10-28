@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sources",
+  "info": {
+    "singularName": "source",
+    "pluralName": "sources",
+    "displayName": "Source",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::contact.contact",
+      "inversedBy": "sources"
+    },
+    "organizations": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::organization.organization",
+      "inversedBy": "sources"
+    }
+  }
+}

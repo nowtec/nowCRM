@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_types",
+  "info": {
+    "singularName": "contact-type",
+    "pluralName": "contact-types",
+    "displayName": "ContactType",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::contact.contact",
+      "mappedBy": "contact_types"
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}

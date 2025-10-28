@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "scheduled_compositions",
+  "info": {
+    "singularName": "scheduled-composition",
+    "pluralName": "scheduled-compositions",
+    "displayName": "Composition-Scheduled",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "publish_date": {
+      "type": "datetime"
+    },
+    "composition": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::composition.composition"
+    },
+    "name": {
+      "type": "text"
+    },
+    "description": {
+      "type": "text"
+    },
+    "color": {
+      "type": "text"
+    },
+    "channel": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::channel.channel"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "scheduled",
+        "processing",
+        "published"
+      ]
+    },
+    "send_to": {
+      "type": "json"
+    }
+  }
+}

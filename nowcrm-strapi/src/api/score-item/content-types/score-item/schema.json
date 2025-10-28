@@ -1,0 +1,28 @@
+{
+  "kind": "collectionType",
+  "collectionName": "score_items",
+  "info": {
+    "singularName": "score-item",
+    "pluralName": "score-items",
+    "displayName": "ScoreItem",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "value": {
+      "type": "decimal"
+    },
+    "action": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::action.action",
+      "inversedBy": "score_items"
+    }
+  }
+}

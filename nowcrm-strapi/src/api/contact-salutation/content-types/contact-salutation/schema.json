@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contact_salutations",
+  "info": {
+    "singularName": "contact-salutation",
+    "pluralName": "contact-salutations",
+    "displayName": "ContactSalutation",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::contact.contact",
+      "mappedBy": "salutation"
+    }
+  }
+}
