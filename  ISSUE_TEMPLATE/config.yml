@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Documentation"
+    url: "https://github.com/nowtec/nowCRM#readme"
+    about: "Review nowCRM Developer Guide before creating an issue."
+  - name: "Report a security vulnerability"
+    url: "mailto:tech@nowtec.solutions"
+    about: "Email the security team directly for private vulnerability reports."
+  - name: "Configuration change report"
+    url: "https://github.com/nowtec/nowCRM/issues/new?template=config-change-report.yml"
+    about: "Propose or document a configuration modification in the system."

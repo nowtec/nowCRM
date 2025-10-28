@@ -1,0 +1,30 @@
+name: "Add new feature / behavior"
+description: "Describe the desired product increment or improvement"
+title: "[Feature]: "
+labels: ["enhancement", "discussion"]
+body:
+  - type: textarea
+    attributes:
+      label: "Feature description"
+      description: "What feature or behavior would you like to see?"
+      placeholder: "Example: Introduce dark mode support for the dashboard interface."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "Motivation / Use case"
+      description: "Why is this feature valuable? What problem does it solve?"
+      placeholder: "Example: Users working at night find the bright UI uncomfortable and request a dark mode option."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "Proposed solution"
+      placeholder: "Example: Implement a theme toggle and CSS variables to switch between light and dark themes."
+
+  - type: textarea
+    attributes:
+      label: "Additional context or screenshots"
+      placeholder: "Example: Attach mockups, diagrams, or references to similar implementations."
