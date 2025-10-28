@@ -10,8 +10,8 @@ module.exports = ({ env }) => {
       // No auth for local testing
     },
     settings: {
-      defaultFrom: env('STRAPI_SMTP_DEFAULT_FROM', 'info@nowtec.solutions'),
-      defaultReplyTo: env('STRAPI_SMTP_DEFAULT_TO', 'info@nowtec.solutions'),
+      defaultFrom: env('STRAPI_SMTP_DEFAULT_FROM', 'default@example.com'),
+      defaultReplyTo: env('STRAPI_SMTP_DEFAULT_TO', 'default@example.com'),
     },
   };
 
@@ -22,14 +22,14 @@ module.exports = ({ env }) => {
       host: env('STRAPI_SMTP_HOST', 'email-smtp.eu-central-1.amazonaws.com'),
       port: env.int('STRAPI_SMTP_PORT', 587),
       auth: {
-        user: env('STRAPI_SMTP_USER', 'nouser@nowtec.solutions'),
-        pass: env('STRAPI_SMTP_PASS', 'nouser@nowtec.solutions'),
+        user: env('STRAPI_SMTP_USER', 'default@example.com'),
+        pass: env('STRAPI_SMTP_PASS', 'example'),
       },
       // secure: false, // Enable if using port 465
     },
     settings: {
-      defaultFrom: env('STRAPI_SMTP_DEFAULT_FROM', 'info@nowtec.solutions'),
-      defaultReplyTo: env('STRAPI_SMTP_DEFAULT_TO', 'info@nowtec.solutions'),
+      defaultFrom: env('STRAPI_SMTP_DEFAULT_FROM', 'default@example.com'),
+      defaultReplyTo: env('STRAPI_SMTP_DEFAULT_TO', 'default@example.com'),
     },
   };
 
