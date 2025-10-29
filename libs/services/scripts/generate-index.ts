@@ -75,7 +75,7 @@ async function generateCustomIndex(
 async function main(): Promise<void> {
   const rootDir = path.resolve(__dirname, "../src");
 
-  await generateCustomIndex(rootDir, "index.ts", ["types", "static", "api-routes"]);
+  await generateCustomIndex(rootDir, "index.ts", ["types", "static", "api-routes","zod-validators"]);
   await generateCustomIndex(rootDir, "server.ts", ["services"]);
   // await generateCustomIndex(rootDir, "client.ts", ["hooks"]);
 }

@@ -1,7 +1,8 @@
 // src/services/baseService.ts
 import qs from "qs";
-import { envShared } from "../envConfig";
-import type { StrapiQuery } from "../typesCommon/StrapiQuery";
+import { envServices } from "../../envConfig";
+import type { DocumentId } from "../../types/common/base_type";
+import type { StrapiQuery } from "../../types/common/StrapiQuery";
 import type { StandardResponse } from "./response.service";
 import { handleError, handleResponse } from "./response.service";
 
@@ -39,23 +40,20 @@ class BaseService<T, FormT> {
 	 * Fetches a list of entities based on provided query options.
 	 * @param {string} [token] - Api token for request
 	 * @param {StrapiQuery} [options] - Query parameters for filtering, sorting, pagination, etc.
+	 * @param {RequestInit} [fetchOptions] - params for fetch
 	 * @returns {Promise<StandardResponse<T[]>>} - The standard response containing an array of entities.
 	 */
 	async find(
 		token: string,
 		options?: StrapiQuery<T>,
+		fetchOptions?: RequestInit & { next?: any },
 	): Promise<StandardResponse<T[]>> {
 		const query = qs.stringify(options, { encodeValuesOnly: true });
-
-		const url = new URL(
-			`${this.endpoint}?${query}`,
-			envShared.SHARED_STRAPI_URL,
-		);
-
+		const url = new URL(`${this.endpoint}?${query}`, envServices.STRAPI_URL);
 		try {
 			const response = await fetch(url, {
+				...fetchOptions,
 				headers: this.getHeaders(false, token),
-				cache: "no-store",
 			});
 			return await handleResponse<T[]>(response);
 		} catch (error: any) {
@@ -64,20 +62,54 @@ class BaseService<T, FormT> {
 	}
 
 	/**
-	 * Fetches and returns all entities across all pages using Strapi pagination.
-	 * Uses options.pagination.pageSize if provided, otherwise defaults to 100.
-	 * Does not mutate the provided options object.
+	 * Return a count of total entities.
+	 * @param {string} [token] - Api token for request
+	 * @param {StrapiQuery} [options] - Query parameters for filtering, sorting, pagination, etc.
+	 *  * @param {RequestInit} [fetchOptions] - params for fetch
+	 * @returns {number} - number of found entities
 	 */
+
+	async count(
+		token: string,
+		options?: StrapiQuery<T>,
+		fetchOptions?: RequestInit & { next?: any },
+	): Promise<StandardResponse<number>> {
+		const query = qs.stringify(options, { encodeValuesOnly: true });
+		const url = new URL(`${this.endpoint}?${query}`, envServices.STRAPI_URL);
+		try {
+			const response = await fetch(url, {
+				...fetchOptions,
+				headers: this.getHeaders(false, token),
+			});
+			const json: any = await response.json();
+			return {
+				data: json.meta.pagination.total,
+				success: true,
+				status: 200,
+				errorMessage: "",
+				meta: json.meta,
+			};
+		} catch (error: any) {
+			return handleError<number>(error);
+		}
+	}
+
+	/**
+	 * Return a count of total entities.
+	 * @param {string} [token] - Api token for request
+	 * @param {StrapiQuery} [options] - Query parameters for filtering, sorting, pagination, etc.
+	 * @param {RequestInit} [fetchOptions] - params for fetch
+	 * @returns {Promise<StandardResponse<T[]>>} - The standard response containing an array of entities.
+	 */
+
 	async findAll(
 		token: string,
 		options?: StrapiQuery<T>,
+		fetchOptions?: RequestInit & { next?: any },
 	): Promise<StandardResponse<T[]>> {
-		// Defensive clone so we never mutate caller options
 		const baseOptions: StrapiQuery<T> = options
 			? JSON.parse(JSON.stringify(options))
 			: ({} as any);
-
-		// Ensure we have a pagination object with page and pageSize
 		const pageSize =
 			(baseOptions as any)?.pagination?.pageSize &&
 			Number((baseOptions as any).pagination.pageSize) > 0
@@ -107,22 +139,18 @@ class BaseService<T, FormT> {
 
 				const url = new URL(
 					`${this.endpoint}?${query}`,
-					envShared.SHARED_STRAPI_URL,
+					envServices.STRAPI_URL,
 				);
 				const resp = await fetch(url, {
+					...fetchOptions,
 					headers: this.getHeaders(false, token),
-					cache: "no-store",
 				});
 
 				const handled = await handleResponse<T[]>(resp);
 				lastStatus = handled.status;
 
-				// If a page fails, bubble up the error
-				if (!handled.success) {
-					return handled;
-				}
+				if (!handled.success) return handled;
 
-				// Accumulate data
 				if (Array.isArray(handled.data)) {
 					allData.push(...handled.data);
 				}
@@ -138,15 +166,9 @@ class BaseService<T, FormT> {
 					  }
 					| undefined;
 
-				// If no pagination metadata is available, stop based on data length
 				if (!meta?.pagination) {
-					if (!handled.data || handled.data.length < pageSize) {
-						break;
-					}
-					// Fallback safeguard to avoid infinite loop
-					if (page > 10_000) {
-						break;
-					}
+					if (!handled.data || handled.data.length < pageSize) break;
+					if (page > 10_000) break;
 					page += 1;
 					continue;
 				}
@@ -156,15 +178,12 @@ class BaseService<T, FormT> {
 					total = Number(meta.pagination.total ?? NaN);
 				}
 
-				// Stop if we reached the last page or if current page returned fewer than pageSize items
 				const reachedLastByCount =
 					typeof pageCount === "number" && page >= pageCount;
 				const reachedLastByData =
 					!handled.data || handled.data.length < pageSize;
 
-				if (reachedLastByCount || reachedLastByData) {
-					break;
-				}
+				if (reachedLastByCount || reachedLastByData) break;
 
 				page += 1;
 			}
@@ -193,26 +212,25 @@ class BaseService<T, FormT> {
 
 	/**
 	 * Fetches a single entity by its ID with populated relations.
-	 * @param {number} id - The unique identifier of the entity.
+	 * @param {DocumentId} id - The unique identifier of the entity.
 	 *  @param {string} [token] - Api token for request
 	 * @param {StrapiQuery} [options] - Query parameters for filtering, sorting, pagination, etc.
 	 * @returns {Promise<StandardResponse<T>>} - The standard response containing the entity details.
 	 */
 	async findOne(
-		id: number,
+		id: DocumentId,
 		token: string,
 		options?: StrapiQuery<T>,
 	): Promise<StandardResponse<T>> {
 		const query = qs.stringify(options, { encodeValuesOnly: true });
 		const url = new URL(
 			`${this.endpoint}/${id}?${query}`,
-			envShared.SHARED_STRAPI_URL,
+			envServices.STRAPI_URL,
 		);
 
 		try {
 			const response = await fetch(url, {
 				headers: this.getHeaders(false, token),
-				cache: "no-store",
 			});
 			return await handleResponse<T>(response);
 		} catch (error: any) {
@@ -222,13 +240,12 @@ class BaseService<T, FormT> {
 
 	/**
 	 * Deletes an entity by its ID.
-	 * @param {number} id - The unique identifier of the entity to delete.
+	 * @param {DocumentId} id - The unique identifier of the entity to delete.
 	 * @param {string} [token] - Api token for request
 	 * @returns {Promise<StandardResponse<null>>} - The standard response indicating success or failure.
 	 */
-	async delete(id: number, token: string): Promise<StandardResponse<null>> {
-		const url = new URL(`${this.endpoint}/${id}}`, envShared.SHARED_STRAPI_URL);
-
+	async delete(id: DocumentId, token: string): Promise<StandardResponse<null>> {
+		const url = new URL(`${this.endpoint}/${id}`, envServices.STRAPI_URL);
 		try {
 			const response = await fetch(url, {
 				method: "DELETE",
@@ -241,15 +258,7 @@ class BaseService<T, FormT> {
 					success: true,
 				};
 			}
-			const errorData = await response.json();
-			return {
-				data: null,
-				status: response.status,
-				success: false,
-				errorMessage:
-					`${errorData.error.message} Status -${errorData.error.status}` ||
-					`Failed to delete. Status - ${errorData.status}`,
-			};
+			return await handleResponse<null>(response);
 		} catch (error: any) {
 			return handleError<null>(error);
 		}
@@ -262,7 +271,7 @@ class BaseService<T, FormT> {
 	 * @returns {Promise<StandardResponse<T>>} - The standard response containing the created entity.
 	 */
 	async create(form: FormT, token: string): Promise<StandardResponse<T>> {
-		const url = new URL(`${this.endpoint}`, envShared.SHARED_STRAPI_URL);
+		const url = new URL(`${this.endpoint}`, envServices.STRAPI_URL);
 
 		try {
 			const response = await fetch(url, {
@@ -285,12 +294,12 @@ class BaseService<T, FormT> {
 	 * @returns {Promise<StandardResponse<T>>} - The standard response containing the updated entity.
 	 */
 	async update(
-		id: number,
+		id: DocumentId,
 		form: Partial<FormT>,
 		token: string,
 		falseData?: boolean,
 	): Promise<StandardResponse<T>> {
-		const url = new URL(`${this.endpoint}/${id}`, envShared.SHARED_STRAPI_URL);
+		const url = new URL(`${this.endpoint}/${id}`, envServices.STRAPI_URL);
 
 		try {
 			const response = await fetch(url, {
@@ -311,8 +320,11 @@ class BaseService<T, FormT> {
 	 * @param {string} [token] - Api token for request
 	 * @returns {Promise<StandardResponse<null>>} - The standard response indicating success or failure.
 	 */
-	async unPublish(id: number, token: string): Promise<StandardResponse<null>> {
-		const url = new URL(`${this.endpoint}/${id}`, envShared.SHARED_STRAPI_URL);
+	async unPublish(
+		id: DocumentId,
+		token: string,
+	): Promise<StandardResponse<null>> {
+		const url = new URL(`${this.endpoint}/${id}`, envServices.STRAPI_URL);
 
 		const postData = {
 			data: {
@@ -332,15 +344,7 @@ class BaseService<T, FormT> {
 					success: true,
 				};
 			}
-			const errorData = await response.json();
-			return {
-				data: null,
-				status: response.status,
-				success: false,
-				errorMessage:
-					`${errorData.error.message} Status -${errorData.error.status}` ||
-					`Failed to unpublish. Status - ${errorData.status}`,
-			};
+			return await handleResponse<null>(response);
 		} catch (error: any) {
 			return handleError<null>(error);
 		}

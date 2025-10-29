@@ -1,10 +1,8 @@
 // src/services/contact.service.ts
 
-
 import APIRoutes from "../api-routes/api-routes-crm";
+import type { ActionType, Form_ActionType } from "../types/action-type";
 import BaseService from "./common/base.service";
-import { ActionType, Form_ActionType } from "../types/action-type";
-
 
 /**
  * Service class to handle Contact-related API interactions.

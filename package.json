@@ -6,6 +6,9 @@
     "build:libs": "pnpm --filter './libs/*' run build",
     "build:apps": "pnpm --filter './apps/*' run build",
     "build:all": "pnpm -r run build",
+    "lint:libs": "pnpm --filter './libs/*' run lint:fix",
+    "lint:apps": "pnpm --filter './apps/*' run lint:fix",
+    "lint:all": "pnpm -r run lint:fix",
     "generate-index:services": "pnpm --filter @nowcrm/services run generate-index"
   },
   "keywords": [],

@@ -44,7 +44,7 @@ export async function handleResponse<T>(
 	const status = response.status;
 	const success = response.ok;
 	try {
-		const json = await response.json();
+		const json: any = await response.json();
 		let data: T | null = null;
 		let meta: any;
 		let errorMessage: any;
