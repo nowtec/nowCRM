@@ -40,7 +40,7 @@ jobs:
           echo "Got release version ${{ steps.release.outputs.version }}"
           echo "Upload release artifacts to ${{ steps.release.outputs.upload_url }}"
 
-  build-and-push:
+  build-and-push-composer:
     name: Build and Push Composer Docker Image
     runs-on: ubuntu-latest
     permissions:
@@ -120,10 +120,90 @@ jobs:
         if: steps.docker-build.outcome == 'failure'
         run: exit 1
 
+  build-and-push-strapi:
+    name: Build and Push Strapi Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    if: github.event.pull_request.merged == true
+    needs: [create_release]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image for Strapi
+        id: docker-build-strapi
+        continue-on-error: true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/nowcrm-strapi/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi:${{ needs.create_release.outputs.tag_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output docker build result
+        if: always()
+        run: |
+          echo "Docker Build Outcome: ${{ steps.docker-build-strapi.outcome }}"
+          echo "Docker Build Conclusion: ${{ steps.docker-build-strapi.conclusion }}"
+
+      - name: Save build failure details
+        if: steps.docker-build-strapi.outcome == 'failure'
+        run: |
+          mkdir -p build-logs
+          cat > build-logs/error.txt << 'EOF'
+          Docker Build Failed
+          ===================
+
+          Repository: ${{ github.repository }}
+          Image: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi
+          Tags: latest, ${{ needs.create_release.outputs.tag_name }}
+          Context: . (root)
+          Dockerfile: ./apps/nowcrm-strapi/Dockerfile.prod
+
+          Build Outcome: ${{ steps.docker-build-strapi.outcome }}
+
+          See the full GitHub Actions logs for detailed build output:
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Common Docker build failures:
+          1. Missing dependencies in apps/nowcrm-strapi/package.json
+          2. Failed pnpm install
+          3. Strapi build errors
+          4. Missing database migrations
+          EOF
+
+      - name: Upload build logs
+        if: steps.docker-build-strapi.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-strapi
+          path: build-logs/error.txt
+          retention-days: 30
+
+      - name: Fail job if build failed
+        if: steps.docker-build-strapi.outcome == 'failure'
+        run: exit 1
+
   notify_success:
     name: Send Success Notification
     if: github.event.pull_request.merged && success()
-    needs: [create_release, build-and-push]  # Include all build jobs
+    needs: [create_release, build-and-push-composer, build-and-push-strapi]
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram Success Notification
@@ -136,7 +216,7 @@ jobs:
   notify_failure:
     name: Send Failure Notification
     if: github.event.pull_request.merged && failure()
-    needs: [create_release, build-and-push]
+    needs: [create_release, build-and-push-composer, build-and-push-strapi]
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram Failure Notification
@@ -150,12 +230,12 @@ jobs:
             🔗 View full logs:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            📋 Check the "build-and-push" job for Docker build error details
+            📋 Check the "build-and-push-composer" or "build-and-push-strapi" job for Docker build error details
 
   release_created:
     name: Send Release Created Notification
     if: github.event.pull_request.merged && success()
-    needs: [create_release, build-and-push]
+    needs: [create_release, build-and-push-composer, build-and-push-strapi]
     runs-on: ubuntu-latest
     steps:
       - name: 👌 Release Created
