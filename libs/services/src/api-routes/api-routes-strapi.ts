@@ -50,10 +50,11 @@ const API_ROUTES_STRAPI = {
 	JOURNEY_STEP_CONNECTIONS:"journey-step-connections",
 	JOURNEY_STEP_RULES: "journey-step-rules",
 	JOURNEY_STEP_RULE_SCORES: "journey-step-rule-scores",
-
+	JOURNEY_DUPLICATE: "journeys/duplicate",
 	//List
 	LISTS: "lists",
-
+	LISTS_COUNT_CONTACTS: "lists/:id/active-contacts-count",
+	LISTS_DUPLICATE: "lists/duplicate",	
 
 	//Addional data
 	DEPARTMENTS: "departments",
@@ -68,7 +69,7 @@ const API_ROUTES_STRAPI = {
 	//Organization
 	ORGANIZATIONS: "organizations",
 	ORGANIZATION_TYPES: "organization-types",
-
+	ORGANIZATIONS_DUPLICATE: "organizations/duplicate",
 	//Search History
 	SEARCH_HISTORIES:"search-histories",
 	SEARCH_HISTORY_TEMPLATES:"search-history-templates",
@@ -99,6 +100,8 @@ const API_ROUTES_STRAPI = {
 	//Form
 	FORMS: "forms",
 	FORM_ITEMS:"form-items",
+	FORM_SUBMIT: "forms/form-submit",
+	FORM_DUPLICATE: "forms/duplicate",
 	//Surveys
 	SURVEYS:"surveys",
 	SURVEY_ITEMS:"survey-items",

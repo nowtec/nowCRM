@@ -3,6 +3,7 @@ import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
 import type { Journey, Form_Journey } from "../types/journey";
 import BaseService from "./common/base.service";
 import { journeyPassedStepService } from "./journey-passed-step.service";
+import { actionsService } from "./action.service";
 
 class JourneyStepsService extends BaseService<Journey, Form_Journey> {
   public constructor() {
@@ -36,6 +37,48 @@ class JourneyStepsService extends BaseService<Journey, Form_Journey> {
             data: data.data.length > 0,
             status: data.status,
             success: data.success,
+        };
+    } catch (error: any) {
+        return handleError(error);
+    }
+}
+async checkStepAction(
+    token: string,
+    stepId: number,
+    contactId: number,
+): Promise<StandardResponse<{ find: boolean; target_step: number | null }>> {
+    try {
+        const data = await actionsService.find(token, {
+            filters: {
+                action_type: { $eq: "step_reached" },
+                external_id: { $eq: stepId.toString() },
+                contact: { id: { $eq: contactId } },
+            } as any, //TODO: update action type on shared folder + journey-finished to const,
+        });
+
+        if (!data.data)
+            return handleError(new Error("Could not check step action. Probably strapi is down"));
+
+        let targetStep: number;
+        try {
+            const payloadRaw = data?.data?.[0]?.payload;
+
+            // Try to parse payload if it's a string
+            const payloadObj =
+                typeof payloadRaw === "string" ? JSON.parse(payloadRaw) : payloadRaw;
+
+            targetStep = payloadObj?.target_step;
+        } catch (e) {
+            return handleError(new Error(`Could not parse payload or extract target_step: ${e}`));
+        }
+
+        return {
+            data: {
+                find: data.data.length > 0,
+                target_step: targetStep,
+            },
+            status: data.status,
+            success: true,
         };
     } catch (error: any) {
         return handleError(error);

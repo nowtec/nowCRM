@@ -1,11 +1,32 @@
+import { handleError, handleResponse, StandardResponse } from "server";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
 import type { Journey, Form_Journey } from "../types/journey";
 import BaseService from "./common/base.service";
+import { envServices } from "envConfig";
 
 class JourneysService extends BaseService<Journey, Form_Journey> {
   public constructor() {
     super(API_ROUTES_STRAPI.JOURNEYS);
   }
+
+  async duplicate(
+		journeyId: number,
+		token: string,
+	): Promise<StandardResponse<null>> {
+		try {
+			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.JOURNEY_DUPLICATE}`;
+
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({ id: journeyId }),
+			});
+
+			return await handleResponse(response);
+		} catch (error: any) {
+			return handleError(error);
+		}
+	}
 }
 
 export const journeysService = new JourneysService();
