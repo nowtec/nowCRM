@@ -1,25 +1,29 @@
-import { envServices } from "envConfig";
+import API_ROUTES_COMPOSER from "../api-routes/api-routes-composer";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { envServices } from "../envConfig";
+import type { composerSendType } from "../types/composer/composer-send-types";
+import type { createAdditionalComposition } from "../types/composer/create-additional-composition";
+import type { createComposition } from "../types/composer/create-composition";
+import type { QuickWriteModel } from "../types/composer/quick-write-model";
+import type { ReferenceComposition } from "../types/composer/reference-composition";
 import type { Composition, Form_Composition } from "../types/composition";
+import type { Contact } from "../types/contact";
+import type { JourneyStep } from "../types/journey-step";
+import type { ServiceResponse } from "../types/microservices/service-response";
 import BaseService from "./common/base.service";
-import { handleError, handleResponse, StandardResponse } from "./common/response.service";
-import { ReferenceComposition } from "types/composer/reference-composition";
-import API_ROUTES_COMPOSER from "api-routes/api-routes-composer";
-import { ServiceResponse } from "types/microservices/service-response";
-import { QuickWriteModel } from "types/composer/quick-write-model";
-import { createAdditionalComposition } from "types/composer/create-additional-composition";
-import { createComposition } from "types/composer/create-composition";
-import { JourneyStep } from "types/journey-step";
-import { Contact } from "types/contact";
-import { composerSendType } from "types/composer/composer-send-types";
+import {
+	handleError,
+	handleResponse,
+	type StandardResponse,
+} from "./common/response.service";
 import { journeyStepsService } from "./journey-steps.service";
 
 class CompositionsService extends BaseService<Composition, Form_Composition> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.COMPOSITIONS);
-  }
+	public constructor() {
+		super(API_ROUTES_STRAPI.COMPOSITIONS);
+	}
 
-  async createReference(
+	async createReference(
 		data: ReferenceComposition,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
@@ -32,7 +36,9 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
-			const reference = await response.json() as ServiceResponse<{ result: string }>;
+			const reference = (await response.json()) as ServiceResponse<{
+				result: string;
+			}>;
 			return {
 				data: reference.responseObject,
 				status: reference.statusCode,
@@ -45,7 +51,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		}
 	}
 
-  async quickWrite(
+	async quickWrite(
 		data: QuickWriteModel,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
@@ -58,7 +64,9 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
-			const reference = await response.json() as ServiceResponse<{ result: string }>;
+			const reference = (await response.json()) as ServiceResponse<{
+				result: string;
+			}>;
 			return {
 				data: reference.responseObject,
 				status: reference.statusCode,
@@ -70,7 +78,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		}
 	}
 
-  async regenerateItemResult(
+	async regenerateItemResult(
 		data: createAdditionalComposition,
 	): Promise<StandardResponse<string>> {
 		try {
@@ -83,19 +91,21 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
-			const response = await rez.json() as ServiceResponse<{ result: string }>;
+			const response = (await rez.json()) as ServiceResponse<{
+				result: string;
+			}>;
 			return {
 				data: response.responseObject.result,
 				status: response.statusCode,
 				success: response.success,
-        errorMessage: response.message,
+				errorMessage: response.message,
 			};
 		} catch (error: any) {
 			return handleError(error);
 		}
 	}
 
-  async createComposition(
+	async createComposition(
 		data: createComposition,
 	): Promise<StandardResponse<string>> {
 		try {
@@ -108,19 +118,21 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
-			const response = await res.json() as ServiceResponse<{ result: string }>;
+			const response = (await res.json()) as ServiceResponse<{
+				result: string;
+			}>;
 			return {
 				data: response.responseObject.result,
 				status: response.statusCode,
 				success: response.success,
-        errorMessage: response.message,
+				errorMessage: response.message,
 			};
 		} catch (error: any) {
 			return handleError(error);
 		}
 	}
 
-  async duplicate(
+	async duplicate(
 		compositionId: number,
 		token: string,
 	): Promise<StandardResponse<null>> {
@@ -133,14 +145,14 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				body: JSON.stringify({ id: compositionId }),
 			});
 
-      const result = await handleResponse<null>(response);
-      return result;
+			const result = await handleResponse<null>(response);
+			return result;
 		} catch (error: any) {
 			return handleError(error);
 		}
 	}
 
-  async sendComposition(
+	async sendComposition(
 		token: string,
 		step: JourneyStep,
 		contact: Contact,
@@ -188,7 +200,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				},
 				body: JSON.stringify(payload),
 			});
-			const data = await response.json() as ServiceResponse<null>;
+			const data = (await response.json()) as ServiceResponse<null>;
 
 			if (!data.success) {
 				return {
@@ -212,10 +224,6 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 			success: true,
 		};
 	}
-
 }
 
 export const compositionsService = new CompositionsService();
-
-
-

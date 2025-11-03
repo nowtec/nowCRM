@@ -1,6 +1,6 @@
 import { cleanEnv, testOnly } from "envalid";
-import { NotEmptyStringValidator } from "zod-validators/non-empty-string";
-import { URLValidator } from "zod-validators/url-validator";
+import { NotEmptyStringValidator } from "./zod-validators/non-empty-string";
+import { URLValidator } from "./zod-validators/url-validator";
 
 // this needed is because nodejs env handler inside nextjs is not working how envalid expect
 const processEnv = {

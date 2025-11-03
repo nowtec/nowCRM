@@ -1,13 +1,11 @@
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { Industry, Form_Industry } from "../types/industry";
+import type { Form_Industry, Industry } from "../types/industry";
 import BaseService from "./common/base.service";
 
 class IndustriesService extends BaseService<Industry, Form_Industry> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.INDUSTRY);
-  }
+	public constructor() {
+		super(API_ROUTES_STRAPI.INDUSTRY);
+	}
 }
 
 export const industriesService = new IndustriesService();
-
-

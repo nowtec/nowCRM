@@ -1,16 +1,26 @@
-import { handleError, handleResponse, StandardResponse } from "server";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { CompositionItem, Form_CompositionItem } from "../types/composition-item";
+import { envServices } from "../envConfig";
+import type Asset from "../types/common/asset";
+import type {
+	CompositionItem,
+	Form_CompositionItem,
+} from "../types/composition-item";
 import BaseService from "./common/base.service";
-import Asset from "types/common/asset";
-import { envServices } from "envConfig";
+import {
+	handleError,
+	handleResponse,
+	type StandardResponse,
+} from "./common/response.service";
 
-class CompositionItemsService extends BaseService<CompositionItem, Form_CompositionItem> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.COMPOSITION_ITEM);
-  }
+class CompositionItemsService extends BaseService<
+	CompositionItem,
+	Form_CompositionItem
+> {
+	public constructor() {
+		super(API_ROUTES_STRAPI.COMPOSITION_ITEM);
+	}
 
-  async uploadFile(
+	async uploadFile(
 		files: any,
 		compositionItemId: number,
 		token: string,
@@ -40,6 +50,3 @@ class CompositionItemsService extends BaseService<CompositionItem, Form_Composit
 }
 
 export const compositionItemsService = new CompositionItemsService();
-
-
-

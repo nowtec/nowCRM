@@ -1,8 +1,7 @@
-import { aiModelKeys } from "static/ai-models";
-import { LanguageKeys } from "static/languages";
-import { DocumentId } from "types/common/base_type";
-import { CompositionStatusKeys } from "types/composition";
-
+import type { aiModelKeys } from "static/ai-models";
+import type { LanguageKeys } from "static/languages";
+import type { DocumentId } from "types/common/base_type";
+import type { CompositionStatusKeys } from "types/composition";
 
 export interface createComposition {
 	name: string;

@@ -1,14 +1,17 @@
-import { envServices } from "envConfig";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { List, Form_List } from "../types/list";
+import { envServices } from "../envConfig";
+import type { Form_List, List } from "../types/list";
 import BaseService from "./common/base.service";
-import { handleError, handleResponse, StandardResponse } from "server";
+import {
+	handleError,
+	handleResponse,
+	type StandardResponse,
+} from "./common/response.service";
 
 class ListsService extends BaseService<List, Form_List> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.LISTS);
-  }
-
+	public constructor() {
+		super(API_ROUTES_STRAPI.LISTS);
+	}
 
 	async countContacts(
 		id: number,
@@ -21,13 +24,12 @@ class ListsService extends BaseService<List, Form_List> {
 				cache: "no-store",
 			});
 			return await handleResponse(response);
-
 		} catch (error: any) {
 			return handleError<number>(error);
 		}
 	}
 
-  async duplicate(
+	async duplicate(
 		listId: number,
 		token: string,
 	): Promise<StandardResponse<null>> {
@@ -41,7 +43,6 @@ class ListsService extends BaseService<List, Form_List> {
 			});
 
 			return await handleResponse(response);
-
 		} catch (error: any) {
 			return handleError<null>(error);
 		}
@@ -49,5 +50,3 @@ class ListsService extends BaseService<List, Form_List> {
 }
 
 export const listsService = new ListsService();
-
-

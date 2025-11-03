@@ -1,17 +1,20 @@
-import { envServices } from "envConfig";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { FormEntity, Form_FormEntity } from "../types/form";
+import { envServices } from "../envConfig";
+import type Asset from "../types/common/asset";
+import type { Form_FormEntity, FormEntity } from "../types/form";
 import BaseService from "./common/base.service";
-import { handleError, handleResponse, StandardResponse } from "server";
-import Asset from "types/common/asset";
-
+import {
+	handleError,
+	handleResponse,
+	type StandardResponse,
+} from "./common/response.service";
 
 class FormsService extends BaseService<FormEntity, Form_FormEntity> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.FORMS);
-  }
+	public constructor() {
+		super(API_ROUTES_STRAPI.FORMS);
+	}
 
-  public async submit(
+	public async submit(
 		payload: {
 			formId?: number;
 			identifier: string;
@@ -51,7 +54,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		}
 	}
 
-  async uploadCoverOrLogo(
+	async uploadCoverOrLogo(
 		files: any,
 		formId: number,
 		targetField: string,
@@ -79,7 +82,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		}
 	}
 
-  async deleteCoverOrLogo(
+	async deleteCoverOrLogo(
 		assetId: number,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
@@ -97,7 +100,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		}
 	}
 
-  async duplicate(
+	async duplicate(
 		formId: number,
 		token: string,
 	): Promise<StandardResponse<null>> {
@@ -117,5 +120,3 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 }
 
 export const formsService = new FormsService();
-
-

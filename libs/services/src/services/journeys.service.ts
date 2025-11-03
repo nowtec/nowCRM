@@ -1,15 +1,19 @@
-import { handleError, handleResponse, StandardResponse } from "server";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { Journey, Form_Journey } from "../types/journey";
+import { envServices } from "../envConfig";
+import type { Form_Journey, Journey } from "../types/journey";
 import BaseService from "./common/base.service";
-import { envServices } from "envConfig";
+import {
+	handleError,
+	handleResponse,
+	type StandardResponse,
+} from "./common/response.service";
 
 class JourneysService extends BaseService<Journey, Form_Journey> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.JOURNEYS);
-  }
+	public constructor() {
+		super(API_ROUTES_STRAPI.JOURNEYS);
+	}
 
-  async duplicate(
+	async duplicate(
 		journeyId: number,
 		token: string,
 	): Promise<StandardResponse<null>> {
@@ -30,6 +34,3 @@ class JourneysService extends BaseService<Journey, Form_Journey> {
 }
 
 export const journeysService = new JourneysService();
-
-
-

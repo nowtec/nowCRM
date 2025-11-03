@@ -1,16 +1,16 @@
-import { CommunicationChannelKeys } from "static/communication-channel";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import type { CommunicationChannelKeys } from "../static/communication-channel";
 import type { Contact, Form_Contact } from "../types/contact";
 import BaseService from "./common/base.service";
+import { handleError, type StandardResponse } from "./common/response.service";
 import { settingsService } from "./settings.service";
-import { handleError, StandardResponse } from "server";
 
 class ContactsService extends BaseService<Contact, Form_Contact> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.CONTACTS);
-  }
+	public constructor() {
+		super(API_ROUTES_STRAPI.CONTACTS);
+	}
 
-  async checkSubscription(
+	async checkSubscription(
 		token: string,
 		contact: Contact,
 		channelName: CommunicationChannelKeys,
@@ -65,6 +65,3 @@ class ContactsService extends BaseService<Contact, Form_Contact> {
 }
 
 export const contactsService = new ContactsService();
-
-
-

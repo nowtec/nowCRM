@@ -1,15 +1,22 @@
-import { handleError, handleResponse, StandardResponse } from "server";
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { Organization, Form_Organization } from "../types/organization";
+import { envServices } from "../envConfig";
+import type { Form_Organization, Organization } from "../types/organization";
 import BaseService from "./common/base.service";
-import { envServices } from "envConfig";
+import {
+	handleError,
+	handleResponse,
+	type StandardResponse,
+} from "./common/response.service";
 
-class OrganizationsService extends BaseService<Organization, Form_Organization> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.ORGANIZATIONS);
-  }
+class OrganizationsService extends BaseService<
+	Organization,
+	Form_Organization
+> {
+	public constructor() {
+		super(API_ROUTES_STRAPI.ORGANIZATIONS);
+	}
 
-  async duplicate(
+	async duplicate(
 		organizationId: number,
 		token: string,
 	): Promise<StandardResponse<null>> {
@@ -30,5 +37,3 @@ class OrganizationsService extends BaseService<Organization, Form_Organization> 
 }
 
 export const organizationsService = new OrganizationsService();
-
-

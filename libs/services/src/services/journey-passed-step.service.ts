@@ -1,6 +1,9 @@
-import { Form_JourneyPassedStep, JourneyPassedStep } from "types/journey-passed-step";
+import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import type {
+	Form_JourneyPassedStep,
+	JourneyPassedStep,
+} from "../types/journey-passed-step";
 import BaseService from "./common/base.service";
-import API_ROUTES_STRAPI from "api-routes/api-routes-strapi";
 
 class JourneyPassedStepService extends BaseService<
 	JourneyPassedStep,

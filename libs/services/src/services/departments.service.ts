@@ -3,11 +3,9 @@ import type { Department, Form_Department } from "../types/department";
 import BaseService from "./common/base.service";
 
 class DepartmentsService extends BaseService<Department, Form_Department> {
-  public constructor() {
-    super(API_ROUTES_STRAPI.DEPARTMENTS);
-  }
+	public constructor() {
+		super(API_ROUTES_STRAPI.DEPARTMENTS);
+	}
 }
 
 export const departmentsService = new DepartmentsService();
-
-

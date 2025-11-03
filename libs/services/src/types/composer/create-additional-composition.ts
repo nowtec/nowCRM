@@ -1,4 +1,4 @@
-import { aiModelKeys } from "static/ai-models";
+import type { aiModelKeys } from "static/ai-models";
 
 export interface createAdditionalComposition {
 	model: aiModelKeys;

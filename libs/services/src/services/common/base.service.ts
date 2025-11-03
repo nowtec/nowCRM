@@ -270,7 +270,10 @@ class BaseService<T, FormT> {
 	 * @param {string} [token] - Api token for request
 	 * @returns {Promise<StandardResponse<T>>} - The standard response containing the created entity.
 	 */
-	async create(form: Partial<FormT>, token: string): Promise<StandardResponse<T>> {
+	async create(
+		form: Partial<FormT>,
+		token: string,
+	): Promise<StandardResponse<T>> {
 		const url = new URL(`${this.endpoint}`, envServices.STRAPI_URL);
 
 		try {

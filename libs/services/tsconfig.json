@@ -8,7 +8,6 @@
      "resolveJsonModule": true,
      "moduleDetection": "auto",
      "isolatedModules": false,
-     "baseUrl": "src",
      /* Strictness */
      "strict": true,
      "noUncheckedIndexedAccess": true,
