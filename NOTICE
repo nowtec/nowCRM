@@ -1,10 +1,83 @@
-nowCRM
-Copyright 2025 nowtec solutions AG
+nowCRM - Open Source Customer Relationship Management Platform
+Copyright © 2025 nowtec solutions AG
+All Rights Reserved
 
-This product includes software developed by nowtec solutions AG (https://www.nowtec.ch)
-and contributors under the Apache License, Version 2.0.
+================================================================================
 
-Product: nowCRM — a CRM platform by nowtec solutions AG
-https://github.com/nowtec/nowCRM
+This software is licensed under the GNU Affero General Public License v3.0
+(AGPL-3.0). See the LICENSE file for the complete license text, or visit:
+https://www.gnu.org/licenses/agpl-3.0.html
 
-Forks and derivative works must preserve this NOTICE file and the attribution to nowtec solutions AG.
+================================================================================
+
+ATTRIBUTION REQUIREMENT:
+
+This software and all derivative works must retain the following attribution:
+
+   "nowCRM" is developed and maintained by nowtec solutions AG
+   https://nowtec.solutions
+
+When you distribute or make available this software or any modified version
+(including through network access as a web service or SaaS offering), you must:
+
+1. Retain this NOTICE file in its entirety
+2. Preserve all copyright notices, trademarks, and attribution statements
+3. Include a prominent notice that the work is based on nowCRM by nowtec solutions AG
+4. Provide clear attribution to nowtec solutions AG in any user-facing interfaces
+5. Make the complete source code available as required by AGPL-3.0 Section 13
+
+================================================================================
+
+NETWORK USE PROVISION (AGPL-3.0 Section 13):
+
+If you run a modified version of this software as a network service or make it
+available to users over a network, you MUST provide those users with access to
+the Corresponding Source code of your modified version. This is in addition to
+the standard AGPL-3.0 requirements.
+
+================================================================================
+
+THIRD-PARTY COMPONENTS:
+
+This software may include or depend on third-party open source components,
+each governed by their respective licenses. See individual component
+documentation and package.json files for details.
+
+Key dependencies may include:
+- Next.js (MIT License)
+- Strapi (MIT License)
+- React (MIT License)
+- Node.js and npm packages (Various licenses)
+- BullMQ (MIT License)
+- PostgreSQL (PostgreSQL License)
+- Redis (BSD License)
+- RabbitMQ (MPL 2.0 license)
+
+
+All third-party licenses are compatible with AGPL-3.0 and are preserved
+in their original form within their respective packages.
+
+================================================================================
+
+TRADEMARK NOTICE:
+
+"nowCRM" and "nowtec solutions" are trademarks of nowtec solutions AG.
+Use of these trademarks must comply with nowtec solutions AG's trademark policy.
+
+The AGPL-3.0 license does not grant permission to use the trade names, trademarks,
+service marks, or product names of nowtec solutions AG, except as required for
+reasonable and customary use in describing the origin of the work and reproducing
+the content of the NOTICE file.
+
+================================================================================
+
+CONTACT:
+
+For questions about licensing, commercial licensing options, or other inquiries:
+- Website: https://nowtec.solutuions
+- Email: opensource@.solutuions
+
+================================================================================
+
+This NOTICE file must be included in all copies or substantial portions of
+the Software, as required by AGPL-3.0 Section 7(b).

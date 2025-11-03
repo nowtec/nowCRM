@@ -2,14 +2,14 @@
 
 **nowCRM** - your open source CRM with multichannel outreach capabilities and efficient data management at scale.
 
-
+---
 
 # nowCRM Developer Guide
 
 **nowCRM** is the central customer relationship management platform developed by **nowtec solutions AG**.  
 It connects several microservices (Strapi, Composer, Journeys, and DAL) into one modular ecosystem.  
 
-> Licensed under the [Apache License 2.0](./LICENSE).  
+> Licensed under the [GNU Affero General Public License v3.0](./LICENSE).  
 > Attribution required — see [NOTICE](./NOTICE).
 
 ---
@@ -118,7 +118,7 @@ yarn dev
 
 ---
 
-## 📨 Queueing System (DAL)
+## 🔨 Queueing System (DAL)
 
 DAL uses **BullMQ** queues backed by Redis.
 
@@ -255,6 +255,45 @@ yarn build
 ## 📜 License & Attribution
 
 © 2025 nowtec solutions AG  
-Licensed under the [Apache License 2.0](./LICENSE)
+Licensed under the [GNU Affero General Public License v3.0](./LICENSE)
 
-Attribution notice (see [NOTICE](./NOTICE)) must be preserved in all forks and derivative works.
+**IMPORTANT:** This software is licensed under AGPL-3.0, which means:
+
+- ✅ You can use, modify, and distribute this software freely
+- ✅ You can use it commercially
+- ⚠️ **You MUST** provide the source code of any modifications
+- ⚠️ **You MUST** disclose your modifications under AGPL-3.0
+- ⚠️ **You MUST** provide source code access to all users if you run it as a network service (SaaS, web application, etc.)
+- ⚠️ **You MUST** retain all copyright and attribution notices
+
+Attribution notice (see [NOTICE](./NOTICE)) must be preserved in all forks, derivative works, and any network-accessible deployments.
+
+### Network Use Provision
+
+If you modify nowCRM and make it available to users over a network (including as a web service, SaaS, or API), you are required to make the complete source code of your modified version available to those users under AGPL-3.0. This is the key difference from standard GPL licenses.
+
+### Commercial Licensing
+
+For commercial licensing options that may provide different terms, please contact:
+- Website: https://www.nowtec.solutions
+- Email: opensource@nowtec.solutions
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! By contributing to nowCRM, you agree that your contributions will be licensed under AGPL-3.0.
+
+Please ensure:
+1. All new files include the appropriate AGPL-3.0 header
+2. You have the right to contribute the code
+3. Your code follows the project's coding standards
+4. You've tested your changes thoroughly
+
+---
+
+## 📞 Support
+
+For questions, issues, or support:
+- GitHub Issues: [https://github.com/nowtec/nowCRM/issues](https://github.com/nowtec/nowCRM/issues)
+- Documentation: [https://github.com/nowtec/nowCRM](https://github.com/nowtec/nowCRM)
