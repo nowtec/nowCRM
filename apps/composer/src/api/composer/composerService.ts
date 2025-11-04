@@ -9,6 +9,7 @@ import {
 	type DocumentId,
 	type QuickWriteModel,
 	type ReferenceComposition,
+	ServiceResponse,
 	type structuredResponse,
 } from "@nowcrm/services";
 import {
@@ -18,7 +19,6 @@ import {
 } from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
-import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
 import { logger } from "@/server";
 import {

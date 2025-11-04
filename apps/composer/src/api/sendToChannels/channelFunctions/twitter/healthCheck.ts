@@ -1,8 +1,7 @@
-import { ServiceResponse } from "@nowcrm/services";
+import type { ServiceResponse, SettingCredential } from "@nowcrm/services";
+import { settingCredentialsService } from "@nowcrm/services/server";
 import { env } from "@/common/utils/envConfig";
 import { refreshToken } from "./callback";
-import { SettingCredential } from "@nowcrm/services";
-import { settingCredentialsService } from "@nowcrm/services/server";
 
 export async function checkTwitterHealth(
 	credential: Omit<SettingCredential, "setting">,

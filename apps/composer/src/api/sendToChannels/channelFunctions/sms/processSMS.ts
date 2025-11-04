@@ -1,7 +1,11 @@
-import { ServiceResponse } from "@nowcrm/services";
+import {
+	CommunicationChannel,
+	type Composition,
+	type ServiceResponse,
+	type sendToChannelsData,
+} from "@nowcrm/services";
 import { processChannel } from "../utils/channelProcessor";
 import { SMSMessage } from "./sendSms";
-import { CommunicationChannel, Composition, sendToChannelsData } from "@nowcrm/services";
 /**
  * Process SMS channel
  * @param data Channel data

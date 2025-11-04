@@ -1,5 +1,6 @@
+import { CommunicationChannel, ServiceResponse } from "@nowcrm/services";
+import { settingsService } from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
 import { checkLinkedInHealth } from "./linkedIn/healthCheck";
 import { checkSMSHealth } from "./sms/healthCheck";
@@ -7,14 +8,11 @@ import { checkTelegramHealth } from "./telegram/healthcheck";
 import { checkTwitterHealth } from "./twitter/healthCheck";
 import { checkWhatsAppHealth } from "./whatsapp/healthCheck";
 import { checkWordpressHealth } from "./wordpress/healthcheck";
-import { settingsService } from "@nowcrm/services/server";
-import { CommunicationChannel } from "@nowcrm/services";
 
 export async function runHealthCheck() {
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(

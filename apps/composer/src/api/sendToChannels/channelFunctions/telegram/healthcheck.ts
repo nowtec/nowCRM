@@ -1,16 +1,14 @@
-
-import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
-import { env, TELEGRAM_API_BASE } from "@/common/utils/envConfig";
-import { SettingCredential } from "@nowcrm/services";
+import type { ServiceResponse, SettingCredential } from "@nowcrm/services";
 import { settingCredentialsService } from "@nowcrm/services/server";
+import { StatusCodes } from "http-status-codes";
+import { env, TELEGRAM_API_BASE } from "@/common/utils/envConfig";
 
 export async function checkTelegramHealth(
 	credential: Omit<SettingCredential, "setting">,
 ): Promise<ServiceResponse<null>> {
 	// Validate that the critical credentials are present.
 	if (!credential || !credential.access_token) {
-			await settingCredentialsService.update(
+		await settingCredentialsService.update(
 			credential.documentId,
 			{
 				credential_status: "disconnected",

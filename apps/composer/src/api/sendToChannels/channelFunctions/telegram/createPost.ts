@@ -1,10 +1,17 @@
+import {
+	CommunicationChannel,
+	type CompositionItem,
+	ServiceResponse,
+} from "@nowcrm/services";
+import {
+	compositionItemsService,
+	settingCredentialsService,
+	settingsService,
+} from "@nowcrm/services/server";
 import * as dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
 import { loadEsm } from "load-esm";
-import { ServiceResponse } from "@nowcrm/services";
 import { env, TELEGRAM_API_BASE } from "@/common/utils/envConfig";
-import { CommunicationChannel, CompositionItem } from "@nowcrm/services";
-import { compositionItemsService, settingCredentialsService, settingsService } from "@nowcrm/services/server";
 
 dotenv.config();
 
@@ -12,10 +19,9 @@ export const telegramPost = async (
 	compositionItem: CompositionItem,
 ): Promise<ServiceResponse<boolean | null>> => {
 	// Fetch settings
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(
 			"Setting not found, probably Strapi is down",

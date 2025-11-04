@@ -1,10 +1,8 @@
 import { ListTopicsCommand, SNSClient } from "@aws-sdk/client-sns";
-
-import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
-import { env } from "@/common/utils/envConfig";
-import { SettingCredential } from "@nowcrm/services";
+import type { ServiceResponse, SettingCredential } from "@nowcrm/services";
 import { settingCredentialsService } from "@nowcrm/services/server";
+import { StatusCodes } from "http-status-codes";
+import { env } from "@/common/utils/envConfig";
 
 export async function checkSMSHealth(
 	credential: Omit<SettingCredential, "setting">,

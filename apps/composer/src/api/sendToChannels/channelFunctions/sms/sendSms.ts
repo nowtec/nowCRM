@@ -1,20 +1,26 @@
 import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
+import {
+	CommunicationChannel,
+	type CompositionItem,
+	type Contact,
+	ServiceResponse,
+} from "@nowcrm/services";
+import {
+	settingCredentialsService,
+	settingsService,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
 import { logEvent } from "../utils/logEvent";
 import { checkMentions, replaceMentionsInText } from "../utils/Mentions";
-import { CommunicationChannel, CompositionItem, Contact } from "@nowcrm/services";
-import { settingCredentialsService, settingsService } from "@nowcrm/services/server";
 
 export async function sendMessage(
 	contact: Contact,
 	composition: CompositionItem,
 ): Promise<ServiceResponse<string | null>> {
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(
 			"Setting not found, probably Strapi is down",

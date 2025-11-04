@@ -1,5 +1,5 @@
+import type { ServiceResponse } from "@nowcrm/services";
 import type { Response } from "express";
-import { ServiceResponse } from "@nowcrm/services";
 
 export const handleServiceResponse = (
 	serviceResponse: ServiceResponse<any>,

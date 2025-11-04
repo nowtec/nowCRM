@@ -1,8 +1,11 @@
-
-import { ServiceResponse } from "@nowcrm/services";
+import {
+	CommunicationChannel,
+	type Composition,
+	type ServiceResponse,
+	type sendToChannelsData,
+} from "@nowcrm/services";
 import { processChannel } from "../utils/channelProcessor";
 import { whatsAppMessage } from "./sendWhatsAppMessage";
-import { CommunicationChannel, Composition, sendToChannelsData } from "@nowcrm/services";
 
 /**
  * Process whatsapp channel

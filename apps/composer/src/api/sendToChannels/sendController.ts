@@ -1,3 +1,4 @@
+import type { sendToChannelsData } from "@nowcrm/services";
 import type { Request, RequestHandler, Response } from "express";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
 import { runHealthCheck } from "./channelFunctions/healthCheck";
@@ -5,7 +6,6 @@ import { generateRefreshUrlLinkedIn } from "./channelFunctions/linkedIn/callback
 import { generateRefreshUrlTwitter } from "./channelFunctions/twitter/callback";
 import { generateAccessURLUnipile } from "./channelFunctions/unipile/loginFlow";
 import { sendToChannelsService } from "./sendService";
-import { sendToChannelsData } from "@nowcrm/services";
 
 class SendController {
 	public sendToChannels: RequestHandler = async (

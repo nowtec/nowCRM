@@ -1,10 +1,18 @@
-
+import {
+	type DocumentId,
+	type Form_Contact,
+	type Form_Event,
+	ServiceResponse,
+} from "@nowcrm/services";
+import {
+	contactsService,
+	eventsService,
+	subscriptionsService,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
-import { Form_Contact, Form_Event, ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
 import { logger } from "@/server";
 import type { EmailRecord, SESMessage, SNSMessage } from "./snsWebhookModel";
-import { contactsService, eventsService, subscriptionsService } from "@nowcrm/services/server";
 
 export class SNSWebhookServiceApi {
 	/**
@@ -328,7 +336,7 @@ export class SNSWebhookServiceApi {
 			);
 
 			// First, find the contact ID by email
-			let contactId = undefined;
+			let contactId: DocumentId | undefined;
 			try {
 				// Use contactsService to find contact by email
 				const contactResponse = await contactsService.find(
@@ -483,7 +491,7 @@ export class SNSWebhookServiceApi {
 								const emailSub = contact.subscriptions?.find(
 									(s: any) =>
 										s.channel?.name === "Email" ||
-										s.channel?.id === Number(record.channel),
+										s.channel?.documentId === record.channel,
 								);
 
 								if (!emailSub) {
@@ -513,11 +521,11 @@ export class SNSWebhookServiceApi {
 								);
 
 								logger.info(
-									`Email subscription ${emailSub.id} deactivated for contact ${contactId}`,
+									`Email subscription ${emailSub.documentId} deactivated for contact ${contactId}`,
 								);
 
 								return ServiceResponse.success(
-									`Email subscription ${emailSub.id} deactivated for contact ${contactId}`,
+									`Email subscription ${emailSub.documentId} deactivated for contact ${contactId}`,
 									null,
 								);
 							}

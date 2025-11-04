@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export const ServiceResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>

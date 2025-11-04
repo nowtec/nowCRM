@@ -1,9 +1,15 @@
+import {
+	CommunicationChannel,
+	ServiceResponse,
+	type SettingCredential,
+} from "@nowcrm/services";
+import {
+	settingCredentialsService,
+	settingsService,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
 import { TwitterApi } from "twitter-api-v2";
-import { ServiceResponse } from "@nowcrm/services";
 import { CALLBACK_URL_TWITTER, env } from "@/common/utils/envConfig";
-import { CommunicationChannel, SettingCredential } from "@nowcrm/services";
-import { settingCredentialsService, settingsService } from "@nowcrm/services/server";
 
 export async function refreshToken(
 	twitter_credential: Omit<SettingCredential, "setting">,
@@ -67,10 +73,9 @@ export async function refreshToken(
 }
 
 export async function generateRefreshUrlTwitter() {
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(
 			"Setting not found,probably strapi is down",

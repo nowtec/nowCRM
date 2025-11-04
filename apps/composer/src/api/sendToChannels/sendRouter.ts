@@ -1,4 +1,10 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
+import { CommunicationChannel } from "@nowcrm/services";
+import {
+	settingCredentialsService,
+	settingsService,
+	unipileIdentitiesService,
+} from "@nowcrm/services/server";
 import express, { type Router } from "express";
 import { TwitterApi } from "twitter-api-v2";
 import { z } from "zod";
@@ -8,8 +14,6 @@ import { logger } from "@/server";
 import { getLinkedInAccessToken } from "./channelFunctions/linkedIn/callback";
 import { sendController } from "./sendController";
 import { sendToChannelsSchema } from "./sendModel";
-import { settingCredentialsService, settingsService, unipileIdentitiesService } from "@nowcrm/services/server";
-import { CommunicationChannel } from "@nowcrm/services";
 
 export const sendToChannelsRegistry = new OpenAPIRegistry();
 export const sendToChannelsRouter: Router = express.Router();
@@ -47,10 +51,9 @@ sendToChannelsRouter.post("/", (req, res, next) => {
 sendToChannelsRouter.get("/callback/linkedin", async (req, res, _next) => {
 	const { state, code } = req.query;
 
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return;
 	}
@@ -87,10 +90,9 @@ sendToChannelsRouter.get("/callback/linkedin", async (req, res, _next) => {
 sendToChannelsRouter.get("/callback/twitter", async (req, res, _next) => {
 	const { state, code } = req.query;
 
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return;
 	}
@@ -131,7 +133,9 @@ sendToChannelsRouter.get("/callback/twitter", async (req, res, _next) => {
 });
 
 sendToChannelsRouter.post("/callback/unipile", async (req, res, _next) => {
-	logger.info(JSON.stringify({ message: "Unipile callback received", body: req.body }));
+	logger.info(
+		JSON.stringify({ message: "Unipile callback received", body: req.body }),
+	);
 
 	const { status, account_id, name } = req.body;
 
@@ -140,7 +144,12 @@ sendToChannelsRouter.post("/callback/unipile", async (req, res, _next) => {
 		typeof name !== "string" ||
 		typeof account_id !== "string"
 	) {
-		logger.error(JSON.stringify({ message: "Unipile callback: invalid body types", body: req.body }));
+		logger.error(
+			JSON.stringify({
+				message: "Unipile callback: invalid body types",
+				body: req.body,
+			}),
+		);
 		return;
 	}
 
@@ -155,9 +164,13 @@ sendToChannelsRouter.post("/callback/unipile", async (req, res, _next) => {
 			env.COMPOSER_STRAPI_API_TOKEN,
 		);
 
-		logger.info(JSON.stringify({ message: "Unipile identity created", created }));
+		logger.info(
+			JSON.stringify({ message: "Unipile identity created", created }),
+		);
 	} catch (err) {
-		logger.error(JSON.stringify({ message: "Error creating unipile identity", err }));
+		logger.error(
+			JSON.stringify({ message: "Error creating unipile identity", err }),
+		);
 	}
 
 	res.redirect(env.COMPOSER_CRM_REDIRECT_HEALTH_CHECK);

@@ -1,21 +1,28 @@
+import {
+	CommunicationChannel,
+	type CompositionItem,
+	type Contact,
+	ServiceResponse,
+	type UnipileIdentity,
+} from "@nowcrm/services";
+import {
+	settingCredentialsService,
+	settingsService,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
 import { UnipileClient } from "unipile-node-sdk";
-import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
 import { logEvent } from "../utils/logEvent";
 import { checkMentions, replaceMentionsInText } from "../utils/Mentions";
-import { CommunicationChannel, CompositionItem, Contact, UnipileIdentity } from "@nowcrm/services";
-import { settingCredentialsService, settingsService } from "@nowcrm/services/server";
 
 export async function sendMessage(
 	contact: Contact,
 	composition: CompositionItem,
 	account: UnipileIdentity,
 ): Promise<ServiceResponse<string | null>> {
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(
 			"Setting not found, probably Strapi is down",
