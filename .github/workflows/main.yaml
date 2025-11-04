@@ -70,7 +70,6 @@ jobs:
           context: .
           file: ./apps/composer/Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/composer:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/composer:${{ needs.create_release.outputs.tag_name }}
@@ -121,16 +120,6 @@ jobs:
         if: steps.docker-build.outcome == 'failure'
         run: exit 1
 
-      - name: Make Composer package public
-        if: steps.docker-build.outcome == 'success'
-        run: |
-          gh api -H "Accept: application/vnd.github+json" \
-            /orgs/nowtec/packages/container/composer/access-levels \
-            -X PATCH \
-            -f visibility='public'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-and-push-strapi:
     name: Build and Push Strapi Docker Image
     runs-on: ubuntu-latest
@@ -161,7 +150,6 @@ jobs:
           context: .
           file: ./apps/nowcrm-strapi/Dockerfile.prod
           push: true
-          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi:${{ needs.create_release.outputs.tag_name }}
@@ -211,16 +199,6 @@ jobs:
       - name: Fail job if build failed
         if: steps.docker-build-strapi.outcome == 'failure'
         run: exit 1
-
-      - name: Make Strapi package public
-        if: steps.docker-build-strapi.outcome == 'success'
-        run: |
-          gh api -H "Accept: application/vnd.github+json" \
-            /orgs/nowtec/packages/container/strapi/access-levels \
-            -X PATCH \
-            -f visibility='public'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   notify_success:
     name: Send Success Notification
