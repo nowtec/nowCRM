@@ -226,7 +226,6 @@ jobs:
 
       - name: Build and push Docker image for Wiki
         id: docker-build-wiki
-        continue-on-error: true
         uses: docker/build-push-action@v5
         with:
           context: .

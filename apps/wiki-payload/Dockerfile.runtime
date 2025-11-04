@@ -8,7 +8,12 @@ COPY . .
 
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
+# Skip static generation during Docker build - database is not available
+# All dynamic routes are protected with SKIP_BUILD_STATIC_GENERATION checks
 ENV SKIP_BUILD_STATIC_GENERATION=true
+ENV DATABASE_URI=postgresql://dummy:dummy@localhost:5432/dummy
+ENV PAYLOAD_SECRET=build-time-secret
+
 RUN pnpm --filter wiki generate:importmap && pnpm --filter wiki build
 
 EXPOSE 3000
