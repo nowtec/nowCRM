@@ -1,0 +1,7 @@
+dist
+jest-html-reporters-attach/
+jest_html_reporters.html
+html-report/
+node_modules/
+npm-debug.log
+.env
