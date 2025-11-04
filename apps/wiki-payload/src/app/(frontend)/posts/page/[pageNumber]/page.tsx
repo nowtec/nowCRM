@@ -1,5 +1,7 @@
 import type { Metadata } from 'next/types'
 
+export const dynamic = 'force-dynamic'
+
 import { CollectionArchive } from '@/components/CollectionArchive'
 import { PageRange } from '@/components/PageRange'
 import { Pagination } from '@/components/Pagination'
