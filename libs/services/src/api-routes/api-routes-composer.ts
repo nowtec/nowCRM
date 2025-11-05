@@ -1,4 +1,4 @@
-const API_ROUTES_COMPOSER = {
+export const API_ROUTES_COMPOSER = {
 	// composer
 	CREATE_COMPOSITION: "composer/create-composition",
 	CREATE_REFERENCE: "composer/create-reference",
@@ -22,4 +22,3 @@ const API_ROUTES_COMPOSER = {
 	CALLBACK_UNIPILE: "callback/unipile",
 	CALLBACK_STATUS_UNIPILE: "callback/status-unipile",
 };
-export default API_ROUTES_COMPOSER;

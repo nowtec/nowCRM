@@ -2,10 +2,10 @@ import {
 	OpenAPIRegistry,
 	OpenApiGeneratorV3,
 } from "@asteasolutions/zod-to-openapi";
+import { queueRegistry } from "@/api/queue/queueRouter";
 
 export function generateOpenAPIDocument() {
-	//add here registries for api routes
-	const registry = new OpenAPIRegistry([]);
+	const registry = new OpenAPIRegistry([queueRegistry]);
 
 	const generator = new OpenApiGeneratorV3(registry.definitions);
 
@@ -13,7 +13,7 @@ export function generateOpenAPIDocument() {
 		openapi: "3.0.0",
 		info: {
 			version: "1.0.0",
-			title: "Swagger API",
+			title: "Queue API",
 		},
 		externalDocs: {
 			description: "View the raw OpenAPI Specification in JSON format",

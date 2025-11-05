@@ -1,4 +1,4 @@
-const API_ROUTES_STRAPI = {
+export const APIRoutesStrapi = {
 	//Actions
 	ACTIONS: "actions",
 	ACTION_SCORE_ITEMS: "action-score-items",
@@ -105,4 +105,3 @@ const API_ROUTES_STRAPI = {
 	TEXTBLOCK: "text-blocks",
 };
 
-export default API_ROUTES_STRAPI;
