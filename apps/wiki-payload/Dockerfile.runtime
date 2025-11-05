@@ -45,6 +45,9 @@ WORKDIR /app
 # Copy built application
 COPY --from=builder /app .
 
+# Enable pnpm for runtime
+RUN corepack enable pnpm
+
 EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
