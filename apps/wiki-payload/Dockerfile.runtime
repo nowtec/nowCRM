@@ -1,21 +1,44 @@
+FROM node:22-alpine AS builder
+
+RUN apk add --no-cache libc6-compat postgresql postgresql-client su-exec
+
+WORKDIR /app
+
+# Initialize PostgreSQL
+RUN mkdir -p /run/postgresql /var/lib/postgresql/data && \
+    chown -R postgres:postgres /run/postgresql /var/lib/postgresql && \
+    chmod 2777 /run/postgresql
+
+COPY . .
+
+RUN corepack enable pnpm && pnpm i --frozen-lockfile
+
+# Build with temporary PostgreSQL
+RUN set -e && \
+    echo "Initializing PostgreSQL..." && \
+    su-exec postgres initdb -D /var/lib/postgresql/data && \
+    echo "Starting PostgreSQL..." && \
+    su-exec postgres pg_ctl -D /var/lib/postgresql/data -w start && \
+    echo "Creating database..." && \
+    su-exec postgres createdb wikidb && \
+    echo "Running build..." && \
+    DATABASE_URI=postgresql://postgres@localhost:5432/wikidb \
+    PAYLOAD_SECRET=build-time-secret \
+    pnpm --filter wiki generate:importmap && \
+    pnpm --filter wiki build && \
+    echo "Stopping PostgreSQL..." && \
+    su-exec postgres pg_ctl -D /var/lib/postgresql/data -w stop && \
+    echo "Build complete!"
+
+# Runtime stage - clean image without PostgreSQL
 FROM node:22-alpine
 
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-COPY . .
-
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
-
-# Build arguments provided by CI/CD at build time
-ARG DATABASE_URI
-ARG PAYLOAD_SECRET
-
-ENV DATABASE_URI=$DATABASE_URI
-ENV PAYLOAD_SECRET=$PAYLOAD_SECRET
-
-RUN pnpm --filter wiki generate:importmap && pnpm --filter wiki build
+# Copy built application
+COPY --from=builder /app .
 
 EXPOSE 3000
 ENV NODE_ENV=production
