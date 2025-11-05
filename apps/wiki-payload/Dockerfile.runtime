@@ -22,8 +22,8 @@ RUN set -e && \
     echo "Creating database..." && \
     su-exec postgres createdb wikidb && \
     echo "Running build..." && \
-    DATABASE_URI=postgresql://postgres@localhost:5432/wikidb \
-    PAYLOAD_SECRET=build-time-secret \
+    export DATABASE_URI=postgresql://postgres@localhost:5432/wikidb && \
+    export PAYLOAD_SECRET=build-time-secret && \
     pnpm --filter wiki generate:importmap && \
     pnpm --filter wiki build && \
     echo "Stopping PostgreSQL..." && \
