@@ -313,6 +313,8 @@ jobs:
           file: ./apps/wiki-payload/Dockerfile.runtime
           push: true
           platforms: linux/amd64
+          build-args: |
+            NEXT_PUBLIC_SERVER_URL=https://wiki.nowtec.solutions
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/wiki:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/wiki:${{ needs.create_release.outputs.tag_name }}

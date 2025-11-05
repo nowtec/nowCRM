@@ -1,5 +1,7 @@
 FROM node:22-alpine AS builder
 
+ARG NEXT_PUBLIC_SERVER_URL=https://wiki.nowtec.solutions
+
 RUN apk add --no-cache libc6-compat postgresql postgresql-client su-exec
 
 WORKDIR /app
@@ -24,6 +26,7 @@ RUN set -e && \
     echo "Setting environment variables..." && \
     export DATABASE_URI=postgresql://postgres@localhost:5432/wikidb && \
     export PAYLOAD_SECRET=build-time-secret && \
+    export NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL} && \
     echo "Creating migrations directory..." && \
     mkdir -p /app/apps/wiki-payload/src/migrations && \
     echo "Generating initial Payload migration..." && \
