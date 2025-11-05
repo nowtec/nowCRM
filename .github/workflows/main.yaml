@@ -201,6 +201,87 @@ jobs:
       - name: Fail job if build failed
         if: steps.docker-build.outcome == 'failure'
         run: exit 1
+  
+  build-and-push-dal:
+    name: Build and Push DAL Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    if: github.event.pull_request.merged == true
+    needs: [create_release]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image for DAL
+        id: docker-build
+        continue-on-error: true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/dal/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/dal:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/dal:${{ needs.create_release.outputs.tag_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Output docker build result
+        if: always()
+        run: |
+          echo "Docker Build Outcome: ${{ steps.docker-build.outcome }}"
+          echo "Docker Build Conclusion: ${{ steps.docker-build.conclusion }}"
+
+      - name: Save build failure details
+        if: steps.docker-build.outcome == 'failure'
+        run: |
+          mkdir -p build-logs
+          cat > build-logs/error.txt << 'EOF'
+          Docker Build Failed
+          ===================
+
+          Repository: ${{ github.repository }}
+          Image: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/dal
+          Tags: latest, ${{ needs.create_release.outputs.tag_name }}
+          Context: . (root)
+          Dockerfile: ./apps/dal/Dockerfile
+
+          Build Outcome: ${{ steps.docker-build.outcome }}
+
+          See the full GitHub Actions logs for detailed build output:
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Common Docker build failures:
+          1. Missing dependencies in apps/dal/package.json
+          2. Failed pnpm install in the monorepo
+          3. TypeScript compilation errors (pnpm build)
+          4. Missing files in Dockerfile COPY commands
+          EOF
+
+      - name: Upload build logs
+        if: steps.docker-build.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build-logs/error.txt
+          retention-days: 30
+
+      - name: Fail job if build failed
+        if: steps.docker-build.outcome == 'failure'
+        run: exit 1
 
   build-and-push-strapi:
     name: Build and Push Strapi Docker Image
@@ -323,7 +404,7 @@ jobs:
   notify_success:
     name: Send Success Notification
     if: github.event.pull_request.merged && success()
-    needs: [create_release, build-and-push-composer, build-and-push-journeys, build-and-push-strapi, build-and-push-wiki]
+    needs: [create_release, build-and-push-composer, build-and-push-journeys, build-and-push-dal, build-and-push-strapi, build-and-push-wiki]
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram Success Notification
@@ -336,7 +417,7 @@ jobs:
   notify_failure:
     name: Send Failure Notification
     if: github.event.pull_request.merged && failure()
-    needs: [create_release, build-and-push-composer, build-and-push-journeys, build-and-push-strapi, build-and-push-wiki]
+    needs: [create_release, build-and-push-composer, build-and-push-journeys, build-and-push-dal, build-and-push-strapi, build-and-push-wiki]
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram Failure Notification
@@ -350,12 +431,12 @@ jobs:
             🔗 View full logs:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            📋 Check the "build-and-push-composer" or "build-and-push-journeys" or "build-and-push-strapi" job for Docker build error details
+            📋 Check the "build-and-push-composer" or "build-and-push-journeys" or "build-and-push-dal" or "build-and-push-strapi" job for Docker build error details
 
   release_created:
     name: Send Release Created Notification
     if: github.event.pull_request.merged && success()
-    needs: [create_release, build-and-push-composer, build-and-push-journeys, build-and-push-strapi, build-and-push-wiki]
+    needs: [create_release, build-and-push-composer, build-and-push-journeys, build-and-push-dal, build-and-push-strapi, build-and-push-wiki]
     runs-on: ubuntu-latest
     steps:
       - name: 👌 Release Created
