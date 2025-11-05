@@ -33,7 +33,7 @@
       "relation": "oneToOne",
       "target": "api::contact.contact"
     },
-    "task_status": {
+    "status": {
       "type": "enumeration",
       "enum": [
         "planned",
