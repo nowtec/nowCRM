@@ -34,11 +34,11 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@nowcrm/services": ["../../libs/services/src/index.ts"],
-      "@nowcrm/services/server": ["../../libs/services/src/server.ts"],
-      "@nowcrm/services/client": ["../../libs/services/src/client.ts"]
+      "@nowcrm/services/server": ["../../libs/services/src/server.ts"]
       },
     "target": "ES2017"
   },

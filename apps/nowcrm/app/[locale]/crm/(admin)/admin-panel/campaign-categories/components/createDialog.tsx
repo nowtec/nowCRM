@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createCampaignCategory } from "@/lib/actions/campaign-categories/createCampaignCategory";
+import { createCampaignCategory } from "@/lib/actions/campaign-categories/create-campaign-category";
 
 export default function CreateCampaignCategoryDialog() {
 	const t = useMessages();

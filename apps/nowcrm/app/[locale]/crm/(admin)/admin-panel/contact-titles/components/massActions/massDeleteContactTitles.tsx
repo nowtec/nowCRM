@@ -1,6 +1,6 @@
 "use server";
 
-import { deleteContactTitleAction } from "@/lib/actions/contact-titles/deleteContactTitle";
+import { deleteContactTitleAction } from "@/lib/actions/contact-titles/delete-contact-title";
 
 export async function MassDeleteContactTitles(contactTitleIds: number[]) {
 	try {

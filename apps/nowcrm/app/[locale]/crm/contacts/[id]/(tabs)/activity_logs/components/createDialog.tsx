@@ -53,7 +53,7 @@ export default function CreateTaskDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createActivityLog } = await import(
-			"@/lib/actions/activity_logs/createActivityLog"
+			"@/lib/actions/activity_logs/create-activity-log"
 		);
 		const res = await createActivityLog({ ...values, publishedAt: new Date() });
 		if (!res.success) {

@@ -29,8 +29,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	type ChannelThrottleResponse,
 	getChannelThrottle,
-} from "@/lib/actions/channels/getThrottle";
-import { getComposition } from "@/lib/actions/composer/getComposition";
+} from "@/lib/actions/channels/get-channel-throttle";
+import { getComposition } from "@/lib/actions/composer/get-composition";
 import { getUnipileIdentity } from "@/lib/actions/unipile/getUnipileIdentity";
 import { CommunicationChannel } from "@/lib/static/channel-icons";
 import type { CompositionItem } from "@/lib/types/new_type/composition";

@@ -1,8 +1,0 @@
-[
-	{ "label": "New", "value": "new" },
-	{ "label": "Closed", "value": "closed" },
-	{ "label": "Contacted", "value": "contacted" },
-	{ "label": "Negotiating", "value": "negotiating" },
-	{ "label": "Registered", "value": "registered" },
-	{ "label": "Backfill", "value": "backfill" }
-]

@@ -30,7 +30,7 @@ const DeleteAction: React.FC<{ organizationType: MediaType }> = ({
 					onClick={async () => {
 						const { default: toast } = await import("react-hot-toast");
 						const { deleteActionType } = await import(
-							"@/lib/actions/action_types/deleteActionType"
+							"@/lib/actions/action_types/delete-action-type"
 						);
 						await deleteActionType(organizationType.id);
 						toast.success(t.Admin.MediaType.toast.delete);

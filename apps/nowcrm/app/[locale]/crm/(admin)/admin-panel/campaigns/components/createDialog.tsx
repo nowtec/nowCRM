@@ -35,8 +35,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { getCampaignCategories } from "@/lib/actions/campaign-categories/getCampaignCategories";
-import { createCampaign } from "@/lib/actions/campaigns/createCampaign";
+import { getCampaignCategories } from "@/lib/actions/campaign-categories/get-campaign-category";
+import { createCampaign } from "@/lib/actions/campaigns/create-campaign";
 import type { CampaignCategory } from "@/lib/types/new_type/campaignCategory";
 
 export default function CreateCampaignDialog() {

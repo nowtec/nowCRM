@@ -27,7 +27,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { findContactByToken } from "@/lib/actions/contacts/findOneContact";
+import { findContactByToken } from "@/lib/actions/contacts/find-contact-by-unsubscribe";
 // Import actions from your API
 import {
 	getChannels,

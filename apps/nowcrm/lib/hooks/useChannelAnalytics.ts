@@ -1,7 +1,7 @@
 // lib/hooks/useChannelAnalytics.ts
 import { format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
-import { getEventsByCompositionId } from "@/lib/actions/events/getEvents";
+import { getEventsByCompositionId } from "@/lib/actions/events/get-event";
 import type { DateRange } from "@/lib/types/new_type/composition";
 
 export function useChannelAnalytics(

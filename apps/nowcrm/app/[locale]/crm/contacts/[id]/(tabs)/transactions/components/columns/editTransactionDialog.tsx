@@ -81,7 +81,7 @@ export default function EditTransactionDialog({
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { updateTransaction } = await import(
-			"@/lib/actions/donationTransactions/updateTransaction"
+			"@/lib/actions/donationTransactions/update-transaction"
 		);
 		const res = await updateTransaction(transaction.id, values);
 		if (!res.success) {

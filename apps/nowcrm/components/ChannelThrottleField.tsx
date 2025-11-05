@@ -5,7 +5,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { ChannelThrottleResponse } from "@/lib/actions/channels/getThrottle";
+import type { ChannelThrottleResponse } from "@/lib/actions/channels/get-channel-throttle";
 
 export type ThrottleUnit = "sec" | "min" | "hour" | "day";
 

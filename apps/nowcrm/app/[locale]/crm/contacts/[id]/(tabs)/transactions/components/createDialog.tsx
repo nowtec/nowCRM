@@ -87,7 +87,7 @@ export default function CreateTransactionDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createTransaction } = await import(
-			"@/lib/actions/donationTransactions/createTransaction"
+			"@/lib/actions/donationTransactions/create-transaction"
 		);
 		const res = await createTransaction({ ...values, publishedAt: new Date() });
 		if (!res.success) {

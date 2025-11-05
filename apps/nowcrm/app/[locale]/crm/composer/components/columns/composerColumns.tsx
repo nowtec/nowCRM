@@ -47,7 +47,7 @@ const ViewActions: React.FC<{ composition: Composition }> = ({
 				<DropdownMenuItem
 					onClick={async () => {
 						const { duplicateCompositionAction } = await import(
-							"@/lib/actions/composer/dublicateComposition"
+							"@/lib/actions/composer/duplicate-composition"
 						);
 						const res = await duplicateCompositionAction(composition.id);
 						if (!res.success) {

@@ -19,7 +19,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { updateComposition } from "@/lib/actions/composer/updateComposition";
+import { updateComposition } from "@/lib/actions/composer/update-composition";
 import { delay } from "@/lib/delay";
 import { CommunicationChannel } from "@/lib/static/channel-icons";
 import { getFileUploadMimeType } from "@/lib/types/new_type/channel";
@@ -206,10 +206,10 @@ export function CompositionView({ composition }: { composition: Composition }) {
 		data: createAdditionalComposition,
 	) => {
 		const { regenerateItemResult } = await import(
-			"@/lib/actions/composer/composerItems/regenerateComposition"
+			"@/lib/actions/composer/composerItems/regenerate-item-result"
 		);
 		const { updateCompositionItem } = await import(
-			"@/lib/actions/composer/composerItems/updateCompositionItem"
+			"@/lib/actions/composer/composerItems/update-composition-item"
 		);
 		const rez = await regenerateItemResult(data);
 		await updateCompositionItem(itemId, {
@@ -252,7 +252,7 @@ export function CompositionView({ composition }: { composition: Composition }) {
 		try {
 			setIsAddingChannel(true);
 			const { createCompositionItem } = await import(
-				"@/lib/actions/composer/composerItems/createCompositionItem"
+				"@/lib/actions/composer/composerItems/create-composition-item"
 			);
 			await createCompositionItem(composition.id, channelName);
 			toast.success(
@@ -261,7 +261,7 @@ export function CompositionView({ composition }: { composition: Composition }) {
 
 			// Fetch the updated composition data
 			const { getComposition } = await import(
-				"@/lib/actions/composer/getComposition"
+				"@/lib/actions/composer/get-composition"
 			);
 			const updatedComposition = (await getComposition(composition.id)).data;
 
@@ -480,7 +480,7 @@ export async function handleCompositionSubmit(
 					item.files_to_delete = undefined;
 
 					const { updateCompositionItem } = await import(
-						"@/lib/actions/composer/composerItems/updateCompositionItem"
+						"@/lib/actions/composer/composerItems/update-composition-item"
 					);
 
 					await updateCompositionItem(item.id, item);

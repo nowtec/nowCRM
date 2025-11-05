@@ -35,8 +35,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { getCampaignCategories } from "@/lib/actions/campaign-categories/getCampaignCategories";
-import { updateCampaign } from "@/lib/actions/campaigns/updateCampaign";
+import { getCampaignCategories } from "@/lib/actions/campaign-categories/get-campaign-category";
+import { updateCampaign } from "@/lib/actions/campaigns/update-campaigns";
 import type { Campaign } from "@/lib/types/new_type/campaign";
 import type { CampaignCategory } from "@/lib/types/new_type/campaignCategory";
 

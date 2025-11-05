@@ -1,1 +1,1 @@
-export { deleteContactSalutationAction } from "@/lib/actions/contact-salutations/deleteContactSalutation";
+export { deleteContactSalutationAction } from "@/lib/actions/contact-salutations/delete-contact-salutation";

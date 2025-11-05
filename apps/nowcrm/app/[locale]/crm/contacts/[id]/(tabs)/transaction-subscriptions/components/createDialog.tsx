@@ -79,7 +79,7 @@ export default function CreateTransactionDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createDonationSubscription } = await import(
-			"@/lib/actions/donationSubscriptions/createDonationSubscription"
+			"@/lib/actions/donationSubscriptions/create-donation-subscrpition"
 		);
 		const res = await createDonationSubscription({
 			...values,

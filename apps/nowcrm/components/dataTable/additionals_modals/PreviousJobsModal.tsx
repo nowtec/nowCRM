@@ -19,7 +19,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getCompositionJobs } from "@/lib/actions/composer/getCompositionJobs";
+import { getCompositionJobs } from "@/lib/actions/composer/get-composition-jobs";
 import {
 	getImportProgressMap,
 	getPreviousImports,

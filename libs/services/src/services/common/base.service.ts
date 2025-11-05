@@ -318,41 +318,6 @@ class BaseService<T, FormT> {
 	}
 
 	/**
-	 * Unpublish (soft delete) an entity by its ID.
-	 * @param {number} id - The unique identifier of the entity to unpublish.
-	 * @param {string} [token] - Api token for request
-	 * @returns {Promise<StandardResponse<null>>} - The standard response indicating success or failure.
-	 */
-	async unPublish(
-		id: DocumentId,
-		token: string,
-	): Promise<StandardResponse<null>> {
-		const url = new URL(`${this.endpoint}/${id}`, envServices.STRAPI_URL);
-
-		const postData = {
-			data: {
-				publishedAt: null,
-			},
-		};
-		try {
-			const response = await fetch(url, {
-				method: "PUT",
-				headers: this.getHeaders(true, token),
-				body: JSON.stringify(postData),
-			});
-			if (response.ok) {
-				return {
-					data: null,
-					status: response.status,
-					success: true,
-				};
-			}
-			return await handleResponse<null>(response);
-		} catch (error: any) {
-			return handleError<null>(error);
-		}
-	}
-	/**
 	 * Returns the type of the item.
 	 * @returns {string} - The type of the item.
 	 */

@@ -29,7 +29,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getEventsByCompositionId } from "@/lib/actions/events/getEvents";
+import { getEventsByCompositionId } from "@/lib/actions/events/get-event";
 import type { Event } from "@/lib/types/new_type/event";
 
 interface EventTableProps {

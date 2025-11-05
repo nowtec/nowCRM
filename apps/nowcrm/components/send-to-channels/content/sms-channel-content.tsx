@@ -35,8 +35,8 @@ import {
 import {
 	type ChannelThrottleResponse,
 	getChannelThrottle,
-} from "@/lib/actions/channels/getThrottle";
-import { getComposition } from "@/lib/actions/composer/getComposition";
+} from "@/lib/actions/channels/get-channel-throttle";
+import { getComposition } from "@/lib/actions/composer/get-composition";
 import { normalizePhone } from "@/lib/normalizePhone";
 import { CommunicationChannel } from "@/lib/static/channel-icons";
 import type { CompositionItem } from "@/lib/types/new_type/composition";

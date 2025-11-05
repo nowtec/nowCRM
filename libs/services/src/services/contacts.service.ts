@@ -1,8 +1,10 @@
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { envServices } from "../envConfig";
 import type { CommunicationChannelKeys } from "../static/communication-channel";
+import { DocumentId } from "../types/common/base_type";
 import type { Contact, Form_Contact } from "../types/contact";
 import BaseService from "./common/base.service";
-import { handleError, type StandardResponse } from "./common/response.service";
+import { handleError, handleResponse, type StandardResponse } from "./common/response.service";
 import { settingsService } from "./settings.service";
 
 class ContactsService extends BaseService<Contact, Form_Contact> {
@@ -60,6 +62,65 @@ class ContactsService extends BaseService<Contact, Form_Contact> {
 			};
 		} catch (error: any) {
 			return handleError(error);
+		}
+	}
+
+	async anonymizeContact(
+		contactId: DocumentId,
+		token: string,
+	): Promise<StandardResponse<Contact>> {
+		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.CONTACT_ANONYMIZE_DATA}`;
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({ contactId }),
+			});
+
+			const result = await handleResponse<Contact>(response);
+			return result;
+		} catch (error: any) {
+			return handleError(error);
+		}
+	}
+
+	async duplicate(contactId: DocumentId, token: string): Promise<StandardResponse<null>> {
+
+		try {
+			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.CONTACTS_DUPLICATE}`;
+
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({ id: contactId }),
+			});
+
+			const result = await handleResponse<null>(response);
+
+			return result;
+		} catch (error: any) {
+			return handleError(error);
+		}
+	}
+
+	async exportUserData(
+		contactId: number,
+		token: string
+	): Promise<StandardResponse<Contact>> {
+		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.CONTACT_EXPORT_DATA}`;
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({ contactId }),
+			});
+			console.log(response);
+
+			const result = await handleResponse<Contact>(response)
+			return result
+		} catch (error: any) {
+			return handleError(error)
 		}
 	}
 }

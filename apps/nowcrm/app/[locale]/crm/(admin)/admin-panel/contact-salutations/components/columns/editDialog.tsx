@@ -27,7 +27,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { updateContactSalutation } from "@/lib/actions/contact-salutations/updateContactSalutation";
+import { updateContactSalutation } from "@/lib/actions/contact-salutations/update-contact-salutation";
 import type { ContactSalutation } from "@/lib/types/new_type/contact_salutation";
 
 interface EditContactSalutationDialogProps {

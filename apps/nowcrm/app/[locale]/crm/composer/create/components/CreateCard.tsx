@@ -5,7 +5,7 @@ import { useMessages } from "next-intl";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui/card";
-import { createComposition } from "@/lib/actions/composer/createComposition";
+import { createComposition } from "@/lib/actions/composer/create-composition";
 import { createCompositionFull } from "@/lib/actions/composer/createCompositionFull";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import type { CompositionModelKeys } from "@/lib/static/compoisitonModels";
@@ -70,7 +70,7 @@ export default function CreateCompositionCard({ channels }: Props) {
 	// Update the handleInitialSubmit function to preserve existing HTML when going back to step 1
 	const handleInitialSubmit = async (data: ReferenceComposition) => {
 		const { createReference } = await import(
-			"@/lib/actions/composer/createReference"
+			"@/lib/actions/composer/create-reference"
 		);
 		// Store the form data
 		setCompositionData(data);
@@ -106,7 +106,7 @@ export default function CreateCompositionCard({ channels }: Props) {
 	const handleRegenerate = async (data: ReferenceComposition) => {
 		if (!compositionData) return;
 		const { createReference } = await import(
-			"@/lib/actions/composer/createReference"
+			"@/lib/actions/composer/create-reference"
 		);
 		try {
 			const result = await createReference(data);

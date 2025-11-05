@@ -1,7 +1,7 @@
 "use server";
 
 import { getContactByEmail } from "@/lib/actions/contacts/getContactByEmail";
-import { logUnsubscribeEvent } from "@/lib/actions/events/logEvent";
+import { logUnsubscribeEvent } from "@/lib/actions/events/log-event";
 import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
 
 export async function unsubscribeUser(

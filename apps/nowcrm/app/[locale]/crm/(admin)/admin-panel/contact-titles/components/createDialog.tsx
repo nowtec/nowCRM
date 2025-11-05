@@ -27,7 +27,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createContactTitle } from "@/lib/actions/contact-titles/createContactTitle";
+import { createContactTitle } from "@/lib/actions/contact-titles/create-contact-title";
 
 export default function CreateContactTitleDialog() {
 	const t = useMessages();

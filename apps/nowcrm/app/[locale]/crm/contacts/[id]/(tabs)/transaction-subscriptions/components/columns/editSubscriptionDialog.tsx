@@ -74,7 +74,7 @@ export default function EditSubscriptionTransactionDialog({
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { updateDonationSubscription } = await import(
-			"@/lib/actions/donationSubscriptions/updateDonationSubscription"
+			"@/lib/actions/donationSubscriptions/update-donation-subscription"
 		);
 		const res = await updateDonationSubscription(subscription.id, values);
 		if (!res.success) {

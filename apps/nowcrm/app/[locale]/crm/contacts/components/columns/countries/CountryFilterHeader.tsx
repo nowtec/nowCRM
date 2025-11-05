@@ -12,7 +12,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getCountries } from "@/lib/actions/contacts/getCountries";
+import { getCountries } from "@/lib/actions/contacts/get-unique-contact-countries";
 
 type CountryWithCount = { name: string; count: number };
 

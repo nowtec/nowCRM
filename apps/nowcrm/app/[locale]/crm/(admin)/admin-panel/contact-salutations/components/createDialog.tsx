@@ -27,7 +27,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createContactSalutation } from "@/lib/actions/contact-salutations/createContactSalutation";
+import { createContactSalutation } from "@/lib/actions/contact-salutations/create-contact-salutation";
 
 export default function CreateContactSalutationDialog() {
 	const t = useMessages();

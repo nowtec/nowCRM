@@ -78,7 +78,7 @@ export function PersonalInfoCard({ contact }: PersonalInfoCardProps) {
 	const handleAnonymize = async () => {
 		const { default: toast } = await import("react-hot-toast");
 		const { anonymizeContact } = await import(
-			"@/lib/actions/contacts/anonymizeContact"
+			"@/lib/actions/contacts/anonymize-contact"
 		);
 
 		try {
@@ -104,7 +104,7 @@ export function PersonalInfoCard({ contact }: PersonalInfoCardProps) {
 	const handleExportUserData = async () => {
 		const { default: toast } = await import("react-hot-toast");
 		const { exportContact } = await import(
-			"@/lib/actions/contacts/exportUserData"
+			"@/lib/actions/contacts/export-contact"
 		);
 
 		try {

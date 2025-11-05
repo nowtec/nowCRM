@@ -30,7 +30,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getChannels } from "@/lib/actions/channels/getChannel";
+import { getEmailChannel } from "@/lib/actions/channels/get-email-channel";
 import { compositionModels } from "@/lib/static/compoisitonModels";
 import { getLanguageLabel, getLanguageValue } from "@/lib/static/languages";
 import type { ReferenceComposition } from "@/lib/types/new_type/composition";
@@ -215,7 +215,7 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 		form.setValue("subject", promptBaseName);
 
 		// Set mainChannel to 1
-		const id = await getChannels();
+		const id = await getEmailChannel();
 		if (id.data) form.setValue("mainChannel", id.data[0].id);
 		else form.setValue("mainChannel", 1);
 

@@ -89,7 +89,7 @@ export function EditDialogAddress({
 	async function handleSubmit(values: FormValues) {
 		const { default: toast } = await import("react-hot-toast");
 		const { updateContact } = await import(
-			"@/lib/actions/contacts/updateContact"
+			"@/lib/actions/contacts/update-contact"
 		);
 
 		const finalValues = {

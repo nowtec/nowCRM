@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { updateCampaignCategory } from "@/lib/actions/campaign-categories/updateCampaignCategory";
+import { updateCampaignCategory } from "@/lib/actions/campaign-categories/update-campaign-category";
 import type { CampaignCategory } from "@/lib/types/new_type/campaignCategory";
 
 interface EditCampaignCategoryDialogProps {

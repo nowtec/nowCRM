@@ -49,7 +49,7 @@ const ViewActions: React.FC<{ contact: Contact }> = ({ contact }) => {
 					<DropdownMenuItem
 						onClick={async () => {
 							const { duplicateContactAction } = await import(
-								"@/lib/actions/contacts/duplicateContact"
+								"@/lib/actions/contacts/duplicate-contact"
 							);
 							const res = await duplicateContactAction(contact.id);
 							if (!res.success) {

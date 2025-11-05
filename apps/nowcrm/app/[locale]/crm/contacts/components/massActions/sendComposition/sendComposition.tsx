@@ -7,7 +7,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import type { ChannelThrottleResponse } from "@/lib/actions/channels/getThrottle";
+import type { ChannelThrottleResponse } from "@/lib/actions/channels/get-channel-throttle";
 import {
 	SendCompositionForm,
 	type SendCompositionFormValues,

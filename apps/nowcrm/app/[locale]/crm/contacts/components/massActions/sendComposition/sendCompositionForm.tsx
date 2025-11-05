@@ -14,7 +14,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import type { ChannelThrottleResponse } from "@/lib/actions/channels/getThrottle";
+import type { ChannelThrottleResponse } from "@/lib/actions/channels/get-channel-throttle";
 import type { CommunicationChannel } from "@/lib/static/channel-icons";
 
 export const sendCompositionSchema = (

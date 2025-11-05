@@ -1,6 +1,6 @@
 "use server";
 
-import { deleteContactSalutationAction } from "@/lib/actions/contact-salutations/deleteContactSalutation";
+import { deleteContactSalutationAction } from "@/lib/actions/contact-salutations/delete-contact-salutation";
 
 export async function MassDeleteContactSalutations(
 	contactSalutationIds: number[],

@@ -175,7 +175,7 @@ export function EnrichDialog({ contact, isOpen, onClose }: EnrichDialogProps) {
 
 		const { default: toast } = await import("react-hot-toast");
 		const { structuredResponse } = await import(
-			"@/lib/actions/composer/getStructuredResponse"
+			"@/lib/actions/composer/get-sctructured-response"
 		);
 
 		try {
@@ -285,7 +285,7 @@ export function EnrichDialog({ contact, isOpen, onClose }: EnrichDialogProps) {
 
 		const { default: toast } = await import("react-hot-toast");
 		const { updateContact } = await import(
-			"@/lib/actions/contacts/updateContact"
+			"@/lib/actions/contacts/update-contact"
 		);
 
 		try {

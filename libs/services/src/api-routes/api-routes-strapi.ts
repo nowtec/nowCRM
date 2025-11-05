@@ -1,4 +1,4 @@
-const API_ROUTES_STRAPI = {
+export const API_ROUTES_STRAPI = {
 	//Actions
 	ACTIONS: "actions",
 	ACTION_SCORE_ITEMS: "action-score-items",
@@ -33,7 +33,11 @@ const API_ROUTES_STRAPI = {
 	CONTACT_SALUTATIONS: "contact-salutations",
 	CONTACT_TITLES: "contact-titles",
 	CONTACT_TYPES: "contact-types",
+	CONTACT_ANONYMIZE_DATA: "contacts/anonymize-user",
+	CONTACTS_DUPLICATE: "contacts/duplicate",
+	CONTACT_EXPORT_DATA: "contacts/export-user-data",
 
+	//tasks
 	TASKS: "tasks",
 
 	//Sibscriptions
@@ -104,5 +108,3 @@ const API_ROUTES_STRAPI = {
 	//TextBlock
 	TEXTBLOCK: "text-blocks",
 };
-
-export default API_ROUTES_STRAPI;

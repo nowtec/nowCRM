@@ -1,1 +1,1 @@
-export { deleteContactTitleAction } from "@/lib/actions/contact-titles/deleteContactTitle";
+export { deleteContactTitleAction } from "@/lib/actions/contact-titles/delete-contact-title";

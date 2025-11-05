@@ -73,7 +73,7 @@ export default function CreateContactDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createContact } = await import(
-			"@/lib/actions/contacts/createContact"
+			"@/lib/actions/contacts/create-contact"
 		);
 		const { getContactByEmail } = await import(
 			"@/lib/actions/contacts/getContactByEmail"

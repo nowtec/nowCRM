@@ -45,7 +45,7 @@ export default function CreateOrganizationTypeDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createActionType } = await import(
-			"@/lib/actions/action_types/createActionType"
+			"@/lib/actions/action_types/create-action-type"
 		);
 		const res = await createActionType(values.name);
 		if (!res.success) {

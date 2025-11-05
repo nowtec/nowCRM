@@ -27,7 +27,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { updateContactTitle } from "@/lib/actions/contact-titles/updateContactTitle";
+import { updateContactTitle } from "@/lib/actions/contact-titles/update-contact-title";
 import type { ContactTitle } from "@/lib/types/new_type/contact_title";
 
 interface EditContactTitleDialogProps {

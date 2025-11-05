@@ -1,0 +1,24 @@
+// actions/deleteContactAction.ts
+"use server";
+import { auth } from "@/auth";
+import { DocumentId, DonationTransaction, Form_DonationTransaction } from "@nowcrm/services";
+import { donationTransactionsService, handleError, 	StandardResponse } from "@nowcrm/services/server";
+export async function updateTransaction(
+	id: DocumentId,
+	values: Partial<Form_DonationTransaction>,
+): Promise<StandardResponse<DonationTransaction>> {
+	const session = await auth();
+	if (!session) {
+		return {
+			data: null,
+			status: 403,
+			success: false,
+		};
+	}
+	try {
+		const res = await donationTransactionsService.update(id, values,session.jwt);
+		return res;
+	} catch (error) {
+		return handleError(error);
+	}
+}

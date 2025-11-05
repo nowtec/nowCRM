@@ -186,7 +186,7 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 	async function handleSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { updateContact } = await import(
-			"@/lib/actions/contacts/updateContact"
+			"@/lib/actions/contacts/update-contact"
 		);
 		const edited_values = {
 			...values,
