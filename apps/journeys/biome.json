@@ -1,0 +1,29 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.7/schema.json",
+	"extends": ["../../biome.json"],
+	"files": {
+		"includes": ["src/**"]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"nursery": {
+				"useSortedClasses": {
+					"level": "warn",
+					"fix": "safe",
+					"options": {
+						"attributes": ["classList"],
+						"functions": ["clsx", "cva", "cn"]
+					}
+				}
+			},
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noConfusingVoidType": "off",
+				"noArrayIndexKey": "warn"
+			}
+		}
+	}
+}
+

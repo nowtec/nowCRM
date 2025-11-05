@@ -48,6 +48,7 @@ export * from './services/subscriptions.service';
 export * from './services/survey-items.service';
 export * from './services/surveys.service';
 export * from './services/tags.service';
+export * from './services/tasks.service';
 export * from './services/textblocks.service';
 export * from './services/unipile-identities.service';
 export * from './services/users.service';

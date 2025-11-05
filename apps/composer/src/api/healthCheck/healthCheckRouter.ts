@@ -1,6 +1,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import express, { type Request, type Response, type Router } from "express";
 import { ServiceResponse } from "@nowcrm/services";
+import express, { type Request, type Response, type Router } from "express";
 import { handleServiceResponse } from "@/common/utils/httpHandlers";
 
 export const healthCheckRegistry = new OpenAPIRegistry();

@@ -1,9 +1,14 @@
+import { CommunicationChannel, type Contact } from "@nowcrm/services";
+import {
+	channelsService,
+	contactsService,
+	type StandardResponse,
+	subscriptionsService,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
 import { env } from "@/common/utils/envConfig";
 import { logger } from "@/server";
 import type { fieldTypes } from "./field_types";
-import { channelsService, contactsService, StandardResponse, subscriptionsService } from "@nowcrm/services/server";
-import { CommunicationChannel, Contact } from "@nowcrm/services";
 
 export async function getOrCreateContact(
 	field: fieldTypes,
@@ -74,11 +79,14 @@ export async function getOrCreateContact(
 				};
 			}
 
-			const channel = await channelsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
-				filters: {
-					name: { $eqi: CommunicationChannel.EMAIL },
+			const channel = await channelsService.find(
+				env.COMPOSER_STRAPI_API_TOKEN,
+				{
+					filters: {
+						name: { $eqi: CommunicationChannel.EMAIL },
+					},
 				},
-			});
+			);
 			if (!channel.data || !channel.success || channel.data.length === 0) {
 				return {
 					data: null,

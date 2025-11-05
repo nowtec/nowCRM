@@ -23,8 +23,9 @@ export interface Action extends BaseType {
 	 *   timestamp: "2025-10-29T10:30:00Z",
 	 *   extra: { key: "value" }
 	 * }
+	 * can accept json string or object
 	 */
-	payload: object;
+	payload: object | string;
 	action_type: ActionType;
 	contact: Contact;
 	journey_step: JourneyStep;
@@ -50,8 +51,9 @@ export interface Form_Action extends BaseFormType {
 	 *   timestamp: "2025-10-29T10:30:00Z",
 	 *   extra: { key: "value" }
 	 * }
+	 * can accept json string or object
 	 */
-	payload: object;
+	payload: object | string;
 	action_type: DocumentId;
 	contact: DocumentId;
 	journey_step: DocumentId;

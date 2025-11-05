@@ -1,18 +1,19 @@
+import { CommunicationChannel, ServiceResponse } from "@nowcrm/services";
+import {
+	settingCredentialsService,
+	settingsService,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
 import { type PostHostedAuthLinkInput, UnipileClient } from "unipile-node-sdk";
-import { ServiceResponse } from "@nowcrm/services";
 import { CALLBACK_URL_UNIPILE, env } from "@/common/utils/envConfig";
 import { logger } from "@/logger";
-import { settingCredentialsService, settingsService } from "@nowcrm/services/server";
-import { CommunicationChannel } from "@nowcrm/services";
 export async function generateAccessURLUnipile(
 	name: string,
 	reconnect_account?: string,
 ) {
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(
 			"Setting not found,probably strapi is down",
@@ -87,10 +88,11 @@ export async function generateAccessURLUnipile(
 				name,
 			};
 
-	logger.info(JSON.stringify({
-		message: "Generating Unipile access URL",
-		notify_url: payload.notify_url,
-		type: payload.type,
+	logger.info(
+		JSON.stringify({
+			message: "Generating Unipile access URL",
+			notify_url: payload.notify_url,
+			type: payload.type,
 			name: payload.name,
 			api_url: payload.api_url,
 			reconnect_account: reconnect_account,

@@ -9,7 +9,8 @@
     "lint:libs": "pnpm --filter './libs/*' run lint:fix",
     "lint:apps": "pnpm --filter './apps/*' run lint:fix",
     "lint:all": "pnpm -r run lint:fix",
-    "generate-index:services": "pnpm --filter @nowcrm/services run generate-index"
+    "generate-index:services": "pnpm --filter @nowcrm/services run generate-index",
+    "generate-app": "tsx scripts/generate-app/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "tslib": "^2.3.0",
+    "tsx": "^4.20.6",
     "typescript": "~5.9.2"
   }
 }

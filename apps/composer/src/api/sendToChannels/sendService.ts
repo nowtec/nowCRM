@@ -1,4 +1,16 @@
-
+import {
+	CommunicationChannel,
+	type Composition,
+	type DocumentId,
+	ServiceResponse,
+	type sendToChannelsData,
+} from "@nowcrm/services";
+import {
+	compositionsService,
+	listsService,
+	organizationsService,
+	type StandardResponse,
+} from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
 import qs from "qs";
 import { env } from "@/common/utils/envConfig";
@@ -12,8 +24,6 @@ import { twitterPost } from "./channelFunctions/twitter/createPost";
 import { processLinkedInInvitationsChannel } from "./channelFunctions/unipile/processLinkedinInvitations";
 import { processWhatsAppChannel } from "./channelFunctions/whatsapp/processWhatsapp";
 import { wordpressPost } from "./channelFunctions/wordpress/createPost";
-import { CommunicationChannel, Composition, DocumentId, sendToChannelsData, ServiceResponse } from "@nowcrm/services";
-import { compositionsService, listsService, organizationsService, StandardResponse } from "@nowcrm/services/server";
 
 export class SendToChannelsService {
 	/**
@@ -272,7 +282,7 @@ export class SendToChannelsService {
 				},
 				{ encodeValuesOnly: true },
 			);
-			const url = `${env.COMPOSER_STRAPI_API_URL}${entity}?${query}`;
+			const url = `${env.STRAPI_URL}${entity}?${query}`;
 
 			const res = await fetch(url, {
 				method: "GET",

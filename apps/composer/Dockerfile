@@ -6,7 +6,7 @@ RUN npm install -g pnpm@latest
 
 COPY . .
 RUN pnpm install
-RUN pnpm --filter @parse-me/ai-parser build
+RUN pnpm --filter @nowcrm/composer build
 
 FROM node:22.8.0-alpine AS final
 WORKDIR /app
@@ -21,7 +21,7 @@ COPY apps/composer/package.json ./apps/composer/
 COPY --from=builder /app/apps/composer/dist ./dist
 
 # Install production dependencies for the monorepo
-RUN pnpm install --prod --filter @parse-me/ai-parser
+RUN pnpm install --prod --filter @nowcrm/composer
 
 # Copy node_modules and dist for final runtime
 COPY --from=builder /app/node_modules ./node_modules

@@ -17,6 +17,7 @@
     "strict": true,
     "target": "es2022",
     "customConditions": ["@nowcrm/source"],
+    "baseUrl": ".",
     "paths": {
       "@nowcrm/services": ["libs/services/src/index.ts"]
     }

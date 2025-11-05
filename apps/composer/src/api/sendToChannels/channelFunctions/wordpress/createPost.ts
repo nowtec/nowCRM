@@ -1,9 +1,16 @@
+import {
+	CommunicationChannel,
+	type CompositionItem,
+	ServiceResponse,
+} from "@nowcrm/services";
+import {
+	compositionItemsService,
+	settingCredentialsService,
+	settingsService,
+} from "@nowcrm/services/server";
 import * as dotenv from "dotenv";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
-import { CommunicationChannel, CompositionItem } from "@nowcrm/services";
-import { compositionItemsService, settingCredentialsService, settingsService } from "@nowcrm/services/server";
 
 dotenv.config();
 
@@ -12,10 +19,9 @@ export const wordpressPost = async (
 	title: string,
 ): Promise<ServiceResponse<boolean | null>> => {
 	// Fetch settings
-	const settings = await settingsService.find(
-		env.COMPOSER_STRAPI_API_TOKEN,
-		{ populate: "*" },
-	);
+	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
+		populate: "*",
+	});
 	if (!settings.success || !settings.data) {
 		return ServiceResponse.failure(
 			"Setting not found, probably Strapi is down",

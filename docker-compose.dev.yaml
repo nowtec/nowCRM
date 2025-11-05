@@ -97,33 +97,31 @@ services:
 
   journeys:
     container_name: journeys
-    image: journeys
-    build: ./journeys/
+    image: nowcrm-journeys
+    build:
+      context: .
+      dockerfile: ./apps/journeys/Dockerfile
     restart: unless-stopped
     ports:
       - "3010:3010"
     environment:
-      JOURNEYS_BASIC_AUTH_PASSWORD: ${JOURNEYS_BASIC_AUTH_PASSWORD}
-      JOURNEYS_BASIC_AUTH_USERNAME: ${JOURNEYS_BASIC_AUTH_USERNAME}
+      JOURNEYS_HOST: ${JOURNEYS_HOST}
+      JOURNEYS_PORT: ${JOURNEYS_PORT}
       JOURNEYS_CHECK_TIME: ${JOURNEYS_CHECK_TIME}
       JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS}
-      JOURNEYS_COMPOSER_BASE_URL: ${JOURNEYS_COMPOSER_BASE_URL}
       JOURNEYS_CORS_ORIGIN: ${JOURNEYS_CORS_ORIGIN}
-      JOURNEYS_HOST: ${JOURNEYS_HOST}
       JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: ${JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS}
       JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS: ${JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS}
       JOURNEYS_MINUTE_TO_LAUNCH: ${JOURNEYS_MINUTE_TO_LAUNCH}
-      JOURNEYS_PORT: ${JOURNEYS_PORT}
       JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
       JOURNEYS_REDIS_PASSWORD: ${JOURNEYS_REDIS_PASSWORD}
       JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
       JOURNEYS_SESSION_SECRET: ${JOURNEYS_SESSION_SECRET}
       JOURNEYS_STRAPI_API_TOKEN: ${JOURNEYS_STRAPI_API_TOKEN}
-      JOURNEYS_STRAPI_API_URL: ${JOURNEYS_STRAPI_API_URL}
       NODE_ENV: ${NODE_ENV}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      SHARED_COMPOSER_URL: ${SHARED_COMPOSER_URL}
-      SHARED_STRAPI_URL: ${SHARED_STRAPI_URL}
+      COMPOSER_URL: ${COMPOSER_URL}
+      STRAPI_URL: ${STRAPI_URL}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -134,11 +132,13 @@ services:
 
   composer:
     container_name: composer
-    image: composer
-    build: ./composer/
+    image: nowcrm-composer
+    build:
+      context: .
+      dockerfile: ./apps/composer/Dockerfile
     restart: unless-stopped
     ports:
-      - "3020:3000"
+      - "3020:3020"
     environment:
       COMPOSER_ANTHROPIC_KEY: ${COMPOSER_ANTHROPIC_KEY}
       COMPOSER_BASIC_AUTH_PASSWORD: ${COMPOSER_BASIC_AUTH_PASSWORD}
@@ -173,8 +173,11 @@ services:
       - my_net
 
   dal:
-    container_name: dal
-    build: ./dal
+    container_name: nowcrm-dal
+    image: nowcrm-dal
+    build:
+      context: .
+      dockerfile: ./apps/dal/Dockerfile
     restart: unless-stopped
     ports:
       - "6001:6001"

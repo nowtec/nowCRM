@@ -14,9 +14,15 @@ export type JourneyStepTypes =
 	| "channel"
 	| "wait";
 
+export type timingJourneyStepKeys = "delay" | "publish" | "none";
+export interface JourneyTiming {
+	type: timingJourneyStepKeys;
+	value: number | Date;
+}
+
 export interface JourneyStep extends BaseType {
 	contacts: Contact[];
-	joruney: Journey;
+	journey: Journey;
 	channel: Channel;
 	journey_passed_steps: JourneyPassedStep[];
 	connections_to_this_step: JourneyStepConnection[];
@@ -24,12 +30,13 @@ export interface JourneyStep extends BaseType {
 	identity: Identity;
 	additional_data: object;
 	type: JourneyStepTypes;
+	timing?: JourneyTiming;
 	composition: Composition;
 }
 
 export interface Form_JourneyStep extends BaseFormType {
 	contacts: StrapiConnect;
-	joruney: DocumentId;
+	journey: DocumentId;
 	channel: DocumentId;
 	journey_passed_steps: StrapiConnect;
 	connections_to_this_step: StrapiConnect;
@@ -37,5 +44,6 @@ export interface Form_JourneyStep extends BaseFormType {
 	identity: DocumentId;
 	additional_data: object;
 	type: JourneyStepTypes;
+	timing?: JourneyTiming;
 	composition: DocumentId;
 }

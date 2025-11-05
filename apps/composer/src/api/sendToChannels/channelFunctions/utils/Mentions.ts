@@ -1,6 +1,6 @@
-import { env } from "@/common/utils/envConfig";
-import { StrapiQuery, TextBlock } from "@nowcrm/services";
+import type { StrapiQuery, TextBlock } from "@nowcrm/services";
 import { textblocksService } from "@nowcrm/services/server";
+import { env } from "@/common/utils/envConfig";
 
 interface MentionCheckResult {
 	mentions: string[];

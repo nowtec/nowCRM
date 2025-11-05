@@ -1,9 +1,12 @@
-
+import {
+	CommunicationChannel,
+	type Composition,
+	ServiceResponse,
+	type sendToChannelsData,
+} from "@nowcrm/services";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
 import { processChannel } from "../utils/channelProcessor";
 import { emailPost } from "./sendEmail";
-import { CommunicationChannel, Composition, sendToChannelsData } from "@nowcrm/services";
 
 /**
  * Process email channel

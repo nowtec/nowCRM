@@ -1,11 +1,12 @@
 import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
-import type { Form_Journey, Journey } from "../types/journey";
+import type { DocumentId } from "../types/common/base_type";
+import type { Form_JourneyStep, JourneyStep } from "../types/journey-step";
 import { actionsService } from "./action.service";
 import BaseService from "./common/base.service";
 import { handleError, type StandardResponse } from "./common/response.service";
 import { journeyPassedStepService } from "./journey-passed-step.service";
 
-class JourneyStepsService extends BaseService<Journey, Form_Journey> {
+class JourneyStepsService extends BaseService<JourneyStep, Form_JourneyStep> {
 	public constructor() {
 		super(API_ROUTES_STRAPI.JOURNEY_STEPS);
 	}
@@ -44,15 +45,17 @@ class JourneyStepsService extends BaseService<Journey, Form_Journey> {
 	}
 	async checkStepAction(
 		token: string,
-		stepId: number,
-		contactId: number,
-	): Promise<StandardResponse<{ find: boolean; target_step: number | null }>> {
+		stepId: DocumentId,
+		contactId: DocumentId,
+	): Promise<
+		StandardResponse<{ find: boolean; target_step: DocumentId | null }>
+	> {
 		try {
 			const data = await actionsService.find(token, {
 				filters: {
 					action_type: { $eq: "step_reached" },
 					external_id: { $eq: stepId.toString() },
-					contact: { id: { $eq: contactId } },
+					contact: { documentId: { $eq: contactId } },
 				} as any, //TODO: update action type on shared folder + journey-finished to const,
 			});
 
@@ -61,7 +64,7 @@ class JourneyStepsService extends BaseService<Journey, Form_Journey> {
 					new Error("Could not check step action. Probably strapi is down"),
 				);
 
-			let targetStep: number;
+			let targetStep: DocumentId;
 			try {
 				const payloadRaw = data?.data?.[0]?.payload;
 

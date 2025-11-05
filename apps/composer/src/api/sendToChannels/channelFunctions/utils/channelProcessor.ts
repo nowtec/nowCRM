@@ -1,12 +1,18 @@
-
+import {
+	type Composition,
+	type CompositionItem,
+	type Contact,
+	checkDocumentId,
+	type DocumentId,
+	ServiceResponse,
+	type sendToChannelsData,
+} from "@nowcrm/services";
+import { contactsService } from "@nowcrm/services/server";
 import { StatusCodes } from "http-status-codes";
-import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/envConfig";
 import { logger } from "@/server";
 import type { fieldTypes } from "./field_types";
 import { getOrCreateContact } from "./getOrCreateContact";
-import { checkDocumentId, Composition, CompositionItem, Contact, DocumentId, sendToChannelsData } from "@nowcrm/services";
-import { contactsService } from "@nowcrm/services/server";
 
 /**
  * Type for message sending function
@@ -140,8 +146,7 @@ async function processContactRecipient(
 			contactResult.data,
 			...additionalArgs,
 		);
-	}
-	else if (typeof to === "string") {
+	} else if (typeof to === "string") {
 		const contactResponse = await getOrCreateContact(contactField, to);
 		if (!contactResponse.success || !contactResponse.data) {
 			return ServiceResponse.failure(

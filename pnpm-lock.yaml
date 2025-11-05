@@ -3,6 +3,7 @@ lockfileVersion: '9.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
+  injectWorkspacePackages: true
 
 importers:
 
@@ -23,6 +24,9 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
       typescript:
         specifier: ~5.9.2
         version: 5.9.3
@@ -147,6 +151,79 @@ importers:
       tsx:
         specifier: ^4.20.6
         version: 4.20.6
+
+  apps/journeys:
+    dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^7.3.4
+        version: 7.3.4(zod@3.25.76)
+      amqplib:
+        specifier: ^0.10.9
+        version: 0.10.9
+      dotenv:
+        specifier: ^17.2.2
+        version: 17.2.3
+      envalid:
+        specifier: ^8.1.0
+        version: 8.1.0
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      express-rate-limit:
+        specifier: ^7.4.0
+        version: 7.5.1(express@4.21.2)
+      helmet:
+        specifier: ^8.1.0
+        version: 8.1.0
+      http-status-codes:
+        specifier: ^2.3.0
+        version: 2.3.0
+      ioredis:
+        specifier: ^5.8.2
+        version: 5.8.2
+      node-cron:
+        specifier: ^4.2.1
+        version: 4.2.1
+      pino:
+        specifier: ^10.0.0
+        version: 10.1.0
+      pino-http:
+        specifier: ^11.0.0
+        version: 11.0.0
+      pino-pretty:
+        specifier: ^13.1.2
+        version: 13.1.2
+      swagger-ui-express:
+        specifier: ^5.0.1
+        version: 5.0.1(express@4.21.2)
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ^2.2.7
+        version: 2.2.7
+      '@types/amqplib':
+        specifier: ^0.10.8
+        version: 0.10.8
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.24
+      '@types/node':
+        specifier: 20.19.9
+        version: 20.19.9
+      '@types/swagger-ui-express':
+        specifier: ^4.1.8
+        version: 4.1.8
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(@swc/core@1.13.5(@swc/helpers@0.5.17))(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
+      typescript:
+        specifier: ~5.9.2
+        version: 5.9.3
 
   apps/nowcrm:
     dependencies:
@@ -657,6 +734,9 @@ importers:
       tslib:
         specifier: ^2.3.0
         version: 2.8.1
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
     devDependencies:
       '@biomejs/biome':
         specifier: ^2.2.4
@@ -672,6 +752,67 @@ importers:
         version: 10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@24.9.1)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.2
+        version: 5.9.3
+
+  scripts/generate-app/templates/node:
+    dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^7.3.4
+        version: 7.3.4(zod@3.25.76)
+      dotenv:
+        specifier: ^17.2.2
+        version: 17.2.3
+      envalid:
+        specifier: ^8.1.0
+        version: 8.1.0
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      express-rate-limit:
+        specifier: ^7.4.0
+        version: 7.5.1(express@4.21.2)
+      helmet:
+        specifier: ^8.1.0
+        version: 8.1.0
+      http-status-codes:
+        specifier: ^2.3.0
+        version: 2.3.0
+      pino:
+        specifier: ^10.0.0
+        version: 10.1.0
+      pino-http:
+        specifier: ^11.0.0
+        version: 11.0.0
+      pino-pretty:
+        specifier: ^13.1.2
+        version: 13.1.2
+      swagger-ui-express:
+        specifier: ^5.0.1
+        version: 5.0.1(express@4.21.2)
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ^2.2.7
+        version: 2.2.7
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.24
+      '@types/node':
+        specifier: 20.19.9
+        version: 20.19.9
+      '@types/swagger-ui-express':
+        specifier: ^4.1.8
+        version: 4.1.8
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(@swc/core@1.13.5(@swc/helpers@0.5.17))(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
+      typescript:
+        specifier: ~5.9.2
         version: 5.9.3
 
 packages:
@@ -10719,6 +10860,10 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+
+  node-cron@4.2.1:
+    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
+    engines: {node: '>=6.0.0'}
 
   node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
@@ -21589,7 +21734,7 @@ snapshots:
 
   '@types/papaparse@5.3.16':
     dependencies:
-      '@types/node': 24.9.1
+      '@types/node': 20.19.9
 
   '@types/parse-json@4.0.2': {}
 
@@ -21607,7 +21752,7 @@ snapshots:
 
   '@types/qrcode@1.5.5':
     dependencies:
-      '@types/node': 24.9.1
+      '@types/node': 20.19.9
 
   '@types/qs@6.14.0': {}
 
@@ -27293,6 +27438,8 @@ snapshots:
   nocache@2.0.0: {}
 
   node-abort-controller@3.1.1: {}
+
+  node-cron@4.2.1: {}
 
   node-fetch@2.7.0:
     dependencies:

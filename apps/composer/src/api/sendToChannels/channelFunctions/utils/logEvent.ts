@@ -1,7 +1,6 @@
-
-import { env } from "@/common/utils/envConfig";
-import { Contact, DocumentId, Form_Event } from "@nowcrm/services";
+import type { Contact, DocumentId, Form_Event } from "@nowcrm/services";
 import { eventsService } from "@nowcrm/services/server";
+import { env } from "@/common/utils/envConfig";
 
 export async function logEvent(
 	contact: Contact,
@@ -22,7 +21,10 @@ export async function logEvent(
 		channel: channel_id,
 		publishedAt: new Date(),
 	};
-	await eventsService.create(data as Partial<Form_Event>, env.COMPOSER_STRAPI_API_TOKEN);
+	await eventsService.create(
+		data as Partial<Form_Event>,
+		env.COMPOSER_STRAPI_API_TOKEN,
+	);
 }
 
 export async function logUnpublishedEvent(
@@ -44,5 +46,8 @@ export async function logUnpublishedEvent(
 		channel: channel_id,
 		publishedAt: new Date(),
 	};
-	await eventsService.create(data as Partial<Form_Event>, env.COMPOSER_STRAPI_API_TOKEN);
+	await eventsService.create(
+		data as Partial<Form_Event>,
+		env.COMPOSER_STRAPI_API_TOKEN,
+	);
 }
