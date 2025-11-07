@@ -1,6 +1,9 @@
 // contactsapp/lib/actions/user/forgotPasswordAction.ts
 "use server";
-import userService from "@/lib/services/new_type/users.service";
+
+import { env } from "@/lib/config/envConfig";
+import { usersService } from "@nowcrm/services/server";
+
 
 type ForgotPasswordValues = {
 	email: string;
@@ -8,7 +11,7 @@ type ForgotPasswordValues = {
 
 export async function onSubmitForgotPassword(values: ForgotPasswordValues) {
 	try {
-		const result = await userService.forgotPassword(values.email);
+		const result = await usersService.forgotPassword(values.email,env.CRM_STRAPI_API_TOKEN);
 
 		if (!result.success) {
 			return {
@@ -18,7 +21,6 @@ export async function onSubmitForgotPassword(values: ForgotPasswordValues) {
 
 		return { success: true };
 	} catch (error: any) {
-		console.error("Forgot password error:", error);
 		return {
 			error: error.message || "An unexpected error occurred",
 		};

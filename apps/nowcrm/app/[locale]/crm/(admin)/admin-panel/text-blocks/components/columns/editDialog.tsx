@@ -98,7 +98,7 @@ export default function EditTextBlockDialog({
 				setIsLoading(true);
 				try {
 					const { getLocalizedTextBlock } = await import(
-						"@/lib/actions/text_blocks/getLocalizedTextBlock"
+						"@/lib/actions/text_blocks/get-localized-text-block"
 					);
 					const data = await getLocalizedTextBlock(textBlockName);
 					setTextblocks(data.data as any);
@@ -138,7 +138,7 @@ export default function EditTextBlockDialog({
 
 		const { default: toast } = await import("react-hot-toast");
 		const { updateTextBlock } = await import(
-			"@/lib/actions/text_blocks/updateTextBlock"
+			"@/lib/actions/text_blocks/update-text-block"
 		);
 
 		// Update text block for each locale

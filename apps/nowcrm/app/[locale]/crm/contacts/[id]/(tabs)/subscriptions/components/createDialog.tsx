@@ -44,10 +44,10 @@ export default function CreateListDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createSubscription } = await import(
-			"@/lib/actions/subscriptions/createSubscription"
+			"@/lib/actions/subscriptions/create-subscription"
 		);
 		const { getSubscription } = await import(
-			"@/lib/actions/subscriptions/getSubscription"
+			"@/lib/actions/subscriptions/get-subscription"
 		);
 		const exists = await getSubscription(values.contact, values.channel.value);
 		if (exists) {

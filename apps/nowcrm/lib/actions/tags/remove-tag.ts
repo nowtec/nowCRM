@@ -1,14 +1,13 @@
 "use server";
 
 import { auth } from "@/auth";
-import ServiceFactory, {
-	type ServiceName,
-} from "@/lib/services/common/serviceFactory";
+import { DocumentId } from "@nowcrm/services";
+import { BaseServiceName, handleError, ServiceFactory } from "@nowcrm/services/server";
 
 export async function removeTag(
-	serviceName: ServiceName,
-	entityId: number,
-	tagId: number,
+	serviceName: BaseServiceName,
+	entityId: DocumentId,
+	tagId: DocumentId,
 ) {
 	const session = await auth();
 	if (!session) {
@@ -23,15 +22,9 @@ export async function removeTag(
 		const service = ServiceFactory.getService(serviceName);
 		const res = await service.update(entityId, {
 			tags: { disconnect: [tagId] },
-		});
+		}, session.jwt);
 		return res;
 	} catch (error) {
-		console.error("Error removing tag:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: `${error}`,
-		};
+		return handleError(error);
 	}
 }

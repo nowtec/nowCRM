@@ -1,8 +1,9 @@
+
 import { API_ROUTES_STRAPI } from "../api-routes/api-routes-strapi";
 import { envServices } from "../envConfig";
 import { handleError, handleResponse, StandardResponse } from "../server";
 import Asset from "../types/common/asset";
-import type { Form_User, User } from "../types/user";
+import type { Form_User, strapi_user, User } from "../types/user";
 import BaseService from "./common/base.service";
 
 class UsersService extends BaseService<User, Form_User> {
@@ -97,6 +98,102 @@ class UsersService extends BaseService<User, Form_User> {
 		}
 	}
 
+
+	async forgotPassword(email: string, token: string): Promise<StandardResponse<null>> {
+		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.FORGOT_PASSWORD}`;
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({ email }),
+			});
+
+			return await handleResponse<null>(response);
+		} catch (error: any) {
+			return handleError<null>(error);
+		}
+	}
+	async resetPassword(
+		code: string,
+		password: string,
+		passwordConfirmation: string,
+		token: string,
+	): Promise<StandardResponse<strapi_user>> {
+		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.RESET_PASSWORD}`;
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({
+					code,
+					password,
+					passwordConfirmation,
+				}),
+			});
+
+			return await handleResponse(response);
+		} catch (error: any) {
+			return handleError(error);
+		}
+	}
+
+	async authenticateCredentials(
+		email: string,
+		password: string,
+		token: string,
+	): Promise<User | null> {
+		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.AUTH_LOGIN}`;
+
+		try {
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(true, token),
+				body: JSON.stringify({
+					identifier: email,
+					password: password,
+				}),
+			});
+
+			const data = await response.json() as any;
+
+			if (data.error) {
+				// Invalid credentials or other error
+				console.log("Authentication failed:", data.error.message);
+				return null;
+			}
+
+			// Return the user data for 2FA checking
+			return data.user;
+		} catch (error) {
+			console.error("Error authenticating credentials:", error);
+			return null;
+		}
+	}
+
+	async getById(userId: number, token: string): Promise<User | null> {
+		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.USERS}/${userId}`;
+
+		try {
+			const response = await fetch(url, {
+				method: "GET",
+				headers: this.getHeaders(false, token),
+			});
+
+			if (!response.ok) {
+				if (response.status === 404) {
+					return null;
+				}
+				throw new Error(`Failed to fetch user. Status: ${response.status}`);
+			}
+
+			const user: User = await response.json() as User;
+			return user;
+		} catch (error) {
+			return null;
+		}
+	}
 }
 
 export const usersService = new UsersService();

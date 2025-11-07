@@ -4,7 +4,9 @@ import { cookies } from "next/headers";
 import { signIn } from "@/auth";
 
 import { RouteConfig } from "@/lib/config/RoutesConfig";
-import userService from "@/lib/services/new_type/users.service"; // Adjust path if needed
+import { usersService } from "@nowcrm/services/server";
+import { env } from "@/lib/config/envConfig";
+
 
 export async function onSubmitLogin(values: {
 	password: string;
@@ -12,9 +14,10 @@ export async function onSubmitLogin(values: {
 }) {
 	try {
 		// First, check if user exists and verify password
-		const user = await userService.authenticateCredentials(
+		const user = await usersService.authenticateCredentials(
 			values.email,
 			values.password,
+			env.CRM_STRAPI_API_TOKEN,
 		);
 
 		if (!user) {
@@ -75,7 +78,7 @@ export async function completeLoginAfter2FA(userId: number) {
 		}
 
 		// Get user data to complete the sign in
-		const user = await userService.getById(userId);
+		const user = await usersService.getById(userId, env.CRM_STRAPI_API_TOKEN);
 
 		if (!user) {
 			throw new Error("User not found");

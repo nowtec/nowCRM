@@ -94,4 +94,5 @@ export type StrapiQuery<T> = {
 export type StrapiConnect =
 	| { connect: DocumentId[]; disconnect?: never; set?: never }
 	| { disconnect: DocumentId[]; connect?: never; set?: never }
-	| { set: DocumentId[]; connect?: never; disconnect?: never };
+	| { set: DocumentId[]; connect?: never; disconnect?: never }
+	| { connect: DocumentId[]; disconnect: DocumentId[]; set?: never };

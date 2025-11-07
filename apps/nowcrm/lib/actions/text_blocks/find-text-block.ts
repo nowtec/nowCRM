@@ -1,9 +1,7 @@
 "use server";
 import { auth } from "@/auth";
-import textBlockService from "@/lib/services/new_type/text_blocks.service";
-import type StrapiQuery from "@/lib/types/common/StrapiQuery";
-import type { TextBlock } from "@/lib/types/new_type/text_blocks";
-
+import { StrapiQuery, TextBlock } from "@nowcrm/services";
+import {  textblocksService } from "@nowcrm/services/server";
 export async function findTextBlock(
 	query: StrapiQuery<TextBlock>,
 ): Promise<string[]> {
@@ -11,7 +9,7 @@ export async function findTextBlock(
 	if (!session) return [];
 
 	try {
-		const textBlocks = await textBlockService.find(query);
+		const textBlocks = await textblocksService.find(session.jwt,query, session.jwt);
 		return textBlocks.data
 			? textBlocks.data.map((item) => {
 					return `text_block.${item.name.replaceAll(" ", "-")}`;

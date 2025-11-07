@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { verifyTotpToken } from "@/lib/actions/profile/edit-profile";
 import { decryptTotpSecret } from "@/lib/actions/profile/encryption-helpers";
 
-import { completeLoginAfter2FA } from "@/lib/actions/user/signInAction";
+import { completeLoginAfter2FA } from "@/lib/actions/user/sign-in-action";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import userService from "@/lib/services/new_type/users.service"; // Adjust path if needed
 

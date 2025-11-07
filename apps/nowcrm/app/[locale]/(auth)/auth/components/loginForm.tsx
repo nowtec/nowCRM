@@ -44,7 +44,7 @@ export function LoginForm() {
 		try {
 			const { default: toast } = await import("react-hot-toast");
 			const { onSubmitLogin } = await import(
-				"../../../../../lib/actions/user/signInAction"
+				"../../../../../lib/actions/user/sign-in-action"
 			);
 
 			const result = await onSubmitLogin(values);

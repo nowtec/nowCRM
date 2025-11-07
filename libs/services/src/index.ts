@@ -68,6 +68,7 @@ export * from './types/survey-item';
 export * from './types/survey';
 export * from './types/tag';
 export * from './types/task';
+export * from './types/term';
 export * from './types/text-block';
 export * from './types/unipie-identity';
 export * from './types/user';

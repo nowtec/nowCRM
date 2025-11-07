@@ -12,7 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
-import { updateSubscription } from "@/lib/actions/subscriptions/updateSubscription";
+import { updateSubscription } from "@/lib/actions/subscriptions/update-subscription";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
 import type { Subscription } from "@/lib/types/new_type/subscription";

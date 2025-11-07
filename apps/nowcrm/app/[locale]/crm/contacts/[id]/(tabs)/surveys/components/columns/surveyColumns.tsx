@@ -23,7 +23,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { getSurveyItemsBySurveyId } from "@/lib/actions/surveyItems/getSurveyItems";
+import { getSurveyItemsBySurveyId } from "@/lib/actions/surveyItems/get-survey-items";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
 import type { Survey } from "@/lib/types/new_type/survey";
 import type { SurveyItem } from "@/lib/types/new_type/survey_item";

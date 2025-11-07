@@ -31,7 +31,7 @@ import {
 	getChannelThrottle,
 } from "@/lib/actions/channels/get-channel-throttle";
 import { getComposition } from "@/lib/actions/composer/get-composition";
-import { getUnipileIdentity } from "@/lib/actions/unipile/getUnipileIdentity";
+import { getUnipileIdentity } from "@/lib/actions/unipile/get-unipile-identity";
 import { CommunicationChannel } from "@/lib/static/channel-icons";
 import type { CompositionItem } from "@/lib/types/new_type/composition";
 import type { sendToChannelsData } from "../sendToChannelType";

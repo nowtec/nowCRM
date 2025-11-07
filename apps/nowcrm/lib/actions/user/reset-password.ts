@@ -1,5 +1,7 @@
 "use server";
-import userService from "@/lib/services/new_type/users.service";
+
+import { env } from "@/lib/config/envConfig";
+import { usersService } from "@nowcrm/services/server";
 
 type ResetPasswordValues = {
 	code: string;
@@ -9,10 +11,11 @@ type ResetPasswordValues = {
 
 export async function onSubmitResetPassword(values: ResetPasswordValues) {
 	try {
-		const result = await userService.resetPassword(
+		const result = await usersService.resetPassword(
 			values.code,
 			values.password,
 			values.passwordConfirmation,
+			env.CRM_STRAPI_API_TOKEN,
 		);
 
 		if (!result.success) {

@@ -67,7 +67,7 @@ export default function CreateTextBlockDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createTextBlock } = await import(
-			"@/lib/actions/text_blocks/createTextBlock"
+			"@/lib/actions/text_blocks/create-text-block"
 		);
 
 		// Create a text block for each locale

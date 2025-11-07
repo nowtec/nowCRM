@@ -17,7 +17,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { onSubmitResetPassword } from "@/lib/actions/user/resetPasswordAction";
+import { onSubmitResetPassword } from "@/lib/actions/user/reset-password";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 
 export function ResetPasswordForm() {

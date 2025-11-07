@@ -10,6 +10,7 @@
     "lint:apps": "pnpm --filter './apps/*' run lint:fix",
     "lint:all": "pnpm -r run lint:fix",
     "generate-index:services": "pnpm --filter @nowcrm/services run generate-index",
+    "generate-service-factory": "pnpm --filter @nowcrm/services run generate-service-factory",
     "generate-app": "tsx scripts/generate-app/index.ts"
   },
   "keywords": [],

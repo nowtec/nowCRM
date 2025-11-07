@@ -4,10 +4,7 @@ import { auth } from "@/auth";
 import { Tag } from "@nowcrm/services";
 import { handleError, StandardResponse, tagsService } from "@nowcrm/services/server";
 
-export async function createTag(
-	name: string,
-	color: string,
-): Promise<StandardResponse<Tag>> {
+export async function fetchTags(): Promise<StandardResponse<Tag[]>> {
 	const session = await auth();
 	if (!session) {
 		return {
@@ -18,11 +15,7 @@ export async function createTag(
 	}
 
 	try {
-		const res = await tagsService.create({
-			name,
-			color,
-			publishedAt: new Date(),
-		}, session.jwt);
+		const res = await tagsService.find(session.jwt, {sort: ["id:desc"]});
 		return res;
 	} catch (error) {
 		return handleError(error);

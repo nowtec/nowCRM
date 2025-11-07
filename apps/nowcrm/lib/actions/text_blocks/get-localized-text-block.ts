@@ -1,10 +1,8 @@
 // actions/deleteContactAction.ts
 "use server";
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import textBlockService from "@/lib/services/new_type/text_blocks.service";
-import type { LanguageKeys } from "@/lib/static/languages";
-import type { TextBlock } from "@/lib/types/new_type/text_blocks";
+import { LanguageKeys, TextBlock } from "@nowcrm/services";
+import { handleError, StandardResponse, textblocksService } from "@nowcrm/services/server";
 
 export async function getLocalizedTextBlock(
 	name: string,
@@ -20,17 +18,17 @@ export async function getLocalizedTextBlock(
 	const locales: LanguageKeys[] = ["en", "de", "it", "fr"];
 	try {
 		const fetchPromises = locales.map(async (loc) => {
-			const response = await textBlockService.find({
+			const response = await textblocksService.find(session.jwt, {
 				filters: { name: { $eq: name } },
 				locale: loc,
 			});
 			if (!response.data || !(response.data.length > 0)) {
-				const item = await textBlockService.create({
+				const item = await textblocksService.create({
 					name,
 					publishedAt: new Date(),
 					text: "",
 					locale: loc,
-				});
+				}, session.jwt);
 				return { locale: loc, data: item.data as TextBlock };
 			}
 			return { locale: loc, data: response.data[0] };
@@ -44,12 +42,6 @@ export async function getLocalizedTextBlock(
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error adding to group:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: `${error}`,
-		};
+		return handleError(error);
 	}
 }

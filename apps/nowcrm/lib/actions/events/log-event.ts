@@ -7,8 +7,8 @@ import { eventsService, handleError, StandardResponse } from "@nowcrm/services/s
 
 export async function logUnsubscribeEvent(
 	contact: Contact,
-	compositionId: DocumentId,
 	channelId: DocumentId,
+	compositionId?: DocumentId,
 	payload?: any,
 ): Promise<StandardResponse<Event>> {
 	const session = await auth();

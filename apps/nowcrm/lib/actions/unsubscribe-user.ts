@@ -1,25 +1,33 @@
 "use server";
 
-import { getContactByEmail } from "@/lib/actions/contacts/getContactByEmail";
 import { logUnsubscribeEvent } from "@/lib/actions/events/log-event";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
+import { Contact, DocumentId } from "@nowcrm/services";
+import { contactsService, subscriptionsService } from "@nowcrm/services/server";
+import { env } from "../config/envConfig";
 
 export async function unsubscribeUser(
 	email: string,
 	channelName: string = "Email",
-	compositionId?: number,
+	compositionId?: DocumentId,
 ): Promise<{ message: string; success: boolean }> {
-	console.log("[unsubscribeUser] Invoked with:", {
-		email,
-		channelName,
-		compositionId,
+
+	let contact: Contact | null = null;
+	const normalizedEmail = email.trim().toLowerCase();
+
+	const response = await contactsService.find(env.CRM_STRAPI_API_TOKEN, {
+		populate: {
+			subscriptions: { populate: ["id", "channel", "subscribedAt"] },
+			contact_interests: "*",
+		},
+		filters: {
+			email: { $eqi: normalizedEmail },
+		},
 	});
 
-	const contact = await getContactByEmail(email);
-	console.log(
-		"[unsubscribeUser] Contact lookup result:",
-		contact ? `FOUND id=${contact.id}` : "NOT FOUND",
-	);
+	if (Array.isArray(response.data) && response.data.length > 0) {
+		contact = response.data[0];
+	}
+
 
 	if (!contact) {
 		return {
@@ -58,7 +66,7 @@ export async function unsubscribeUser(
 				console.log(
 					`[unsubscribeUser] Updating subscription id=${sub.id}, channel=${sub.channel?.name}`,
 				);
-				await subscriptionsService.update(sub.id, { active: false }, true);
+				await subscriptionsService.update(sub.documentId, { active: false }, env.CRM_STRAPI_API_TOKEN);
 				console.log(
 					`[unsubscribeUser] Subscription ${sub.id} updated to inactive.`,
 				);
@@ -68,8 +76,8 @@ export async function unsubscribeUser(
 				);
 				const logResult = await logUnsubscribeEvent(
 					contact,
-					compositionId || 0,
-					sub.channel.id,
+					sub.channel.documentId,
+					compositionId,
 					{ reason: "user clicked unsubscribe link" },
 				);
 				console.log("[unsubscribeUser] logUnsubscribeEvent result:", logResult);
@@ -124,9 +132,9 @@ export async function unsubscribeUser(
 			`[unsubscribeUser] Updating subscription id=${subscription.id}, channel=${channelName}`,
 		);
 		const updated = await subscriptionsService.update(
-			subscription.id,
+			subscription.documentId,
 			{ active: false },
-			true,
+			env.CRM_STRAPI_API_TOKEN,
 		);
 		console.log("[unsubscribeUser] Update result:", updated);
 
@@ -134,8 +142,8 @@ export async function unsubscribeUser(
 			console.log("[unsubscribeUser] Logging unsubscribe event...");
 			const logResult = await logUnsubscribeEvent(
 				contact,
-				compositionId || 0,
-				subscription.channel.id,
+				subscription.channel.documentId,
+				compositionId,
 				{ reason: "user clicked unsubscribe link" },
 			);
 			console.log("[unsubscribeUser] logUnsubscribeEvent result:", logResult);

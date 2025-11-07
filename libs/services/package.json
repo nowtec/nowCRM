@@ -8,10 +8,11 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "generate-index": "tsx scripts/generate-index.ts",
+    "generate-service-factory": "tsx scripts/generate-service-factory.ts",
     "lint": "biome check",
     "lint:fix": "biome check --fix --unsafe",
     "format": "biome format --fix",
-    "build": "pnpm generate-index && tsc --project tsconfig.json"
+    "build": "pnpm generate-index && pnpm generate-service-factory && tsc --project tsconfig.json"
   },
   "exports": {
     "./package.json": "./package.json",

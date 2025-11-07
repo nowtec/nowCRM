@@ -1,12 +1,12 @@
 // actions/deleteContactAction.ts
 "use server";
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
-import type { Subscription } from "@/lib/types/new_type/subscription";
+import { DocumentId, Subscription } from "@nowcrm/services";
+import { handleError, StandardResponse, subscriptionsService } from "@nowcrm/services/server";
+
 export async function createSubscription(
-	channel: number,
-	contact: number,
+	channel: DocumentId,
+	contact: DocumentId,
 ): Promise<StandardResponse<Subscription>> {
 	const session = await auth();
 	if (!session) {
@@ -23,15 +23,9 @@ export async function createSubscription(
 			active: false,
 			subscribed_at: new Date(),
 			publishedAt: new Date(),
-		});
+		},session.jwt);
 		return res;
 	} catch (error) {
-		console.error("Error adding to group:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: `${error}`,
-		};
+		return handleError(error);
 	}
 }

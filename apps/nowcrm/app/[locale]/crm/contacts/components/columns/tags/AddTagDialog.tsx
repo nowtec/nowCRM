@@ -20,7 +20,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { fetchTags } from "@/lib/actions/tags/fetchTags";
+import { fetchTags } from "@/lib/actions/tags/fetch-tags";
 
 type Tag = { id: number; name: string; color: string };
 

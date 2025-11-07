@@ -1,22 +1,23 @@
 "use server";
 import { auth } from "@/auth";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
+import { DocumentId } from "@nowcrm/services";
+import { subscriptionsService } from "@nowcrm/services/server";
 
 export async function getSubscription(
-	contactId: number,
-	channelId: number,
+	contactId: DocumentId,
+	channelId: DocumentId,
 ): Promise<boolean> {
 	const session = await auth();
 	if (!session) return false;
 
 	try {
-		const existing = await subscriptionsService.find({
+		const existing = await subscriptionsService.find(session.jwt,{
 			filters: {
 				contact: {
-					id: { $eq: contactId },
+					documentId: { $eq: contactId },
 				},
 				channel: {
-					id: { $eq: channelId },
+					documentId: { $eq: channelId },
 				},
 			},
 			pagination: { limit: 1 },

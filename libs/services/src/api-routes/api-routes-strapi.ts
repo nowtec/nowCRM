@@ -1,4 +1,6 @@
 export const API_ROUTES_STRAPI = {
+	//Terms
+	TERMS: "terms",
 	//Actions
 	ACTIONS: "actions",
 	ACTION_SCORE_ITEMS: "action-score-items",
@@ -84,7 +86,11 @@ export const API_ROUTES_STRAPI = {
 
 	//User
 	USERS: "users",
-
+	FORGOT_PASSWORD: "auth/forgot-password",
+	REGISTER: "auth/local/register",
+	RESET_PASSWORD: "auth/reset-password",
+	AUTH_LOGIN: "auth/local",
+	
 	// Uploads
 	UPLOAD: "upload",
 	UPLOAD_FILES: "upload/files",

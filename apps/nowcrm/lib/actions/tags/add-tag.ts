@@ -1,14 +1,13 @@
 "use server";
 
 import { auth } from "@/auth";
-import ServiceFactory, {
-	type ServiceName,
-} from "@/lib/services/common/serviceFactory";
+import { DocumentId } from "@nowcrm/services";
+import { BaseServiceName, handleError, ServiceFactory } from "@nowcrm/services/server";
 
 export async function addTag(
-	serviceName: ServiceName,
-	entityId: number,
-	tagId: number,
+	serviceName: BaseServiceName,
+	entityId: DocumentId,
+	tagId: DocumentId,
 ) {
 	const session = await auth();
 	if (!session) {
@@ -23,16 +22,9 @@ export async function addTag(
 		const service = ServiceFactory.getService(serviceName);
 		const res = await service.update(entityId, {
 			tags: { connect: [tagId] },
-		});
-		console.log(res);
+		}, session.jwt);
 		return res;
 	} catch (error) {
-		console.error("Error adding tag:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: `${error}`,
-		};
+		return handleError(error);
 	}
 }

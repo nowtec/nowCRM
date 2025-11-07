@@ -70,7 +70,7 @@ export default function CreateTaskDialog() {
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
-		const { createTask } = await import("@/lib/actions/tasks/createTask");
+		const { createTask } = await import("@/lib/actions/tasks/create-task");
 		const updated_values = {
 			...values,
 			due_date: new Date(),

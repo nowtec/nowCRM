@@ -17,7 +17,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { onSubmitForgotPassword } from "@/lib/actions/user/forgotPasswordAction";
+import { onSubmitForgotPassword } from "@/lib/actions/user/forgot-password";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 
 export function ForgotPasswordForm() {

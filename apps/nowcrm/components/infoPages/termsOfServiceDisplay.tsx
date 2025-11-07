@@ -1,7 +1,7 @@
 "use client";
 
 import { InfoMarkdownDisplay } from "@/components/infoPages/infoMarkdownDisplay";
-import { getLatestTerms } from "@/lib/actions/termsOfService/termsOfService";
+import { getLatestTerms } from "@/lib/actions/termsOfService/get-terms";
 
 export function TermsOfServiceDisplay() {
 	return (

@@ -4,8 +4,8 @@ import { Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { addTag } from "@/lib/actions/tags/addTag";
-import { removeTag } from "@/lib/actions/tags/removeTag";
+import { addTag } from "@/lib/actions/tags/add-tag";
+import { removeTag } from "@/lib/actions/tags/remove-tag";
 import type { ServiceName } from "@/lib/services/common/serviceFactory";
 import { AddTagDialog } from "./AddTagDialog";
 

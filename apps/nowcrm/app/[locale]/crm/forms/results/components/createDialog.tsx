@@ -25,7 +25,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createSurveyItem } from "@/lib/actions/surveyItems/createSurveyItem";
+import { createSurveyItem } from "@/lib/actions/surveyItems/create-survey-items";
 
 const formSchema = z.object({
 	question: z.object({
