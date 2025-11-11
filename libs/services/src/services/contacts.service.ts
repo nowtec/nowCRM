@@ -105,7 +105,7 @@ class ContactsService extends BaseService<Contact, Form_Contact> {
 	}
 
 	async exportUserData(
-		contactId: number,
+		contactId: DocumentId,
 		token: string
 	): Promise<StandardResponse<Contact>> {
 		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.CONTACT_EXPORT_DATA}`;

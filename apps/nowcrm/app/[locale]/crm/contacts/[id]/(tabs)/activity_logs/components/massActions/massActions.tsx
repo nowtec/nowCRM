@@ -6,6 +6,7 @@ import {
 	massActionsGenerator,
 } from "@/components/generativeComponents/MassActionsGenerator";
 import { MassRemoveActivityLogs } from "./massDeleteActivityLogs";
+import { DocumentId } from "@nowcrm/services";
 
 // Get your translations/messages
 
@@ -13,7 +14,7 @@ import { MassRemoveActivityLogs } from "./massDeleteActivityLogs";
 const actionsConfig: ActionsConfig = {
 	deleteContacts: {
 		label: "Delete", // e.g., "Delete"
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			return await MassRemoveActivityLogs(selectedRows);
 		},
 		successMessage: "Activity logs deleted",

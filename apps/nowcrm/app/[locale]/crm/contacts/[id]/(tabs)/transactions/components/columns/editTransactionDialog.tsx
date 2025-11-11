@@ -29,7 +29,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import type { DonationTransaction } from "@/lib/types/new_type/donation_transaction";
+import { DonationTransaction } from "@nowcrm/services";
 
 export default function EditTransactionDialog({
 	transaction,
@@ -49,7 +49,7 @@ export default function EditTransactionDialog({
 		payment_method: z.string().optional(),
 		payment_provider: z.string().optional(),
 		user_ip: z.string().optional(),
-		status: z.string().optional(),
+		donation_status: z.string().optional(),
 		currency: z.string().optional(),
 		user_agent: z.string().optional(),
 		epp_transaction_id: z.string().optional(),
@@ -63,11 +63,11 @@ export default function EditTransactionDialog({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			card_holder_name: transaction.card_holder_name || "",
-			amount: transaction.amount || 0,
+			amount: transaction.ammount || 0,
 			payment_method: transaction.payment_method || "",
 			payment_provider: transaction.payment_provider || "",
 			user_ip: transaction.user_ip || "",
-			status: transaction.status || "",
+			donation_status: transaction.donation_status || "success",
 			currency: transaction.currency || "",
 			user_agent: transaction.user_agent || "",
 			epp_transaction_id: transaction.epp_transaction_id || "",
@@ -83,7 +83,7 @@ export default function EditTransactionDialog({
 		const { updateTransaction } = await import(
 			"@/lib/actions/donationTransactions/update-transaction"
 		);
-		const res = await updateTransaction(transaction.id, values);
+		const res = await updateTransaction(transaction.documentId, values);
 		if (!res.success) {
 			toast.error(`${t("Contacts.transactions.error")} ${res.errorMessage}`);
 		} else {
@@ -207,7 +207,7 @@ export default function EditTransactionDialog({
 					/>
 					<FormField
 						control={form.control}
-						name="status"
+						name="donation_status"
 						render={({ field }) => (
 							<FormItem className="flex flex-col">
 								<FormLabel className="flex items-center">

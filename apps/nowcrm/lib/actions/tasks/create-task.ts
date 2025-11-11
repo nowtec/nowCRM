@@ -5,7 +5,7 @@ import { Form_Task, Task } from "@nowcrm/services";
 import { handleError, StandardResponse, tasksService } from "@nowcrm/services/server";
 
 export async function createTask(
-	values: Form_Task,
+	values: Partial<Form_Task>,
 ): Promise<StandardResponse<Task>> {
 	const session = await auth();
 	if (!session) {

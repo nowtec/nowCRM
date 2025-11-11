@@ -2,13 +2,12 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import listsService from "@/lib/services/new_type/lists.service";
-import type { List } from "@/lib/types/new_type/list";
+import { DocumentId, List } from "@nowcrm/services";
+import { handleError, listsService, StandardResponse } from "@nowcrm/services/server";
 
 export async function deleteListAction(
-	listId: number,
-	contactId: number,
+	listId: DocumentId,
+	contactId: DocumentId,
 ): Promise<StandardResponse<List>> {
 	const session = await auth();
 	if (!session) {
@@ -21,11 +20,10 @@ export async function deleteListAction(
 	try {
 		const response = await listsService.update(listId, {
 			contacts: { disconnect: [contactId] },
-		});
+		}, session.jwt);
 
 		return response;
 	} catch (error) {
-		console.log(error);
-		throw new Error("Failed to remove List");
+		return handleError(error);
 	}
 }

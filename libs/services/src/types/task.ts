@@ -5,7 +5,7 @@ import type { User } from "./user";
 export type taskStatuses = "planned" | "in progress" | "done" | "expired";
 
 export interface Task extends BaseType {
-	due_data: Date;
+	due_date: Date;
 	assigned_to: User;
 	description: string;
 	contact: Contact;
@@ -14,7 +14,7 @@ export interface Task extends BaseType {
 }
 
 export interface Form_Task extends BaseFormType {
-	due_data: Date;
+	due_date: Date;
 	assigned_to?: number; // users plugin still uses number id atm
 	description: string;
 	contact?: DocumentId;

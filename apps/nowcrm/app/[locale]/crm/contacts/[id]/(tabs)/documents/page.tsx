@@ -4,10 +4,10 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import DataTable from "@/components/dataTable/dataTable";
 import ErrorMessage from "@/components/ErrorMessage";
-import documentsService from "@/lib/services/new_type/documents.service";
-import type { PaginationParams } from "@/lib/types/common/paginationParams";
 import { columns } from "./components/columns/documentColumns";
 import DocumentsMassActions from "./components/massActions/massActions";
+import { DocumentId, PaginationParams } from "@nowcrm/services";
+import { contactDocumentsService } from "@nowcrm/services/server";
 
 export const metadata: Metadata = {
 	title: "Contact documents",
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function Page(props: {
 	searchParams: Promise<PaginationParams>;
-	params: Promise<{ id: number }>;
+	params: Promise<{ id: DocumentId }>;
 }) {
 	const t = await getTranslations();
 	const params = await props.params;
@@ -29,7 +29,7 @@ export default async function Page(props: {
 	} = searchParams;
 	// Fetch data from the contactService
 	const session = await auth();
-	const response = await documentsService.find({
+	const response = await contactDocumentsService.find(session?.jwt, {
 		sort: [`${sortBy}:${sortOrder}` as any],
 		populate: "*",
 		pagination: {
@@ -38,7 +38,7 @@ export default async function Page(props: {
 		},
 		filters: {
 			$or: [{ name: { $containsi: search } }],
-			contacts: { id: { $in: params.id } },
+			contact: { documentId: { $in: params.id } },
 		},
 	});
 

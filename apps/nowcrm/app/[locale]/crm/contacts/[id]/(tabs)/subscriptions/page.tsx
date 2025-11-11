@@ -4,7 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import DataTable from "@/components/dataTable/dataTable";
 import ErrorMessage from "@/components/ErrorMessage";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
+import { subscriptionsService } from "@nowcrm/services/server";
+import { DocumentId } from "@nowcrm/services";
 import { columns } from "./components/columns/subscriptionColumns";
 import createListDialog from "./components/createDialog";
 import ContactsSubscriptionsMassActions from "./components/massActions/massActions";
@@ -13,16 +14,16 @@ export const metadata: Metadata = {
 	title: "Contact subscriptions",
 };
 
-export default async function Page(props: { params: Promise<{ id: number }> }) {
+export default async function Page(props: { params: Promise<{ id: DocumentId }> }) {
 	const t = await getTranslations();
 	const params = await props.params;
 	// Fetch data from the contactService
 	const session = await auth();
 
-	const response = await subscriptionsService.find({
+	const response = await subscriptionsService.find(session?.jwt, {
 		populate: "*",
-		sort: ["id:desc"],
-		filters: { contact: { id: { $eq: params.id } } },
+		sort: ["documentId:desc"],
+		filters: { contact: { documentId: { $eq: params.id } } },
 	});
 
 	if (!response.success || !response.data || !response.meta) {

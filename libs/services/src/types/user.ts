@@ -1,11 +1,13 @@
 import type { BaseFormType, BaseType } from "./common/base_type";
 export interface User extends BaseType {
+	username: string;
     is2FAEnabled?: boolean;
 		totpSecret?: string;
         email: string;
 }
 
 export interface Form_User extends BaseFormType {
+	username: string;
     is2FAEnabled?: boolean;
 		totpSecret?: string;
         email: string;

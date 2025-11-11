@@ -22,7 +22,7 @@ import {
 import { getListCount } from "@/lib/actions/lists/get-list-count";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { List } from "@/lib/types/new_type/list";
+import { List } from "@nowcrm/services";
 
 const DeleteAction: React.FC<{ list: List }> = ({ list }) => {
 	const router = useRouter();
@@ -39,7 +39,11 @@ const DeleteAction: React.FC<{ list: List }> = ({ list }) => {
 					onClick={async () => {
 						const { default: toast } = await import("react-hot-toast");
 						const { deleteListAction } = await import("./removeList");
-						await deleteListAction(list.id, Number.parseInt(params.id));
+						const res = await deleteListAction(list.documentId, (params.id));
+						if (!res.success) {
+							toast.error(res.errorMessage ?? "Failed to delete list");
+							return;
+						}
 						toast.success(t("Contacts.lists.listDeleted"));
 						router.refresh();
 					}}
@@ -64,7 +68,7 @@ const ViewActions: React.FC<{ list: List }> = ({ list }) => {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuLabel>{t("common.actions.actions")}</DropdownMenuLabel>
-				<Link href={`${RouteConfig.lists.single(list.id)}`}>
+				<Link href={`${RouteConfig.lists.single(list.documentId)}`}>
 					<DropdownMenuItem>{t("common.actions.view")}</DropdownMenuItem>
 				</Link>
 				<DropdownMenuSeparator />
@@ -81,7 +85,7 @@ const ListCount: React.FC<{ list: List }> = ({ list }) => {
 	useEffect(() => {
 		const fetchCount = async () => {
 			try {
-				const response = await getListCount(list.id);
+				const response = await getListCount(list.documentId);
 				setCount(response.data);
 				setIsLoading(false);
 			} catch (_err) {
@@ -91,7 +95,7 @@ const ListCount: React.FC<{ list: List }> = ({ list }) => {
 		};
 
 		fetchCount();
-	}, [list.id, error]);
+	}, [list.documentId, error]);
 
 	if (isLoading) return <Spinner size="small" />;
 	if (error)
@@ -139,7 +143,7 @@ export const columns: ColumnDef<List>[] = [
 			const list = row.original;
 			return (
 				<Link
-					href={`${RouteConfig.lists.single(list.id)}`}
+					href={`${RouteConfig.lists.single(list.documentId)}`}
 					className=" font-medium"
 				>
 					{cell.renderValue() as any}

@@ -2,12 +2,10 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import contactsService from "@/lib/services/new_type/contacts.service";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
-
-export async function massUnsubscribeContacts(
-	contacts: number[],
+import { DocumentId } from "@nowcrm/services";
+import { contactsService, handleError, StandardResponse, subscriptionsService } from "@nowcrm/services/server";
+	export async function massUnsubscribeContacts(
+	contacts: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	console.log("[Server] massUnsubscribeContacts called with:", contacts);
 
@@ -24,11 +22,11 @@ export async function massUnsubscribeContacts(
 	try {
 		const unsubscribePromises = contacts.map(async (contactId) => {
 			console.log("[Server] Fetching contact", contactId);
-			const contact = await contactsService.findOne(contactId, {
+			const contact = await contactsService.findOne(contactId, session.jwt, {
 				populate: ["subscriptions"],
 			});
 
-			const subscriptionId = contact?.data?.subscriptions?.[0]?.id;
+			const subscriptionId = contact?.data?.subscriptions?.[0]?.documentId;
 
 			if (!subscriptionId) {
 				console.warn(`[Server] No subscription found for contact ${contactId}`);
@@ -44,7 +42,7 @@ export async function massUnsubscribeContacts(
 
 			const res = await subscriptionsService.update(subscriptionId, {
 				active: false,
-			});
+			}, session.jwt);
 
 			console.log("[Server] Result for subscription", subscriptionId, ":", res);
 			return res;
@@ -71,12 +69,6 @@ export async function massUnsubscribeContacts(
 			success: true,
 		};
 	} catch (error: any) {
-		console.error("[Server] Error unsubscribing contacts:", error);
-		return {
-			data: null,
-			status: error.status ?? 500,
-			success: false,
-			errorMessage: error.message,
-		};
+		return handleError(error);
 	}
 }

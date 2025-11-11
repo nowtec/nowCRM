@@ -56,11 +56,10 @@ import { createSearch } from "@/lib/actions/search_history/create-search";
 import { deleteSearch } from "@/lib/actions/search_history/delete-search";
 import { getSearchHistory } from "@/lib/actions/search_history/get-search-history";
 import { makeFavorite } from "@/lib/actions/search_history/make-favorite-search";
-import { updateSearchTemplate } from "@/lib/actions/search_history/update-search-history-template";
-import type { SearchHistoryType } from "@/lib/types/new_type/searchHistory";
-import type { SearchHistoryTemplate } from "@/lib/types/new_type/searchHistoryTemplate";
 import FilterGroupComponent from "./FilterGroupComponents";
 import { SaveDialog } from "./SaveSearchDialog";
+import { SearchHistoryType, SearchHistoryTemplate, DocumentId } from "@nowcrm/services";
+import { updateSearchHistoryTemplate } from "@/lib/actions/search_history/update-search-history-template";
 
 // Enhanced filter schema with grouping and logic
 const filterGroupSchema = z.object({
@@ -112,7 +111,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 	const [loadingSaved, setLoadingSaved] = React.useState(false);
 	const [faVersion, setFaVersion] = React.useState(0);
 	const [selectedSavedId, setSelectedSavedId] = React.useState<
-		string | undefined
+		DocumentId | undefined
 	>();
 	const [isUpdating, setIsUpdating] = React.useState(false);
 	const [saveDialogOpen, setSaveDialogOpen] = React.useState(false);
@@ -415,9 +414,9 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 		}
 	}
 
-	async function toggleFavorite(searchId: string) {
-		const searchIdNum = Number(searchId);
-		const currentSearch = saved.find((s) => s.id === searchIdNum);
+	async function toggleFavorite(searchId: DocumentId) {
+		const searchIdNum = (searchId);
+		const currentSearch = saved.find((s) => s.documentId === searchIdNum);
 		if (!currentSearch) return;
 
 		setFavoriteLoading((prev) => new Set(prev).add(searchId));
@@ -430,7 +429,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 				// Update local state immediately for better UX
 				setSaved((prevSaved) =>
 					prevSaved.map((search) =>
-						search.id === searchIdNum
+						search.documentId === searchIdNum
 							? { ...search, favorite: newFavoriteStatus }
 							: search,
 					),
@@ -457,12 +456,12 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 
 	// apply a saved search to the table
 	function applySavedById(idStr: string) {
-		const item = saved.find((s) => String(s.id) === idStr);
+		const item = saved.find((s) => (s.documentId) === idStr);
 		if (!item) return;
 
 		let stored: any = {};
 		try {
-			stored = JSON.parse(item.filters || "{}");
+			stored = JSON.parse(item.filters as string || "{}");
 		} catch {}
 
 		const ui: FilterValues = stored.ui ?? {
@@ -491,7 +490,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 			const strapiFilters = transformFilters(ui);
 			const payload = JSON.stringify({ ui, strapiFilters });
 
-			const res = await updateSearchTemplate(Number(selectedSavedId), {
+			const res = await updateSearchHistoryTemplate((selectedSavedId), {
 				filters: payload,
 				query: currentSearchTerm || "",
 			});
@@ -513,7 +512,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 	async function handleRename(searchId: string, newName: string) {
 		if (
 			!newName.trim() ||
-			newName === saved.find((s) => String(s.id) === searchId)?.name
+			newName === saved.find((s) => (s.documentId) === searchId)?.name
 		) {
 			setEditingSearchId(null);
 			setEditingName("");
@@ -523,7 +522,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 		setRenameLoading((prev) => new Set(prev).add(searchId));
 
 		try {
-			const res = await updateSearchTemplate(Number(searchId), {
+			const res = await updateSearchHistoryTemplate((searchId), {
 				name: newName.trim(),
 			});
 
@@ -531,7 +530,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 				// Update local state immediately for better UX
 				setSaved((prevSaved) =>
 					prevSaved.map((search) =>
-						search.id === Number(searchId)
+						search.documentId === (searchId)
 							? { ...search, name: newName.trim() }
 							: search,
 					),
@@ -606,7 +605,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 										</p>
 									) : (
 										filteredSaved.map((search) => (
-											<SavedSearchItem key={search.id} search={search} />
+											<SavedSearchItem key={search.documentId} search={search} />
 										))
 									)}
 								</div>
@@ -622,7 +621,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 										</p>
 									) : (
 										favoriteSaved.map((search) => (
-											<SavedSearchItem key={search.id} search={search} />
+											<SavedSearchItem key={search.documentId} search={search} />
 										))
 									)}
 								</div>
@@ -637,7 +636,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 					<div className="flex items-center gap-2 rounded-md bg-muted/50 p-3">
 						<div className="flex-1">
 							<p className="font-medium text-sm">
-								{saved.find((s) => String(s.id) === selectedSavedId)?.name}
+								{saved.find((s) => (s.documentId) === selectedSavedId)?.name}
 							</p>
 							<p className="text-muted-foreground text-xs">Currently loaded</p>
 						</div>
@@ -683,10 +682,10 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 
 	const SavedSearchItem = ({ search }: { search: SearchHistoryTemplate }) => {
 		const isFavorite = search.favorite === true;
-		const isSelected = selectedSavedId === String(search.id);
-		const isEditing = editingSearchId === String(search.id);
-		const isFavoriteLoading = favoriteLoading.has(String(search.id));
-		const isRenameLoading = renameLoading.has(String(search.id));
+		const isSelected = selectedSavedId === (search.documentId);
+		const isEditing = editingSearchId === (search.documentId);
+		const isFavoriteLoading = favoriteLoading.has((search.documentId));
+		const isRenameLoading = renameLoading.has((search.documentId));
 
 		return (
 			<div
@@ -701,7 +700,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 								variant="ghost"
 								size="sm"
 								className="h-6 w-6 p-0"
-								onClick={() => toggleFavorite(String(search.id))}
+								onClick={() => toggleFavorite((search.documentId))}
 								disabled={isFavoriteLoading}
 							>
 								{isFavoriteLoading ? (
@@ -729,11 +728,11 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 							value={editingName}
 							onChange={(e) => setEditingName(e.target.value)}
 							onBlur={() => {
-								handleRename(String(search.id), editingName);
+								handleRename((search.documentId), editingName);
 							}}
 							onKeyDown={(e) => {
 								if (e.key === "Enter") {
-									handleRename(String(search.id), editingName);
+									handleRename((search.documentId), editingName);
 								}
 								if (e.key === "Escape") {
 									setEditingSearchId(null);
@@ -747,7 +746,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 					) : (
 						<button
 							type="button"
-							onClick={() => applySavedById(String(search.id))}
+							onClick={() => applySavedById((search.documentId))}
 							className="w-full text-left"
 						>
 							<div className="flex items-center gap-2">
@@ -778,7 +777,7 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 					<DropdownMenuContent align="end">
 						<DropdownMenuItem
 							onClick={() => {
-								setEditingSearchId(String(search.id));
+								setEditingSearchId((search.documentId));
 								setEditingName(search.name);
 							}}
 							disabled={isRenameLoading}
@@ -796,13 +795,13 @@ const AdvancedFilters = forwardRef(function AdvancedFilters(
 									)
 								) {
 									// deletion not implemented yet
-									const res = await deleteSearch(search.id);
+									const res = await deleteSearch(search.documentId);
 									if (res?.success) {
 										const listed = await getSearchHistory(historyType);
 										if (listed?.success && Array.isArray(listed.data)) {
 											setSaved(listed.data);
 										}
-										if (selectedSavedId === String(search.id)) {
+										if (selectedSavedId === (search.documentId)) {
 											setSelectedSavedId(undefined);
 											const blank = {
 												groups: [{ id: "group-1", logic: "AND", filters: {} }],

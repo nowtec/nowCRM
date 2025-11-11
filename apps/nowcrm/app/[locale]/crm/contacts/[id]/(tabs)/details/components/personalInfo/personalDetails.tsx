@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact, DocumentId } from "@nowcrm/services";
 
 interface ListItem {
-	id: number;
+	id: DocumentId;
 	name: string;
 }
 
@@ -98,7 +98,7 @@ export function PersonalDetailsDialog({
 						{renderList(
 							t("AdvancedFilters.fields.keywords"),
 							contact.keywords?.map((item) => ({
-								id: item.id,
+								id: item.documentId,
 								name: item.name,
 							})),
 							undefined,
@@ -107,14 +107,14 @@ export function PersonalDetailsDialog({
 						{/* For Lists, provide a href function that uses the list item's id */}
 						{renderList(
 							t("AdvancedFilters.fields.lists"),
-							contact.lists?.map((item) => ({ id: item.id, name: item.name })),
+							contact.lists?.map((item) => ({ id: item.documentId, name: item.name })),
 							(item) => RouteConfig.lists.single(item.id),
 							<List className="size-4" />,
 						)}
 						{renderList(
 							t("AdvancedFilters.fields.journeys"),
 							contact.journeys?.map((item) => ({
-								id: item.id,
+								id: item.documentId,
 								name: item.name,
 							})),
 							(item) => RouteConfig.journeys.single(item.id),
@@ -123,7 +123,7 @@ export function PersonalDetailsDialog({
 						{renderList(
 							t("AdvancedFilters.fields.journey_step"),
 							contact.journey_steps?.map((item) => ({
-								id: item.id,
+								id: item.documentId,
 								name: item.name,
 							})),
 							undefined,

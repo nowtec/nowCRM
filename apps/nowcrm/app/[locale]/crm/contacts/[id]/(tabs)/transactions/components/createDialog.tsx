@@ -41,7 +41,7 @@ export default function CreateTransactionDialog() {
 	const t = useTranslations();
 
 	const formSchema = z.object({
-		contact: z.number(),
+		contact: z.string(),
 		card_holder_name: z.string().min(2, {
 			message: t("Contacts.transactions.cardSchema"),
 		}),
@@ -62,7 +62,7 @@ export default function CreateTransactionDialog() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			contact: Number.parseInt(params.id),
+			contact: (params.id),
 			card_holder_name: "",
 			amount: 0,
 			payment_method: "",

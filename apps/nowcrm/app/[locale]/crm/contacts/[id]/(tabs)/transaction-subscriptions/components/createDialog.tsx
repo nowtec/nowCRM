@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input";
 
 // Updated schema
 const formSchema = z.object({
-	contact: z.number(),
+	contact: z.string(),
 	payment_method: z.string(),
 	currency: z.string(),
 	amount: z.number(),
@@ -60,7 +60,7 @@ export default function CreateTransactionDialog() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			contact: Number.parseInt(params.id),
+			contact: (params.id),
 			payment_method: "",
 			currency: "",
 			amount: 0,

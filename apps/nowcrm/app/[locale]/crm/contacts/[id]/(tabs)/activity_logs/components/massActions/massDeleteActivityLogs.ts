@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import activityLogsService from "@/lib/services/new_type/activity_logs.service";
+import { DocumentId } from "@nowcrm/services";
+import { activityLogsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function MassRemoveActivityLogs(
-	activity_logs: number[],
+	activity_logs: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,18 +17,14 @@ export async function MassRemoveActivityLogs(
 		};
 	}
 	try {
-		activity_logs.map(async (id) => await activityLogsService.unPublish(id));
+		const deletePromises = activity_logs.map(async (id) => await activityLogsService.delete(id, session.jwt));
+		await Promise.all(deletePromises);
 		return {
 			data: null,
 			status: 200,
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error removing activity logs:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-		};
+		return handleError(error);
 	}
 }

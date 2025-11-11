@@ -4,7 +4,7 @@ import { DonationSubscription, Form_DonationSubscription } from "@nowcrm/service
 import { donationSubscriptionsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function createDonationSubscription(
-	values: Form_DonationSubscription,
+	values: Partial<Form_DonationSubscription>,
 ): Promise<StandardResponse<DonationSubscription>> {
 	const session = await auth();
 	if (!session) {

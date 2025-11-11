@@ -33,32 +33,32 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact } from "@nowcrm/services";
 
 // Updated Zod schema
 const formSchema = z.object({
 	function: z.string().optional(),
 	organization: z
 		.object({
-			value: z.number(),
+			value: z.string(),
 			label: z.string(),
 		})
 		.optional(),
 	department: z
 		.object({
-			value: z.number(),
+			value: z.string(),
 			label: z.string(),
 		})
 		.optional(),
 	industry: z
 		.object({
-			value: z.number(),
+			value: z.string(),
 			label: z.string(),
 		})
 		.optional(),
 	job_title: z
 		.object({
-			value: z.number(),
+			value: z.string(),
 			label: z.string(),
 		})
 		.optional(),
@@ -92,16 +92,16 @@ export function EditDialogProfessional({
 		defaultValues: {
 			function: contact.function || "",
 			organization: contact.organization
-				? { label: contact.organization.name, value: contact.organization.id }
+				? { label: contact.organization.name, value: contact.organization.documentId }
 				: undefined,
 			department: contact.department
-				? { label: contact.department.name, value: contact.department.id }
+				? { label: contact.department.name, value: contact.department.documentId }
 				: undefined,
 			industry: contact.industry
-				? { label: contact.industry.name, value: contact.industry.id }
+				? { label: contact.industry.name, value: contact.industry.documentId }
 				: undefined,
 			job_title: contact.job_title
-				? { label: contact.job_title.name, value: contact.job_title.id }
+				? { label: contact.job_title.name, value: contact.job_title.documentId }
 				: undefined,
 			website_url: contact.website_url || "",
 			linkedin_url: contact.linkedin_url || "",
@@ -121,12 +121,12 @@ export function EditDialogProfessional({
 		);
 		const edited_values = {
 			...values,
-			organization: values.organization?.value,
-			department: values.department?.value,
-			industry: values.industry?.value,
+			organization: values.organization?.value ,
+			department: values.department?.value ,
+			industry: values.industry?.value ,
 			job_title: values.job_title?.value,
 		};
-		const res = await updateContact(contact.id, edited_values);
+		const res = await updateContact(contact.documentId, edited_values);
 		if (!res.success) {
 			toast.error(
 				`${t("Contacts.details.professional.error")} ${res.errorMessage}`,
@@ -179,7 +179,7 @@ export function EditDialogProfessional({
 						<AsyncSelectField
 							name="organization"
 							label={t("AdvancedFilters.fields.organization")}
-							serviceName="organizationService"
+							serviceName="organizationsService"
 							form={form}
 							useFormClear={false}
 						/>
@@ -188,7 +188,7 @@ export function EditDialogProfessional({
 						<AsyncSelectField
 							name="department"
 							label={t("AdvancedFilters.fields.department")}
-							serviceName="departmentService"
+							serviceName="departmentsService"
 							form={form}
 							useFormClear={false}
 						/>
@@ -197,7 +197,7 @@ export function EditDialogProfessional({
 						<AsyncSelectField
 							name="industry"
 							label={t("AdvancedFilters.fields.industry")}
-							serviceName="industryService"
+							serviceName="industriesService"
 							form={form}
 							useFormClear={false}
 						/>
@@ -206,7 +206,7 @@ export function EditDialogProfessional({
 						<AsyncSelectField
 							name="job_title"
 							label={t("AdvancedFilters.fields.job_title")}
-							serviceName="jobTitleService"
+							serviceName="contactJobTitlesService"
 							form={form}
 							useFormClear={false}
 						/>

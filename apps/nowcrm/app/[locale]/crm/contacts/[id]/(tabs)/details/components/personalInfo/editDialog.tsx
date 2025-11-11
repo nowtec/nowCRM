@@ -52,7 +52,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact, LanguageKeys } from "@nowcrm/services";
 
 const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 	const value = e.target.value;
@@ -131,19 +131,19 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 		salutation: z
 			.object({
 				label: z.string(),
-				value: z.number(),
+				value: z.string(),
 			})
 			.optional(),
 		title: z
 			.object({
 				label: z.string(),
-				value: z.number(),
+				value: z.string(),
 			})
 			.optional(),
 		contact_types: z
 			.object({
 				label: z.string(),
-				value: z.number(),
+				value: z.string(),
 			})
 			.optional(),
 		gender: z.string().optional(),
@@ -160,7 +160,7 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 			contact_types: contact.contact_types?.length
 				? {
 						label: contact.contact_types[0].name,
-						value: contact.contact_types[0].id,
+						value: contact.contact_types[0].documentId,
 					}
 				: undefined,
 			phone: contact.phone || "",
@@ -168,13 +168,13 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 			salutation: contact.salutation
 				? {
 						label: contact.salutation.name,
-						value: contact.salutation.id,
+						value: contact.salutation.documentId,
 					}
 				: undefined,
 			title: contact.title
 				? {
 						label: contact.title.name,
-						value: contact.title.id,
+						value: contact.title.documentId,
 					}
 				: undefined,
 			gender: contact.gender || "",
@@ -190,13 +190,14 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 		);
 		const edited_values = {
 			...values,
+			language: values.language as LanguageKeys,
 			contact_types: values.contact_types
-				? [values.contact_types.value]
+				? {set : [values.contact_types.value] }
 				: undefined,
 			title: values.title?.value,
 			salutation: values.salutation?.value,
 		};
-		const res = await updateContact(contact.id, edited_values);
+		const res = await updateContact(contact.documentId, edited_values);
 		if (!res.success) {
 			toast.error(
 				`${t("Contacts.details.personal.edit.error")}: ${res.errorMessage}`,
@@ -429,7 +430,7 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 							<AsyncSelectField
 								name="contact_types"
 								label=""
-								serviceName="contactTypeService"
+								serviceName="contactTypesService"
 								form={form}
 								useFormClear={false}
 							/>

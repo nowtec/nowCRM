@@ -2,11 +2,10 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import documentsService from "@/lib/services/new_type/documents.service";
-
+import { DocumentId } from "@nowcrm/services";
+import { contactDocumentsService, handleError, StandardResponse } from "@nowcrm/services/server";
 export async function massDeleteDocuments(
-	documents: number[],
+	documents: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -18,7 +17,7 @@ export async function massDeleteDocuments(
 	}
 	try {
 		const unpublishPromises = documents.map((id) =>
-			documentsService.unPublish(id),
+			contactDocumentsService.delete(id, session.jwt),
 		);
 		await Promise.all(unpublishPromises);
 		return {
@@ -27,12 +26,6 @@ export async function massDeleteDocuments(
 			success: true,
 		};
 	} catch (error: any) {
-		console.error("Error deleting documents:", error);
-		return {
-			data: null,
-			status: error.status,
-			success: false,
-			errorMessage: error.message,
-		};
+		return handleError(error);
 	}
 }

@@ -24,7 +24,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact } from "@nowcrm/services";
 
 interface EnrichDialogProps {
 	contact: Contact;
@@ -333,7 +333,7 @@ export function EnrichDialog({ contact, isOpen, onClose }: EnrichDialogProps) {
 				toast.error("No changes to apply.");
 				return;
 			}
-			const result = await updateContact(contact.id, updateData);
+			const result = await updateContact(contact.documentId, updateData);
 
 			if (result.success) {
 				toast.success("Contact enriched successfully!");

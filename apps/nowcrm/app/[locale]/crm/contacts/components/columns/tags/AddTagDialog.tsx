@@ -21,11 +21,11 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { fetchTags } from "@/lib/actions/tags/fetch-tags";
+import { DocumentId, Tag } from "@nowcrm/services";
 
-type Tag = { id: number; name: string; color: string };
 
 interface AddTagDialogProps {
-	contactId: number;
+	contactId: DocumentId;
 	currentTags: Tag[];
 	onTagAdded: (tag: Tag) => void;
 }

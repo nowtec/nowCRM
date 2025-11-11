@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/tooltip";
 import cantons from "@/lib/static/cantons.json";
 import countries from "@/lib/static/countries.json";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact } from "@nowcrm/services";
 
 const formSchema = z.object({
 	address_line1: z.string().optional(),
@@ -97,7 +97,7 @@ export function EditDialogAddress({
 			canton: values.country === "Switzerland" ? values.canton : "", // Ignore canton if not CH
 			country: values.country || "",
 		};
-		const res = await updateContact(contact.id, finalValues);
+		const res = await updateContact(contact.documentId, finalValues);
 		if (!res.success) {
 			toast.error(`${t.Contacts.details.address.error} ${res.errorMessage}`);
 		} else {

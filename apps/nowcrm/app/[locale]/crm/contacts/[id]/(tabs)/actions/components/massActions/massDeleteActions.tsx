@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import actionsService from "@/lib/services/new_type/actions.service";
+import { DocumentId } from "@nowcrm/services";
+import { actionsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function massDeleteActions(
-	actions: number[],
+	actions: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,7 +17,7 @@ export async function massDeleteActions(
 		};
 	}
 	try {
-		const unpublishPromises = actions.map((id) => actionsService.unPublish(id));
+		const unpublishPromises = actions.map((id) => actionsService.delete(id, session.jwt));
 		await Promise.all(unpublishPromises);
 		return {
 			data: null,
@@ -25,12 +25,6 @@ export async function massDeleteActions(
 			success: true,
 		};
 	} catch (error: any) {
-		console.error("Error deleting actions:", error);
-		return {
-			data: null,
-			status: error.status,
-			success: false,
-			errorMessage: error.message,
-		};
+		return handleError(error);
 	}
 }

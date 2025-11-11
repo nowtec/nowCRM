@@ -10,6 +10,7 @@ import AddToListDialog from "../AddToListDialog";
 import { getContactIdByEventId } from "./getContactIdByEvent";
 import { massDeleteEvents } from "./massDeleteEvents";
 import { massUnsubscribeContacts } from "./massUnsubscribe";
+import { DocumentId } from "@nowcrm/services";
 
 export let currentEvents: any[] = [];
 export function setEventsForMassActions(events: any[]) {
@@ -19,7 +20,7 @@ export function setEventsForMassActions(events: any[]) {
 const actionsConfig: ActionsConfig = {
 	deleteContacts: {
 		label: "Delete Events",
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			const res = await massDeleteEvents(selectedRows);
 			return res;
 		},
@@ -28,10 +29,10 @@ const actionsConfig: ActionsConfig = {
 	},
 	unsubscribeContacts: {
 		label: "Unsubscribe contacts",
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			const contactIds = selectedRows
 				.map((eventId) => getContactIdByEventId(eventId, currentEvents))
-				.filter((id): id is number => Boolean(id));
+				.filter((id): id is DocumentId => Boolean(id));
 
 			return massUnsubscribeContacts(contactIds);
 		},
@@ -51,7 +52,7 @@ const ContactsSubscriptionsMassActions = ({
 	...restProps
 }: ContactsSubscriptionsMassActionsProps) => {
 	const [dialogOpen, setDialogOpen] = React.useState(false);
-	const [selected, setSelected] = React.useState<number[]>([]);
+	const [selected, setSelected] = React.useState<DocumentId[]>([]);
 	const [resolver, setResolver] = React.useState<((res: any) => void) | null>(
 		null,
 	);
@@ -60,7 +61,7 @@ const ContactsSubscriptionsMassActions = ({
 		...actionsConfig,
 		addContactsToList: {
 			label: "Add contacts to list",
-			onAction: async (selectedRows: number[]) => {
+			onAction: async (selectedRows: DocumentId[]) => {
 				setSelected(selectedRows);
 				setDialogOpen(true);
 				return new Promise((resolve) => setResolver(() => resolve));

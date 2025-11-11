@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { DonationTransaction, Form_DonationTransaction } from "@nowcrm/services";
 import { donationTransactionsService, handleError, StandardResponse } from "@nowcrm/services/server";
 export async function createTransaction(
-	values: Form_DonationTransaction,
+	values: Partial<Form_DonationTransaction>,
 ): Promise<StandardResponse<DonationTransaction>> {
 	const session = await auth();
 	if (!session) {

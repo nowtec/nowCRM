@@ -58,7 +58,7 @@ export default function AddToListDialog() {
 
 	async function handleCreate(values: z.infer<typeof createListSchema>) {
 		const res = await createList(values.name);
-		setSelectedOption({ value: res.data?.id, label: res.data?.name });
+		setSelectedOption({ value: res.data?.documentId, label: res.data?.name });
 		setListCreated(true);
 	}
 
@@ -69,8 +69,8 @@ export default function AddToListDialog() {
 		);
 
 		const res = await addContactToList(
-			Number(params.id),
-			+selectedOption.value,
+			(params.id),
+			selectedOption.value,
 		);
 
 		if (!res.success) {

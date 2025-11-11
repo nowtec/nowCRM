@@ -2,11 +2,10 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import documentsService from "@/lib/services/new_type/documents.service";
-
+import { DocumentId } from "@nowcrm/services";
+import { contactDocumentsService, handleError, StandardResponse } from "@nowcrm/services/server";
 export async function deleteAction(
-	document: number,
+	document: DocumentId,
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,10 +16,9 @@ export async function deleteAction(
 		};
 	}
 	try {
-		const response = await documentsService.unPublish(document);
+		const response = await contactDocumentsService.delete(document, session.jwt);
 		return response;
 	} catch (error) {
-		console.log(error);
-		throw new Error(`Failed to delete document ${error}`);
+		return handleError(error);
 	}
 }

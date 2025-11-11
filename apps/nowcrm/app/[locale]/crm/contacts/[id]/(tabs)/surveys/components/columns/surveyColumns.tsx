@@ -25,8 +25,7 @@ import {
 } from "@/components/ui/table";
 import { getSurveyItemsBySurveyId } from "@/lib/actions/surveyItems/get-survey-items";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { Survey } from "@/lib/types/new_type/survey";
-import type { SurveyItem } from "@/lib/types/new_type/survey_item";
+import { DocumentId, Survey, SurveyItem } from "@nowcrm/services";
 
 const DeleteAction: React.FC<{ survey: Survey }> = ({ survey }) => {
 	const router = useRouter();
@@ -42,7 +41,11 @@ const DeleteAction: React.FC<{ survey: Survey }> = ({ survey }) => {
 					onClick={async () => {
 						const { default: toast } = await import("react-hot-toast");
 						const { deleteSurveyAction } = await import("./deleteSurvey");
-						await deleteSurveyAction(survey.id);
+						const res =await deleteSurveyAction(survey.documentId);
+						if(!res.success) {
+							toast.error(res.errorMessage ?? "Failed to delete survey");
+							return;
+						}
 						toast.success(t("Contacts.surveys.surveyDeleted"));
 						router.refresh();
 					}}
@@ -142,7 +145,7 @@ export const columns: ColumnDef<Survey>[] = [
 ];
 
 // 👇 Subcomponent to display survey items
-const SurveyItemsTable: React.FC<{ surveyId: number }> = ({ surveyId }) => {
+const SurveyItemsTable: React.FC<{ surveyId: DocumentId }> = ({ surveyId }) => {
 	const [items, setItems] = useState<SurveyItem[] | null>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -150,7 +153,7 @@ const SurveyItemsTable: React.FC<{ surveyId: number }> = ({ surveyId }) => {
 		async function load() {
 			try {
 				const data = await getSurveyItemsBySurveyId(surveyId);
-				setItems(data);
+				setItems(data.data);
 			} catch (err) {
 				console.error("Failed to fetch survey items", err);
 			} finally {
@@ -224,8 +227,6 @@ const SurveyItemsTable: React.FC<{ surveyId: number }> = ({ surveyId }) => {
 								)}
 							</TableCell>
 
-							<TableCell>{item.videoask_option_id || "N/A"}</TableCell>
-							<TableCell>{item.videoask_question_id || "N/A"}</TableCell>
 						</TableRow>
 					))}
 				</TableBody>
@@ -237,5 +238,5 @@ const SurveyItemsTable: React.FC<{ surveyId: number }> = ({ surveyId }) => {
 // 👇 Used in React Table's `renderSubComponent`
 export const renderSubComponent = ({ row }: { row: Row<Survey> }) => {
 	const survey = row.original;
-	return <SurveyItemsTable surveyId={survey.id} />;
+	return <SurveyItemsTable surveyId={survey.documentId} />;
 };

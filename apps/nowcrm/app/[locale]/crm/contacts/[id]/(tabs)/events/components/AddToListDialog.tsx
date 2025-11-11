@@ -15,12 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createList } from "@/lib/actions/lists/create-list";
-import type { StandardResponse } from "@/lib/services/common/response.service";
+import { StandardResponse } from "@nowcrm/services/server";
 import { getContactIdByEventId } from "./massActions/getContactIdByEvent";
 import { currentEvents } from "./massActions/massActions";
+import { DocumentId } from "@nowcrm/services";
 
 interface AddToListDialogProps {
-	selectedContacts: number[];
+	selectedContacts: DocumentId[];
 	onDone?: (res: StandardResponse<null>) => void;
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -48,7 +49,7 @@ export default function AddToListDialog({
 
 		const res = await createList(listName.trim());
 		if (res.success) {
-			setSelectedOption({ value: res.data?.id, label: res.data?.name });
+			setSelectedOption({ value: res.data?.documentId, label: res.data?.name });
 			setListCreated(true);
 			setListName("");
 		}
@@ -57,12 +58,12 @@ export default function AddToListDialog({
 	async function handleSubmit() {
 		if (!selectedOption) return;
 
-		const listId = +selectedOption.value;
+		const listId = selectedOption.value;
 
 		// event.id → contact.id
 		const contactIds = selectedContacts
 			.map((eventId) => getContactIdByEventId(eventId, currentEvents))
-			.filter((id): id is number => Boolean(id));
+			.filter((id): id is DocumentId => Boolean(id));
 
 		const res = await massAddContactsToList(contactIds, listId);
 

@@ -38,6 +38,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
+import { DocumentId, LanguageKeys } from "@nowcrm/services";
 
 export default function CreateContactDialog() {
 	const t = useTranslations();
@@ -67,7 +68,7 @@ export default function CreateContactDialog() {
 	);
 	const [dialogOpen, setDialogOpen] = React.useState(false);
 	const [existingContact, setExistingContact] = React.useState<null | {
-		id: number;
+		documentId: DocumentId;
 	}>(null);
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -76,13 +77,13 @@ export default function CreateContactDialog() {
 			"@/lib/actions/contacts/create-contact"
 		);
 		const { getContactByEmail } = await import(
-			"@/lib/actions/contacts/getContactByEmail"
+			"@/lib/actions/contacts/get-contact-by-email"
 		);
 
 		if (values.email) {
 			const existing = await getContactByEmail(values.email);
 			if (existing) {
-				setExistingContact({ id: existing.id });
+				setExistingContact({ documentId: existing.documentId });
 				form.setError("email", {
 					type: "manual",
 					message: "This email address is already associated to a contact.",
@@ -93,8 +94,7 @@ export default function CreateContactDialog() {
 			}
 		}
 
-		const res = await createContact({ ...values, publishedAt: new Date() });
-		console.log(res);
+		const res = await createContact({ ...values, publishedAt: new Date(), language: values.language as LanguageKeys });
 		if (!res.success) {
 			toast.error(
 				`${t("Contacts.createContact.toast.error")} ${res.errorMessage}`,
@@ -196,7 +196,7 @@ export default function CreateContactDialog() {
 												{form.formState.errors.email.message}{" "}
 											</div>
 											<Link
-												href={`${RouteConfig.contacts.single.base(existingContact.id)}`}
+												href={`${RouteConfig.contacts.single.base(existingContact.documentId)}`}
 												target="_blank"
 												rel="noopener noreferrer"
 												className="flex items-center font-medium underline hover:text-red-800"

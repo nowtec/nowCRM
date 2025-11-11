@@ -17,7 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { ServiceName } from "@/lib/services/common/serviceFactory";
+import { BaseServiceName } from "@nowcrm/services";
 import cantons from "@/lib/static/cantons.json";
 import countries from "@/lib/static/countries.json";
 import type { FilterValues } from "./advancedFilters";
@@ -126,7 +126,7 @@ const FilterField = ({
 							<AsyncSelectField
 								form={form}
 								name={relationPath}
-								serviceName="organizationService"
+								serviceName="organizationsService"
 								useFormClear
 								filterKey="name"
 							/>
@@ -207,7 +207,7 @@ const FilterField = ({
 								<AsyncSelectField
 									form={form}
 									name={relationPath}
-									serviceName={relationMeta.serviceName as ServiceName}
+									serviceName={relationMeta.serviceName as BaseServiceName}
 									useFormClear
 									filterKey={relationMeta.filterKey}
 								/>
@@ -215,7 +215,7 @@ const FilterField = ({
 								<AsyncSelectField
 									form={form}
 									name={relationPath}
-									serviceName={relationMeta.serviceName as ServiceName}
+									serviceName={relationMeta.serviceName as BaseServiceName}
 									useFormClear
 									filterKey={relationMeta.filterKey}
 									filter={
@@ -227,7 +227,7 @@ const FilterField = ({
 								<AsyncSelectField
 									form={form}
 									name={relationPath}
-									serviceName={relationMeta.serviceName as ServiceName}
+									serviceName={relationMeta.serviceName as BaseServiceName}
 									useFormClear
 									filterKey={relationMeta.filterKey}
 									filter={{
@@ -239,7 +239,7 @@ const FilterField = ({
 								<AsyncSelectField
 									form={form}
 									name={relationPath}
-									serviceName={relationMeta.serviceName as ServiceName}
+									serviceName={relationMeta.serviceName as BaseServiceName}
 									useFormClear
 									{...(relationMeta.filterKey
 										? { filterKey: relationMeta.filterKey }

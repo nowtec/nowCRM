@@ -12,7 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { Task } from "@/lib/types/new_type/task";
+import { Task } from "@nowcrm/services";
 
 const DeleteAction: React.FC<{ task: Task }> = ({ task }) => {
 	const router = useRouter();
@@ -28,7 +28,11 @@ const DeleteAction: React.FC<{ task: Task }> = ({ task }) => {
 					onClick={async () => {
 						const { default: toast } = await import("react-hot-toast");
 						const { deleteTaskAction } = await import("./deleteTask");
-						await deleteTaskAction(task.id);
+						const res = await deleteTaskAction(task.documentId);
+						if(!res.success) {
+							toast.error(res.errorMessage ?? "Failed to delete task");
+							return;
+						}
 						toast.success(t("Contacts.tasks.taskDeleted"));
 						router.refresh();
 					}}

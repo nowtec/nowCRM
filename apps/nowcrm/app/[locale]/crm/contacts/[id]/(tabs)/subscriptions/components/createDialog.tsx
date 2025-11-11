@@ -21,10 +21,10 @@ import { Form } from "@/components/ui/form";
 
 const formSchema = z.object({
 	channel: z.object({
-		value: z.number(),
+		value: z.string(),
 		label: z.string(),
 	}),
-	contact: z.number(),
+	contact: z.string(),
 });
 
 export default function CreateListDialog() {
@@ -37,7 +37,7 @@ export default function CreateListDialog() {
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			channel: undefined,
-			contact: Number.parseInt(params.id),
+			contact: (params.id),
 		},
 	});
 
@@ -83,7 +83,7 @@ export default function CreateListDialog() {
 						<AsyncSelectField
 							name="channel"
 							label={t("channel")}
-							serviceName="channelService"
+							serviceName="channelsService"
 							form={form}
 							useFormClear={true}
 						/>

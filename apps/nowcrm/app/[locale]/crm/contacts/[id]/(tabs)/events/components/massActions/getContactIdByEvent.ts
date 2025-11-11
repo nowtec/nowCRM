@@ -1,7 +1,9 @@
+import { DocumentId } from "@nowcrm/services";
+
 export function getContactIdByEventId(
-	eventId: number,
+	eventId: DocumentId,
 	events: any[],
-): number | null {
-	const event = events.find((e) => e.id === eventId);
-	return event?.contact?.id ?? null;
+): DocumentId | null {
+	const event = events.find((e) => e.documentId === eventId);
+	return event?.contact?.documentId ?? null;
 }

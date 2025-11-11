@@ -8,6 +8,7 @@ import {
 import { massActivateSubscriptions } from "./massActivateSubscriptions";
 import { massDeactivateSubscriptions } from "./massDeactivateSubscription";
 import { massDeleteSubscriptions } from "./massDeleteSubscriptions";
+import { DocumentId } from "@nowcrm/services";
 
 // Get your translations/messages
 
@@ -15,7 +16,7 @@ import { massDeleteSubscriptions } from "./massDeleteSubscriptions";
 const actionsConfig: ActionsConfig = {
 	activateSubscriptions: {
 		label: "Activate",
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			return await massActivateSubscriptions(selectedRows);
 		},
 		successMessage: "Subscriptions activated",
@@ -23,7 +24,7 @@ const actionsConfig: ActionsConfig = {
 	},
 	deactivateSubscriptions: {
 		label: "Deactivate",
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			return await massDeactivateSubscriptions(selectedRows);
 		},
 		successMessage: "Subscriptions deactivated",
@@ -31,7 +32,7 @@ const actionsConfig: ActionsConfig = {
 	},
 	deleteSubscription: {
 		label: "Delete",
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			return await massDeleteSubscriptions(selectedRows);
 		},
 		successMessage: "Subscriptions deleted",

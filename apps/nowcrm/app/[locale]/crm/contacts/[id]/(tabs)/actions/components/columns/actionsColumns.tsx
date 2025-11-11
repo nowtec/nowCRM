@@ -20,7 +20,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { Action } from "@/lib/types/new_type/action";
+import { Action } from "@nowcrm/services";
+
 
 const DeleteAction: React.FC<{ action: Action }> = ({ action }) => {
 	const router = useRouter();
@@ -35,7 +36,11 @@ const DeleteAction: React.FC<{ action: Action }> = ({ action }) => {
 					onClick={async () => {
 						const { default: toast } = await import("react-hot-toast");
 						const { deleteAction } = await import("./deleteAction");
-						await deleteAction(action.id);
+						const res = await deleteAction(action.documentId);
+						if(!res.success) {
+							toast.error(res.errorMessage || "Failed to delete action");
+							return;
+						}
 						toast.success(t.Contacts.toasts.actionsdeleted);
 						router.refresh();
 					}}
@@ -125,9 +130,9 @@ export const columns: ColumnDef<Action>[] = [
 			return (
 				<div className="flex flex-wrap gap-2">
 					{score_items.map((score, index) => (
-						<TooltipProvider key={`${score.id} - ${index}`}>
+						<TooltipProvider key={`${score.documentId} - ${index}`}>
 							<Card
-								key={`${score.id} - ${index}`}
+								key={`${score.documentId} - ${index}`}
 								className="w-fit cursor-help rounded-md border bg-muted shadow-none"
 							>
 								<Tooltip>

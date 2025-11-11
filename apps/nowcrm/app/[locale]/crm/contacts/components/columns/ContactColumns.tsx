@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { CommunicationChannelKeys, Contact } from "@nowcrm/services";
 import { toNames } from "@/lib/utils";
 import { CountryFilterHeader } from "./countries/CountryFilterHeader";
 import { TagsCell } from "./tags/TagCell";
@@ -42,7 +42,7 @@ const ViewActions: React.FC<{ contact: Contact }> = ({ contact }) => {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuLabel>{t.common.actions.actions}</DropdownMenuLabel>
-					<Link href={`${RouteConfig.contacts.single.base(contact.id)}`}>
+					<Link href={`${RouteConfig.contacts.single.base(contact.documentId)}`}>
 						<DropdownMenuItem>{t.common.actions.view}</DropdownMenuItem>
 					</Link>
 					<DropdownMenuSeparator />
@@ -51,7 +51,7 @@ const ViewActions: React.FC<{ contact: Contact }> = ({ contact }) => {
 							const { duplicateContactAction } = await import(
 								"@/lib/actions/contacts/duplicate-contact"
 							);
-							const res = await duplicateContactAction(contact.id);
+							const res = await duplicateContactAction(contact.documentId);
 							if (!res.success) {
 								toast.error(res.errorMessage ?? "Failed to duplicate contact");
 								return;
@@ -65,7 +65,11 @@ const ViewActions: React.FC<{ contact: Contact }> = ({ contact }) => {
 					<DropdownMenuItem
 						onClick={async () => {
 							const { deleteContactAction } = await import("./ContactDelete");
-							await deleteContactAction(contact.id);
+							const res = await deleteContactAction(contact.documentId);
+							if (!res.success) {
+								toast.error(res.errorMessage ?? "Failed to delete contact");
+								return;
+							}
 							toast.success(t.Contacts.deleteContact);
 							router.refresh();
 						}}
@@ -130,7 +134,7 @@ const ViewContact: React.FC<{ contact: Contact; cell: any }> = ({
 	return (
 		<div className="flex cursor-pointer space-x-2">
 			<Link
-				href={`${RouteConfig.contacts.single.base(contact.id)}`}
+				href={`${RouteConfig.contacts.single.base(contact.documentId)}`}
 				className="max-w-[150px] truncate font-medium"
 			>
 				{cell.renderValue() as any}
@@ -238,7 +242,7 @@ export const columns: ColumnDef<Contact>[] = [
 				row.original.subscriptions
 					?.filter((sub) => !!sub?.active)
 					.map((sub) => sub?.channel?.name ?? null)
-					.filter((n): n is string => !!n && n.trim().length > 0)
+					.filter((n): n is CommunicationChannelKeys => !!n && n.trim().length > 0)
 					.join(", ") || "None";
 			return <p>{names}</p>;
 		},
@@ -485,8 +489,8 @@ export const columns: ColumnDef<Contact>[] = [
 			const tags = row.original.tags || [];
 			return (
 				<TagsCell
-					serviceName="contactService"
-					entityId={row.original.id}
+					serviceName="contactsService"
+					entityId={row.original.documentId}
 					initialTags={tags}
 				/>
 			);

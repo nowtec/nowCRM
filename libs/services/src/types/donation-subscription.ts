@@ -6,7 +6,7 @@ export interface DonationSubscription extends Omit<BaseType, "name"> {
 	payment_method: string;
 	currency: string;
 	payment_provider: string;
-	internal: string;
+	interval: string;
 	subscription_token: string;
 	raw_data: string;
 }
@@ -17,7 +17,7 @@ export interface Form_DonationSubscription extends Omit<BaseFormType, "name"> {
 	payment_method: string;
 	currency: string;
 	payment_provider: string;
-	internal: string;
+	interval: string;
 	subscription_token: string;
 	raw_data: string;
 }

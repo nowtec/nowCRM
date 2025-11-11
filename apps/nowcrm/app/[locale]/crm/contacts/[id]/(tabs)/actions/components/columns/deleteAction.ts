@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import actionsService from "@/lib/services/new_type/actions.service";
+import { DocumentId } from "@nowcrm/services";
+import { actionsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function deleteAction(
-	action: number,
+	action: DocumentId,
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,10 +17,9 @@ export async function deleteAction(
 		};
 	}
 	try {
-		const response = await actionsService.unPublish(action);
+		const response = await actionsService.delete(action, session.jwt);
 		return response;
 	} catch (error) {
-		console.log(error);
-		throw new Error("Failed to delete action");
+		return handleError(error);
 	}
 }

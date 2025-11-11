@@ -6,9 +6,9 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import ErrorMessage from "@/components/ErrorMessage";
 import { HelloMessage } from "@/components/HelloMessage";
-import contactsService from "@/lib/services/new_type/contacts.service";
-import type { PaginationParams } from "@/lib/types/common/paginationParams";
 import ContactsTableClient from "./ContactsTableClient";
+import { contactsService } from "@nowcrm/services/server";
+import { PaginationParams } from "@nowcrm/services";
 
 export const metadata: Metadata = { title: "Contacts" };
 
@@ -26,7 +26,7 @@ export default async function Page(props: {
 
 	const session = await auth();
 
-	const response = await contactsService.find({
+	const response = await contactsService.find(session?.jwt, {
 		fields: [
 			"id",
 			"first_name",

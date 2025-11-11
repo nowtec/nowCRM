@@ -11,7 +11,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact } from "@nowcrm/services";
 import { EditDialogAddress } from "./editDialog";
 
 interface AddressCardProps {

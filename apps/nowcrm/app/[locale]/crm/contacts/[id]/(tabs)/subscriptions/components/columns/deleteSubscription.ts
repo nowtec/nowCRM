@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
-
+import { DocumentId } from "@nowcrm/services";
+import { handleError, StandardResponse } from "@nowcrm/services/server";
+import { subscriptionsService } from "@nowcrm/services/server";
 export async function deleteSubscriptionAction(
-	subscriptionId: number,
+	subscriptionId: DocumentId,
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,10 +17,9 @@ export async function deleteSubscriptionAction(
 		};
 	}
 	try {
-		const response = await subscriptionsService.delete(subscriptionId);
+		const response = await subscriptionsService.delete(subscriptionId, session.jwt);
 		return response;
 	} catch (error) {
-		console.log(error);
-		throw new Error("Failed to delete Subscription");
+		return handleError(error);
 	}
 }

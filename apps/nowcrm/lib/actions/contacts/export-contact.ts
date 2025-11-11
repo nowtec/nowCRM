@@ -1,10 +1,10 @@
 "use server";
 import { auth } from "@/auth";
-import { Contact } from "@nowcrm/services";
+import { Contact, DocumentId } from "@nowcrm/services";
 import { contactsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function exportContact(
-	contactId: number,
+	contactId: DocumentId,
 ): Promise<StandardResponse<Contact>> {
 	const session = await auth();
 	if (!session) {

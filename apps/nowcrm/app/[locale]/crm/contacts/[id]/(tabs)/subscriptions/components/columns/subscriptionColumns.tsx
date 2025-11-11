@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { updateSubscription } from "@/lib/actions/subscriptions/update-subscription";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { Subscription } from "@/lib/types/new_type/subscription";
+import { Subscription } from "@nowcrm/services";
 
 const DeleteAction: React.FC<{ subscription: Subscription }> = ({
 	subscription,
@@ -34,7 +34,11 @@ const DeleteAction: React.FC<{ subscription: Subscription }> = ({
 						const { deleteSubscriptionAction } = await import(
 							"./deleteSubscription"
 						);
-						await deleteSubscriptionAction(subscription.id);
+						const res = await deleteSubscriptionAction(subscription.documentId);
+						if(!res.success) {
+							toast.error(res.errorMessage || "Failed to delete subscription");
+							return;
+						}
 						toast.success(t("Contacts.subscriptions.subscriptionDeleted"));
 						router.refresh();
 					}}
@@ -52,13 +56,16 @@ const SwitchAction: React.FC<{ subscription: Subscription }> = ({
 }) => {
 	const router = useRouter();
 	const t = useTranslations();
-
 	return (
 		<Switch
 			checked={!!subscription.active}
 			onCheckedChange={async (value) => {
 				const { default: toast } = await import("react-hot-toast");
-				await updateSubscription(subscription.id, { active: value });
+				const res = await updateSubscription(subscription.documentId, { active: value });
+				if(!res.success) {
+					toast.error(res.errorMessage || "Failed to update subscription");
+					return;
+				}
 				const status = value
 					? t("Contacts.subscriptions.activated")
 					: t("Contacts.subscriptions.deactivated");
@@ -135,7 +142,7 @@ export const columns: ColumnDef<Subscription>[] = [
 				<div>
 					{consent?.version ? (
 						<Link
-							href={`${RouteConfig.policy.single(Number(consent.version))}`}
+							href={`${RouteConfig.policy.single((consent.version))}`}
 							target="_blank"
 							rel="noopener noreferrer"
 							className="flex items-center font-medium hover:text-red-800"

@@ -35,14 +35,15 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { taskStatuses } from "@nowcrm/services";
 
 const formSchema = z.object({
-	contact: z.number(),
+	contact: z.string(),
 	name: z.string(),
 	description: z.string().optional(),
 	action: z.string().optional(),
 	assigned_to: z.object({
-		value: z.number(),
+		value: z.string(),
 		label: z.string(),
 	}),
 	due_date: z.string().optional(),
@@ -58,7 +59,7 @@ export default function CreateTaskDialog() {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			contact: Number.parseInt(params.id),
+			contact: (params.id),
 			name: "",
 			assigned_to: undefined,
 			description: "",
@@ -73,8 +74,9 @@ export default function CreateTaskDialog() {
 		const { createTask } = await import("@/lib/actions/tasks/create-task");
 		const updated_values = {
 			...values,
+			task_status: values.status as taskStatuses,
 			due_date: new Date(),
-			assigned_to: values.assigned_to.value,
+			assigned_to:Number.parseInt(values.assigned_to.value),
 		};
 		const res = await createTask({
 			...updated_values,
@@ -184,7 +186,7 @@ export default function CreateTaskDialog() {
 						<AsyncSelectField
 							name="assigned_to"
 							label={t("Contacts.tasks.fields.assignTo")}
-							serviceName="userService"
+							serviceName="usersService"
 							form={form}
 							filterKey="username"
 							useFormClear={false}

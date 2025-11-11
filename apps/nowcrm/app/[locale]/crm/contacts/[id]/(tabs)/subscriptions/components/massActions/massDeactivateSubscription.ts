@@ -2,11 +2,12 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import subscriptionsService from "@/lib/services/new_type/subscriptions.service";
+import { handleError, StandardResponse } from "@nowcrm/services/server";
+import { DocumentId } from "@nowcrm/services";
+import { subscriptionsService } from "@nowcrm/services/server";
 
 export async function massDeactivateSubscriptions(
-	subscriptions: number[],
+	subscriptions: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -18,7 +19,7 @@ export async function massDeactivateSubscriptions(
 	}
 	try {
 		const unpublishPromises = subscriptions.map((id) =>
-			subscriptionsService.update(id, { active: false }),
+			subscriptionsService.update(id, { active: false }, session.jwt),
 		);
 		await Promise.all(unpublishPromises);
 		return {
@@ -27,11 +28,6 @@ export async function massDeactivateSubscriptions(
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error deleting Subscription:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-		};
+		return handleError(error);
 	}
 }

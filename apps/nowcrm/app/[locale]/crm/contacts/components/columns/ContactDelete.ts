@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import contactsService from "@/lib/services/new_type/contacts.service";
+import { DocumentId } from "@nowcrm/services";
+import { contactsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function deleteContactAction(
-	contactId: number,
+	contactId: DocumentId,
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -18,10 +18,9 @@ export async function deleteContactAction(
 	}
 
 	try {
-		const response = await contactsService.unPublish(contactId);
+		const response = await contactsService.delete(contactId, session.jwt);
 		return response;
 	} catch (error) {
-		console.log(error);
-		throw new Error("Failed to delete Contact");
+		return handleError(error);
 	}
 }

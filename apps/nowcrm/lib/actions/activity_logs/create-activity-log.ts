@@ -6,7 +6,7 @@ import { activityLogsService, handleError, StandardResponse } from "@nowcrm/serv
 import { type ActivityLog, type Form_ActivityLog } from "@nowcrm/services";
 
 export async function createActivityLog(
-	values: Form_ActivityLog,
+	values: Partial<Form_ActivityLog>,
 ): Promise<StandardResponse<ActivityLog>> {
 	const session = await auth();
 	if (!session) {

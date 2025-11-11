@@ -6,6 +6,7 @@ import {
 	massActionsGenerator,
 } from "@/components/generativeComponents/MassActionsGenerator";
 import { massDeleteDonationSubscriptions } from "./massDeleteTransactions";
+import { DocumentId } from "@nowcrm/services";
 
 // Get your translations/messages
 
@@ -13,7 +14,7 @@ import { massDeleteDonationSubscriptions } from "./massDeleteTransactions";
 const actionsConfig: ActionsConfig = {
 	deleteContacts: {
 		label: "Delete",
-		onAction: async (selectedRows: number[]) => {
+		onAction: async (selectedRows: DocumentId[]) => {
 			return await massDeleteDonationSubscriptions(selectedRows);
 		},
 		successMessage: "Donation subscription deleted",

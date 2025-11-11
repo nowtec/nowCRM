@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import donationTransactionService from "@/lib/services/new_type/donation_transcation.service";
-
+import { DocumentId } from "@nowcrm/services";
+import { handleError, StandardResponse } from "@nowcrm/services/server";
+import { donationTransactionsService } from "@nowcrm/services/server";
 export async function massDeleteTransactions(
-	transactions: number[],
+	transactions: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -18,7 +18,7 @@ export async function massDeleteTransactions(
 	}
 	try {
 		const unpublishPromises = transactions.map((id) =>
-			donationTransactionService.unPublish(id),
+			donationTransactionsService.delete(id, session.jwt),
 		);
 		await Promise.all(unpublishPromises);
 		return {
@@ -27,11 +27,6 @@ export async function massDeleteTransactions(
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error deleting Transaction:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-		};
+		return handleError(error);
 	}
 }

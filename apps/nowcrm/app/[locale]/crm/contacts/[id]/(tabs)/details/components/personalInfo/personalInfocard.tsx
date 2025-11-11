@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { formatDateStrapi } from "@/lib/strapiDate";
-import type { Contact } from "@/lib/types/new_type/contact";
+import { Contact } from "@nowcrm/services";
 import { EditDialog } from "./editDialog";
 import { EnrichDialog } from "./enrichDialog";
 import { PersonalDetailsDialog } from "./personalDetails";
@@ -83,7 +83,7 @@ export function PersonalInfoCard({ contact }: PersonalInfoCardProps) {
 
 		try {
 			setAnonymizeLoading(true);
-			const result = await anonymizeContact(contact.id);
+			const result = await anonymizeContact(contact.documentId);
 			if (result.success) {
 				toast.success(t("Contacts.details.personal.details.anonymize.success"));
 				router.refresh();
@@ -109,14 +109,14 @@ export function PersonalInfoCard({ contact }: PersonalInfoCardProps) {
 
 		try {
 			setExportLoading(true);
-			const result = await exportContact(contact.id);
+			const result = await exportContact(contact.documentId);
 			if (result.success && result.data) {
 				const formattedData = JSON.stringify(result.data, null, 2);
 				const blob = new Blob([formattedData], { type: "application/json" });
 				const url = window.URL.createObjectURL(blob);
 				const a = document.createElement("a");
 				a.href = url;
-				a.download = `contact-${contact.first_name}-${contact.last_name || contact.id}.json`;
+				a.download = `contact-${contact.first_name}-${contact.last_name || contact.documentId}.json`;
 				document.body.appendChild(a);
 				a.click();
 				window.URL.revokeObjectURL(url);

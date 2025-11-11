@@ -4,18 +4,18 @@ import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import DataTable from "@/components/dataTable/dataTable";
 import ErrorMessage from "@/components/ErrorMessage";
-import donationTransactionService from "@/lib/services/new_type/donation_transcation.service";
-import type { PaginationParams } from "@/lib/types/common/paginationParams";
+
 import { columns } from "./components/columns/transactionColumns";
 import createListDialog from "./components/createDialog";
 import DonationTransactionMassActions from "./components/massActions/massActions";
-
+import { DocumentId, PaginationParams } from "@nowcrm/services";
+import { donationTransactionsService } from "@nowcrm/services/server";
 export const metadata: Metadata = {
 	title: "Contact transactions",
 };
 export default async function Page(props: {
 	searchParams: Promise<PaginationParams>;
-	params: Promise<{ id: number }>;
+	params: Promise<{ id: DocumentId }>;
 }) {
 	const t = await getTranslations();
 	const params = await props.params;
@@ -30,8 +30,9 @@ export default async function Page(props: {
 	// Fetch data from the contactService
 	const session = await auth();
 
-	const response = await donationTransactionService.find({
+	const response = await donationTransactionsService.find(session?.jwt, {
 		sort: [`${sortBy}:${sortOrder}` as any],
+		populate: "*",
 		pagination: {
 			page,
 			pageSize,
@@ -42,7 +43,7 @@ export default async function Page(props: {
 				{ payment_method: { $containsi: search } },
 				{ payment_provider: { $containsi: search } },
 			],
-			contact: { id: { $eq: params.id } },
+			contact: { documentId: { $eq: params.id } },
 		},
 	});
 

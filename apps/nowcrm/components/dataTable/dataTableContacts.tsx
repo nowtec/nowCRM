@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { DataTablePagination } from "./dataTablePagination";
 import { DataTableViewOptions } from "./dataTableViewOptions";
+import { DocumentId } from "@nowcrm/services";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -40,7 +41,7 @@ interface DataTableProps<TData, TValue> {
 	table_name: string;
 	table_title: string;
 	mass_actions: React.ComponentType<{
-		selectedRows: number[];
+		selectedRows: DocumentId[];
 		clearFunction: () => void;
 		jwt?: string;
 		refreshData?: () => void;
@@ -351,7 +352,7 @@ export default function DataTable<TData, TValue>({
 
 					<MassActionsComponent
 						selectedRows={Object.keys(table.getState().rowSelection).map(
-							(key) => +key,
+							(key) => key as DocumentId,
 						)}
 						clearFunction={table.resetRowSelection}
 						jwt={table.options.meta?.session?.jwt}

@@ -5,7 +5,7 @@ import {
 	NUMBER_OPERATORS,
 	type Operator,
 	TEXT_OPERATORS,
-} from "@/lib/types/common/StrapiQuery";
+} from "@nowcrm/services";
 import { FIELD_TYPES } from "./filterTypes";
 
 export function getOperatorsForField(field: string): Operator[] {

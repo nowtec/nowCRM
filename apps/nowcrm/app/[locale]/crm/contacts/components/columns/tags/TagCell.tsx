@@ -28,7 +28,7 @@ export function TagsCell({
 	const handleTagAdded = async (newTag: Tag) => {
 		setAdding(true);
 		try {
-			const res = await addTag(serviceName, entityId, newTag.id);
+			const res = await addTag(serviceName, entityId, newTag.documentId);
 			if (res.success) {
 				setTags((prev) => [...prev, newTag]);
 			}
@@ -42,7 +42,7 @@ export function TagsCell({
 		try {
 			const res = await removeTag(serviceName, entityId, tagId);
 			if (res.success) {
-				setTags((prev) => prev.filter((tag) => tag.id !== tagId));
+				setTags((prev) => prev.filter((tag) => tag.documentId !== tagId));
 			}
 		} finally {
 			setRemovingTagId(null);
@@ -81,11 +81,11 @@ export function TagsCell({
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={() => handleTagRemoved(tag.id)}
-							disabled={removingTagId === tag.id}
+							onClick={() => handleTagRemoved(tag.documentId)}
+							disabled={removingTagId === tag.documentId}
 							className="ml-1 h-3 w-3 rounded-full p-0 opacity-0 transition-opacity hover:bg-destructive/20 group-hover:opacity-100"
 						>
-							{removingTagId === tag.id ? (
+							{removingTagId === tag.documentId ? (
 								<Loader2 className="h-2 w-2 animate-spin" />
 							) : (
 								<X className="h-2 w-2" />
