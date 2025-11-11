@@ -1,8 +1,10 @@
 // contactsapp/app/[locale]/crm/forms/components/columns/shareForm.ts
 "use server";
 import { env } from "@/lib/config/envConfig";
+import { DocumentId } from "@nowcrm/services";
+
 export async function shareForm(
-	form_id: number,
+	form_id: DocumentId,
 	form_slug?: string | null,
 ): Promise<string> {
 	// 1. Trim and check the slug

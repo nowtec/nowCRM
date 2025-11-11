@@ -19,8 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { updateForm } from "@/lib/actions/forms/update-form";
 import { RouteConfig } from "@/lib/config/RoutesConfig";
 import { formatDateTimeStrapi } from "@/lib/strapiDate";
-import type { FormEntity } from "@/lib/types/new_type/form";
-import { deleteFormAction } from "./deleteForm";
+import type { FormEntity } from "@nowcrm/services";
 import { shareForm } from "./shareForm";
 
 const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
@@ -36,10 +35,10 @@ const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					<DropdownMenuLabel>Actions</DropdownMenuLabel>
-					<Link href={`${RouteConfig.forms.single(form.id)}`}>
+					<Link href={`${RouteConfig.forms.single(form.documentId)}`}>
 						<DropdownMenuItem>Build and review</DropdownMenuItem>
 					</Link>
-					<Link href={`${RouteConfig.forms.results(form.id)}`}>
+					<Link href={`${RouteConfig.forms.results(form.documentId)}`}>
 						<DropdownMenuItem>View results</DropdownMenuItem>
 					</Link>
 					<DropdownMenuSeparator />
@@ -48,7 +47,7 @@ const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
 							const { duplicateFormAction } = await import(
 								"@/lib/actions/forms/duplicate-form"
 							);
-							const res = await duplicateFormAction(form.id);
+							const res = await duplicateFormAction(form.documentId);
 							if (!res.success) {
 								toast.error(res.errorMessage ?? "Failed to duplicate form");
 								return;
@@ -61,7 +60,14 @@ const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						onClick={async () => {
-							await deleteFormAction(form.id);
+							const { deleteFormAction } = await import(
+								"@/lib/actions/forms/delete-form"
+							);
+							const res = await deleteFormAction(form.documentId);
+							if (!res.success) {
+								toast.error(res.errorMessage ?? "Failed to delete form");
+								return;
+							}
 							toast.success("Form deleted");
 							router.refresh();
 						}}
@@ -81,7 +87,11 @@ const SwitchAction: React.FC<{ form: FormEntity }> = ({ form }) => {
 		<Switch
 			defaultChecked={form.active}
 			onCheckedChange={async (value) => {
-				await updateForm(form.id, { active: value });
+				const res = await updateForm(form.documentId, { active: value });
+				if (!res.success) {
+					toast.error(res.errorMessage ?? "Failed to update form");
+					return;
+				}
 				toast.success(`Form ${value ? "activated" : "deactivated"}`);
 				router.refresh();
 			}}
@@ -91,7 +101,7 @@ const SwitchAction: React.FC<{ form: FormEntity }> = ({ form }) => {
 
 const ShareAction: React.FC<{ form: FormEntity }> = ({ form }) => {
 	const handleShare = async () => {
-		const shareLink = await shareForm(form.id, form.slug);
+		const shareLink = await shareForm(form.documentId, form.slug);
 		await navigator.clipboard.writeText(shareLink);
 		toast.success("Link copied to clipboard");
 	};
@@ -144,7 +154,7 @@ export const columns: ColumnDef<FormEntity>[] = [
 			const form = row.original;
 			return (
 				<Link
-					href={`${RouteConfig.forms.single(form.id)}`}
+					href={`${RouteConfig.forms.single(form.documentId)}`}
 					className="whitespace-nowrap font-medium hover:underline"
 				>
 					{cell.renderValue() as any}

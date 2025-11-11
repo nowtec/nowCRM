@@ -2,11 +2,11 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import formsService from "@/lib/services/new_type/forms.service";
+import { DocumentId } from "@nowcrm/services";
+import { formsService, handleError, StandardResponse } from "@nowcrm/services/server";
 
 export async function massDeleteForms(
-	forms: number[],
+	forms: DocumentId[],
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,7 +17,7 @@ export async function massDeleteForms(
 		};
 	}
 	try {
-		const unpublishPromises = forms.map((id) => formsService.unPublish(id));
+		const unpublishPromises = forms.map((id) => formsService.delete(id, session.jwt));
 		await Promise.all(unpublishPromises);
 		return {
 			data: null,
@@ -25,11 +25,6 @@ export async function massDeleteForms(
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error deleting Lists:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-		};
+		return handleError(error);
 	}
 }

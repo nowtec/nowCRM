@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createSurveyItem } from "@/lib/actions/surveyItems/create-survey-items";
+import { DocumentId } from "@nowcrm/services";
 
 const formSchema = z.object({
 	question: z.object({
@@ -40,7 +41,7 @@ const formSchema = z.object({
 export default function CreateSurveyItemDialog() {
 	const router = useRouter();
 	const [openDialog, setOpenDialog] = React.useState(false);
-	const params = useParams<{ id: string }>();
+	const params = useParams<{ id: DocumentId }>();
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -53,7 +54,7 @@ export default function CreateSurveyItemDialog() {
 		const finalValues = {
 			...values,
 			question: values.question.label,
-			survey: Number(params.id),
+			survey: (params.id),
 		};
 
 		const res = await createSurveyItem(finalValues);

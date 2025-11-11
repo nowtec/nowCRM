@@ -2,11 +2,10 @@
 "use server";
 
 import { auth } from "@/auth";
-import type { StandardResponse } from "@/lib/services/common/response.service";
-import formsService from "@/lib/services/new_type/forms.service";
-
+import { formsService, handleError, StandardResponse } from "@nowcrm/services/server";
+import { DocumentId } from "@nowcrm/services";
 export async function deleteFormAction(
-	journeyId: number,
+	journeyId: DocumentId,
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {
@@ -17,10 +16,9 @@ export async function deleteFormAction(
 		};
 	}
 	try {
-		const response = await formsService.unPublish(journeyId);
+		const response = await formsService.delete(journeyId, session.jwt);
 		return response;
 	} catch (error) {
-		console.log(error);
-		throw new Error("Failed to delete Form");
+		return handleError(error);
 	}
 }

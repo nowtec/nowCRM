@@ -8,7 +8,7 @@ import { CustomForm_FormItemEntity, DocumentId, Form_FormEntity, FormEntity, Str
 import { formItemsService, formsService, handleError, StandardResponse } from "@nowcrm/services/server";
 export async function updateForm(
 	formId: DocumentId,
-	values: Form_FormEntity,
+	values: Partial<Form_FormEntity>,
 	items?: CustomForm_FormItemEntity[],
 ): Promise<StandardResponse<FormEntity>> {
 	const session = await auth();
