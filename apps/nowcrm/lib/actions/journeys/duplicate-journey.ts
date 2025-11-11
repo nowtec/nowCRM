@@ -1,10 +1,11 @@
 "use server";
 
 import { auth } from "@/auth";
+import { DocumentId } from "@nowcrm/services";
 import { handleError, journeysService, StandardResponse } from "@nowcrm/services/server";
 
 export async function duplicateJourneyAction(
-	journeyId: number,
+	journeyId: DocumentId,
 ): Promise<StandardResponse<null>> {
 	const session = await auth();
 	if (!session) {

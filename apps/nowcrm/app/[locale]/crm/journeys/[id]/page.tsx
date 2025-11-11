@@ -2,23 +2,22 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Edge, Node } from "reactflow";
 import { isValidTimeZone } from "@/lib/is-valid-timezone";
-import journeysService from "@/lib/services/new_type/journeys.service";
-import type { Journey } from "@/lib/types/new_type/journey";
-import type { JourneyStep } from "@/lib/types/new_type/journeyStep";
-import type { JourneyStepConnection } from "@/lib/types/new_type/journeyStepConnection";
 import JourneyClient from "./client";
+import { journeysService } from "@nowcrm/services/server";
+import { checkDocumentId, DocumentId, Journey, JourneyStep, JourneyStepConnection } from "@nowcrm/services";
+import { auth } from "@/auth";
 
 export default async function JourneyPage(props: {
-	params: Promise<{ id: string }>;
+	params: Promise<{ id: DocumentId }>;
 }) {
 	const params = await props.params;
-	const journeyId = Number.parseInt(params.id);
-
-	if (Number.isNaN(journeyId)) {
+	const journeyId =params.id;
+	const session = await auth();
+	if (checkDocumentId(journeyId)) {
 		return notFound();
 	}
 
-	const journeyResponse = await journeysService.findOne(journeyId, {
+	const journeyResponse = await journeysService.findOne(journeyId, session?.jwt, {
 		populate: {
 			journey_steps: {
 				populate: {

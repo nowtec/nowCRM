@@ -1,52 +1,31 @@
 "use server";
 
 import { auth } from "@/auth";
-import {
-	handleError,
-	type StandardResponse,
-} from "@/lib/services/common/response.service";
-import { journeyStepConnectionsService } from "@/lib/services/new_type/journeyStepConnections.service";
-import journeyStepsService from "@/lib/services/new_type/journeySteps.service";
-import journeysService from "@/lib/services/new_type/journeys.service";
-import { journeyStepRuleService } from "@/lib/services/new_type/journeysStepRule.service";
-import { journeyStepRuleScoresService } from "@/lib/services/new_type/journeysStepRuleScore.service";
-import { CommunicationChannel } from "@/lib/static/channel-icons";
-import type { Form_Journey } from "@/lib/types/new_type/journey";
-import type { Form_JourneyStep } from "@/lib/types/new_type/journeyStep";
-import type { Form_JourneyStepConnection } from "@/lib/types/new_type/journeyStepConnection";
-import type { Form_JourneyStepRule } from "@/lib/types/new_type/journeyStepRule";
-import type { Form_JourneyStepRuleScore } from "@/lib/types/new_type/journeyStepRuleScore";
+import { checkDocumentId, CommunicationChannel, DocumentId, Form_Journey, Form_JourneyStep, Form_JourneyStepConnection, Form_JourneyStepRule, Form_JourneyStepRuleScore, Journey, JourneyStep } from "@nowcrm/services";
+import { handleError, journeysService, journeyStepConnectionsService, journeyStepRuleScoresService, journeyStepRulesService, journeyStepsService, StandardResponse } from "@nowcrm/services/server";
 
-// Update journey
 export async function updateJourney(
-	journeyId: number,
+	journeyId: DocumentId,
 	data: Partial<Form_Journey>,
-): Promise<StandardResponse<any>> {
+): Promise<StandardResponse<Journey>> {
 	const session = await auth();
 	if (!session) {
 		return {
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
 	try {
-		return await journeysService.update(journeyId, data);
+		return await journeysService.update(journeyId,data, session.jwt);
 	} catch (error) {
-		console.error("Error updating journey:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to update journey",
-		};
+		return handleError(error);
 	}
 }
 
 export async function activateJourney(
-	journeyId: number,
+	journeyId: DocumentId,
 	active: boolean,
 ): Promise<StandardResponse<any>> {
 	const session = await auth();
@@ -55,11 +34,10 @@ export async function activateJourney(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
-	const journey = await journeysService.findOne(journeyId, {
+	const journey = await journeysService.findOne(journeyId, session.jwt, {
 		populate: {
 			journey_steps: {
 				populate: {
@@ -154,9 +132,8 @@ export async function activateJourney(
 	}
 
 	try {
-		return await journeysService.update(journeyId, { active });
+		return await journeysService.update(journeyId, { active }, session.jwt);
 	} catch (error) {
-		console.error("Error updating journey:", error);
 		return handleError(error);
 	}
 }
@@ -164,14 +141,13 @@ export async function activateJourney(
 // Create a new step
 export async function createStep(
 	data: Form_JourneyStep,
-): Promise<StandardResponse<any>> {
+): Promise<StandardResponse<JourneyStep>> {
 	const session = await auth();
 	if (!session) {
 		return {
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
@@ -181,21 +157,15 @@ export async function createStep(
 			data.publishedAt = new Date();
 		}
 
-		return await journeyStepsService.create(data);
+		return await journeyStepsService.create(data, session.jwt);
 	} catch (error) {
-		console.error("Error creating step:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to create step",
-		};
+		return handleError(error);
 	}
 }
 
 // Update an existing step
 export async function updateStep(
-	stepId: number,
+	stepId: DocumentId,
 	data: Partial<Form_JourneyStep>,
 ): Promise<StandardResponse<any>> {
 	const session = await auth();
@@ -204,25 +174,18 @@ export async function updateStep(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 	try {
-		return await journeyStepsService.update(stepId, data);
+		return await journeyStepsService.update(stepId, data, session.jwt);
 	} catch (error) {
-		console.error("Error updating step:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to update step",
-		};
+		return handleError(error);
 	}
 }
 
 // Delete a step
 export async function deleteStep(
-	stepId: number,
+	stepId: DocumentId,
 ): Promise<StandardResponse<any>> {
 	const session = await auth();
 	if (!session) {
@@ -230,35 +193,28 @@ export async function deleteStep(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
 	try {
 		//clear all connection to this node
-		const connects = await journeyStepConnectionsService.findAll({
+		const connects = await journeyStepConnectionsService.findAll(session.jwt, {
 			filters: {
-				target_step: { id: { $eq: stepId } },
+				target_step: { documentId: { $eq: stepId } },
 			},
 		});
 		connects.data?.map(async (item) => {
-			await journeyStepConnectionsService.delete(item.id);
+			await journeyStepConnectionsService.delete(item.documentId, session.jwt);
 		});
-		return await journeyStepsService.delete(stepId);
+		return await journeyStepsService.delete(stepId, session.jwt);
 	} catch (error) {
-		console.error("Error deleting step:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to delete step",
-		};
+		return handleError(error);
 	}
 }
 
 // Update connection priorities
 export async function updateConnectionPriorities(
-	connectionPriorities: { connectionId: number; priority: number }[],
+	connectionPriorities: { connectionId: DocumentId; priority: number }[],
 ): Promise<StandardResponse<any>> {
 	const session = await auth();
 	if (!session) {
@@ -274,7 +230,7 @@ export async function updateConnectionPriorities(
 		// Update each connection with its new priority
 		const updatePromises = connectionPriorities.map(
 			({ connectionId, priority }) =>
-				journeyStepConnectionsService.update(connectionId, { priority }),
+				journeyStepConnectionsService.update(connectionId, { priority }, session.jwt),
 		);
 
 		await Promise.all(updatePromises);
@@ -285,13 +241,7 @@ export async function updateConnectionPriorities(
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error updating connection priorities:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to update connection priorities",
-		};
+		return handleError(error);
 	}
 }
 
@@ -305,7 +255,6 @@ export async function createConnection(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
@@ -315,21 +264,15 @@ export async function createConnection(
 			data.publishedAt = new Date();
 		}
 
-		return await journeyStepConnectionsService.create(data);
+		return await journeyStepConnectionsService.create(data, session.jwt);
 	} catch (error) {
-		console.error("Error creating connection:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to create connection",
-		};
+		return handleError(error);
 	}
 }
 
 // Update an existing connection
 export async function updateConnection(
-	connectionId: number,
+	connectionId: DocumentId,
 	data: Partial<Form_JourneyStepConnection>,
 ): Promise<StandardResponse<any>> {
 	const session = await auth();
@@ -338,26 +281,19 @@ export async function updateConnection(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
 	try {
-		return await journeyStepConnectionsService.update(connectionId, data);
+		return await journeyStepConnectionsService.update(connectionId, data, session.jwt);
 	} catch (error) {
-		console.error("Error updating connection:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to update connection",
-		};
+		return handleError(error);
 	}
 }
 
 // Delete a connection
 export async function deleteConnection(
-	connectionId: number,
+	connectionId: DocumentId,
 ): Promise<StandardResponse<any>> {
 	const session = await auth();
 	if (!session) {
@@ -365,20 +301,13 @@ export async function deleteConnection(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
 	try {
-		return await journeyStepConnectionsService.delete(connectionId);
+		return await journeyStepConnectionsService.delete(connectionId, session.jwt);
 	} catch (error) {
-		console.error("Error deleting connection:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to delete connection",
-		};
+		return handleError(error);
 	}
 }
 
@@ -392,7 +321,6 @@ export async function createRule(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
@@ -402,15 +330,9 @@ export async function createRule(
 			data.publishedAt = new Date();
 		}
 
-		return await journeyStepRuleService.create(data);
+		return await journeyStepRulesService.create(data, session.jwt);
 	} catch (error) {
-		console.error("Error creating rule:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to create rule",
-		};
+		return handleError(error);
 	}
 }
 
@@ -424,7 +346,6 @@ export async function createRuleScore(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
@@ -434,23 +355,17 @@ export async function createRuleScore(
 			data.publishedAt = new Date();
 		}
 
-		return await journeyStepRuleScoresService.create(data);
+		return await journeyStepRuleScoresService.create(data, session.jwt);
 	} catch (error) {
-		console.error("Error creating rule score:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to create rule score",
-		};
+		return handleError(error);
 	}
 }
 
 // Update connection rules
 export async function updateConnectionRules(
-	connectionId: number,
+	connectionId: DocumentId,
 	rules: {
-		id?: number;
+		documentId?: DocumentId;
 		condition: string;
 		condition_operator: string;
 		ready_condition: string;
@@ -458,7 +373,7 @@ export async function updateConnectionRules(
 		additional_data: string;
 		label: string;
 		condition_value: string;
-		scores?: { id?: number; attribute: string; value: string }[];
+		scores?: { documentId?: DocumentId; attribute: string; value: string }[];
 	}[],
 	condition_type: "all" | "any",
 ): Promise<StandardResponse<any>> {
@@ -468,7 +383,6 @@ export async function updateConnectionRules(
 			data: null,
 			status: 403,
 			success: false,
-			errorMessage: "Not authenticated",
 		};
 	}
 
@@ -479,6 +393,7 @@ export async function updateConnectionRules(
 			{
 				condition_type: condition_type,
 			},
+			session.jwt,
 		);
 
 		if (!connectionUpdateResult.success) {
@@ -486,8 +401,8 @@ export async function updateConnectionRules(
 		}
 
 		// Get existing rules for this connection
-		const existingRulesResponse = await journeyStepRuleService.find({
-			filters: { journey_step_connection: { id: { $eq: connectionId } } },
+		const existingRulesResponse = await journeyStepRulesService.findAll(session.jwt, {
+			filters: { journeys_step_connection: { documentId: { $eq: connectionId } } },
 			populate: {
 				journey_step_rule_scores: true,
 			},
@@ -505,14 +420,14 @@ export async function updateConnectionRules(
 		const existingRules = existingRulesResponse.data;
 
 		// Create a map of existing rule IDs
-		const existingRuleIds = new Set(existingRules.map((rule) => rule.id));
+		const existingRuleIds = new Set(existingRules.map((rule) => rule.documentId));
 
 		// Process each rule
 		for (const rule of rules) {
-			if (rule.id && typeof rule.id === "number") {
+			if (rule.documentId && checkDocumentId(rule.documentId)) {
 				// Rule exists, update it
-				existingRuleIds.delete(rule.id);
-				await journeyStepRuleService.update(rule.id, {
+				existingRuleIds.delete(rule.documentId);
+				await journeyStepRulesService.update(rule.documentId, {
 					condition: rule.condition,
 					condition_operator: rule.condition_operator,
 					ready_condition: rule.ready_condition,
@@ -523,58 +438,58 @@ export async function updateConnectionRules(
 							? JSON.stringify(rule.condition_value)
 							: rule.condition_value,
 					label: rule.label,
-				});
+				}, session.jwt);
 
 				// Handle scores for this rule
 				if (rule.scores && rule.scores.length > 0) {
 					// Get existing scores for this rule
 					const existingScores =
-						existingRules.find((r) => r.id === rule.id)
+						existingRules.find((r) => r.documentId === rule.documentId)
 							?.journey_step_rule_scores || [];
 
 					const existingScoreIds = new Set(
-						existingScores.map((score) => score.id),
+						existingScores.map((score) => score.documentId),
 					);
 
 					// Process each score
 					for (const score of rule.scores) {
-						if (score.id) {
+						if (score.documentId) {
 							// Score exists, update it
-							existingScoreIds.delete(score.id);
+							existingScoreIds.delete(score.documentId);
 
-							await journeyStepRuleScoresService.update(score.id, {
+							await journeyStepRuleScoresService.update(score.documentId, {
 								name: score.attribute,
 								value: score.value,
-							});
+							}, session.jwt);
 						} else {
 							// Create new score
 							await journeyStepRuleScoresService.create({
-								journey_step_rule: rule.id,
+								journey_step_rule: rule.documentId,
 								name: score.attribute,
 								value: score.value,
 								publishedAt: new Date(),
-							});
+							}, session.jwt);
 						}
 					}
 
 					// Delete scores that no longer exist
 					for (const scoreId of existingScoreIds) {
-						await journeyStepRuleScoresService.delete(scoreId);
+						await journeyStepRuleScoresService.delete(scoreId, session.jwt);
 					}
 				} else {
 					// No scores provided, delete all existing scores for this rule
 					const existingScores =
-						existingRules.find((r) => r.id === rule.id)
+						existingRules.find((r) => r.documentId === rule.documentId)
 							?.journey_step_rule_scores || [];
 
 					for (const score of existingScores) {
-						await journeyStepRuleScoresService.delete(score.id);
+						await journeyStepRuleScoresService.delete(score.documentId, session.jwt);
 					}
 				}
 			} else {
 				// Create new rule
-				const newRuleResult = await journeyStepRuleService.create({
-					journey_step_connection: connectionId,
+				const newRuleResult = await journeyStepRulesService.create({
+					journeys_step_connection: connectionId,
 					condition: rule.condition,
 					condition_operator: rule.condition_operator,
 					condition_value: rule.condition_value,
@@ -583,7 +498,7 @@ export async function updateConnectionRules(
 					additional_data: rule.additional_data,
 					additional_condition: rule.additional_condition,
 					publishedAt: new Date(),
-				});
+				}, session.jwt);
 
 				if (
 					newRuleResult.success &&
@@ -594,11 +509,11 @@ export async function updateConnectionRules(
 					// Create scores for the new rule
 					for (const score of rule.scores) {
 						await journeyStepRuleScoresService.create({
-							journey_step_rule: newRuleResult.data.id,
+							journey_step_rule: newRuleResult.data.documentId,
 							name: score.attribute,
 							value: score.value,
 							publishedAt: new Date(),
-						});
+						}, session.jwt);
 					}
 				}
 			}
@@ -606,7 +521,7 @@ export async function updateConnectionRules(
 
 		// Delete rules that no longer exist
 		for (const ruleId of existingRuleIds) {
-			await journeyStepRuleService.delete(ruleId);
+			await journeyStepRulesService.delete(ruleId, session.jwt);
 		}
 
 		return {
@@ -615,12 +530,6 @@ export async function updateConnectionRules(
 			success: true,
 		};
 	} catch (error) {
-		console.error("Error updating connection rules:", error);
-		return {
-			data: null,
-			status: 500,
-			success: false,
-			errorMessage: "Failed to update connection rules",
-		};
+		return handleError(error);
 	}
 }

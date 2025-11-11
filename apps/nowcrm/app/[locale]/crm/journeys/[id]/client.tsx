@@ -4,8 +4,7 @@ import { useCallback, useState } from "react";
 import { toast } from "react-hot-toast";
 import type { Edge, Node } from "reactflow";
 import JourneyBuilder from "@/components/journeys/journey-builder";
-import type { Form_JourneyStep } from "@/lib/types/new_type/journeyStep";
-import type { Form_JourneyStepConnection } from "@/lib/types/new_type/journeyStepConnection";
+import { DocumentId, Form_JourneyStep, Form_JourneyStepConnection, JourneyStepTypes } from "@nowcrm/services";
 import {
 	activateJourney,
 	createConnection,
@@ -20,7 +19,7 @@ import {
 } from "./actions";
 
 interface JourneyClientProps {
-	journeyId: number;
+	journeyId: DocumentId;
 	initialTitle: string;
 	initialActive: boolean;
 	initialNodes: Node[];
@@ -221,15 +220,15 @@ export default function JourneyClient({
 
 			if (node.data.type === "channel") {
 				composition = node.data.config.composition?.value
-					? parseInt(node.data.config.composition.value)
+					? (node.data.config.composition.value)
 					: undefined;
 
 				channel = node.data.config.channel?.value
-					? parseInt(node.data.config.channel.value)
+					? (node.data.config.channel.value)
 					: undefined;
 
 				identity = node.data.config.identity?.value
-					? parseInt(node.data.config.identity.value)
+					? (node.data.config.identity.value)
 					: undefined;
 			} else if (node.data.type === "trigger") {
 				additional_data = {
@@ -280,6 +279,7 @@ export default function JourneyClient({
 			// Final data to update
 			const stepData = {
 				...baseData,
+				type: baseData.type as JourneyStepTypes,
 				timing,
 				composition,
 				channel,
@@ -570,7 +570,7 @@ export default function JourneyClient({
 	// Add a new handler for updating connection priorities
 	const handleConnectionPrioritiesUpdate = useCallback(
 		async (
-			connectionPriorities: { connectionId: number; priority: number }[],
+			connectionPriorities: { connectionId: DocumentId; priority: number }[],
 		) => {
 			try {
 				setIsSaving(true);

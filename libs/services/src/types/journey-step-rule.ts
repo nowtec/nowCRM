@@ -12,7 +12,7 @@ export interface JourneyStepRule extends Omit<BaseType, "name"> {
 	journey_step_rule_scores: JourneyStepRuleScore[];
 	ready_condition: string;
 	additional_condition: string;
-	addtional_data: object;
+	additional_data: object | string;
 }
 
 export interface Form_JourneyStepRule extends Omit<BaseFormType, "name"> {
@@ -25,5 +25,5 @@ export interface Form_JourneyStepRule extends Omit<BaseFormType, "name"> {
 	journey_step_rule_scores: StrapiConnect;
 	ready_condition: string;
 	additional_condition: string;
-	addtional_data: object;
+	additional_data: object | string;
 }

@@ -28,7 +28,7 @@ export interface JourneyStep extends BaseType {
 	connections_to_this_step: JourneyStepConnection[];
 	connections_from_this_step: JourneyStepConnection[];
 	identity: Identity;
-	additional_data: object;
+	additional_data: object | any;
 	type: JourneyStepTypes;
 	timing?: JourneyTiming;
 	composition: Composition;
@@ -42,7 +42,7 @@ export interface Form_JourneyStep extends BaseFormType {
 	connections_to_this_step: StrapiConnect;
 	connections_from_this_step: StrapiConnect;
 	identity: DocumentId;
-	additional_data: object;
+	additional_data: object | any;
 	type: JourneyStepTypes;
 	timing?: JourneyTiming;
 	composition: DocumentId;
