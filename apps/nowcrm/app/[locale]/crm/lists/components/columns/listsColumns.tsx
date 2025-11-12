@@ -105,7 +105,7 @@ const ListCount: React.FC<{ list: List }> = ({ list }) => {
 		const fetchCount = async () => {
 			try {
 				const response = await getListCount(list.documentId);
-				setCount(response.data);
+				setCount(response.data?.count ?? null);
 				setIsLoading(false);
 			} catch (_err) {
 				setError(error);

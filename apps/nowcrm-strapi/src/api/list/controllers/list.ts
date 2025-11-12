@@ -10,7 +10,7 @@ export default factories.createCoreController('api::list.list', ({ strapi }) => 
         const listId = ctx.params.id;
         const count = await strapi.db.query('api::contact.contact').count({
         where: {
-            lists: { id: listId },
+            lists: { documentId: listId },
             published_at: { $notNull: true },
         },
         });

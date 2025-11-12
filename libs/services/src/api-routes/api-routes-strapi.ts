@@ -56,7 +56,7 @@ export const API_ROUTES_STRAPI = {
 	JOURNEY_DUPLICATE: "journeys/duplicate",
 	//List
 	LISTS: "lists",
-	LISTS_COUNT_CONTACTS: "lists/:id/active-contacts-count",
+	LISTS_COUNT_CONTACTS: "active-contacts-count",
 	LISTS_DUPLICATE: "lists/duplicate",
 
 	//Addional data

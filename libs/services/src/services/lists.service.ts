@@ -17,7 +17,7 @@ class ListsService extends BaseService<List, Form_List> {
 	async countContacts(
 		id: DocumentId,
 		token: string,
-	): Promise<StandardResponse<number>> {
+	): Promise<StandardResponse<{ count: number }>> {
 		const url = `${envServices.STRAPI_URL}${this.endpoint}/${id}/${API_ROUTES_STRAPI.LISTS_COUNT_CONTACTS}`;
 		try {
 			const response = await fetch(url, {
@@ -26,7 +26,7 @@ class ListsService extends BaseService<List, Form_List> {
 			});
 			return await handleResponse(response);
 		} catch (error: any) {
-			return handleError<number>(error);
+			return handleError<{ count: number }>(error);
 		}
 	}
 

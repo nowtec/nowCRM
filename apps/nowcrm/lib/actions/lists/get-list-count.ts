@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 
 export async function getListCount(
 	listId: DocumentId,
-): Promise<StandardResponse<number>> {
+): Promise<StandardResponse<{ count: number }>> {
 	const session = await auth();
 	if (!session) {
 		return {

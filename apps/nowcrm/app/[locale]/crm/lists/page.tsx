@@ -29,9 +29,7 @@ export default async function Page(props: {
 	const response = await listsService.find(session?.jwt, {
 		fields: ["documentId", "name", "createdAt", "updatedAt"],
 		populate: {
-			tags: {
-				populate: ["name"],
-			},
+			tags: true,
 		},
 		sort: [`${sortBy}:${sortOrder}` as any],
 		pagination: {
@@ -42,12 +40,10 @@ export default async function Page(props: {
 			$or: [{ name: { $containsi: search } }],
 		},
 	});
-
 	if (!response.success || !response.data || !response.meta) {
 		return <ErrorMessage response={response} />;
 	}
 	const { meta } = response;
-
 	return (
 		<div className="container">
 			<DataTable
