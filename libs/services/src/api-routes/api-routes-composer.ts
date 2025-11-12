@@ -1,4 +1,4 @@
-export const API_ROUTES_COMPOSER = {
+export const APIRoutesComposer = {
 	// composer
 	CREATE_COMPOSITION: "composer/create-composition",
 	CREATE_REFERENCE: "composer/create-reference",

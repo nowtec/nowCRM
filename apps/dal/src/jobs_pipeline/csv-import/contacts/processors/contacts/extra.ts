@@ -1,5 +1,5 @@
-import axios from "axios";
 import { env } from "@/common/utils/env-config";
+import { fetchJson } from "@/common/utils/fetch-json";
 
 interface ExtraField {
 	label: string;
@@ -11,47 +11,33 @@ export const createContactExtraFields = async (
 	extraFields: ExtraField[],
 ): Promise<void> => {
 	if (!extraFields || extraFields.length === 0) {
-		console.log(" No extra fields to create.");
+		console.log("No extra fields to create.");
 		return;
 	}
 
-	for (const [_index, field] of extraFields.entries()) {
+	for (const field of extraFields) {
 		try {
-			const _response = await axios.post(
-				`${env.DAL_STRAPI_API_URL}/api/contact-extra-fields`,
-				{
+			await fetchJson(`${env.DAL_STRAPI_API_URL}/api/contact-extra-fields`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
 					data: {
 						name: field.label,
 						value: field.value,
 						contact: contactId,
 					},
-				},
-				{
-					headers: {
-						Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
-						"Content-Type": "application/json",
-					},
-				},
-			);
+				}),
+				timeout: 30000,
+			});
 		} catch (error: any) {
-			if (axios.isAxiosError(error)) {
-				console.error("Axios error message:", error.message);
-				console.error("Axios error code:", error.code);
-
-				if (error.response) {
-					console.error("Strapi response status:", error.response.status);
-					console.error(
-						"Strapi response data:",
-						JSON.stringify(error.response.data, null, 2),
-					);
-				} else if (error.request) {
-					console.error(" No response received from Strapi.");
-					console.error(" Request data:", error.request);
-				} else {
-					console.error("Axios setup error:", error.message);
-				}
+			if (error.name === "AbortError") {
+				console.error("Request timed out while creating extra field:", field.label);
 			} else {
-				console.error("Unknown error:", error);
+				console.error("Failed to create extra field:", field.label);
+				console.error("Error:", error.message || error);
 			}
 		}
 	}

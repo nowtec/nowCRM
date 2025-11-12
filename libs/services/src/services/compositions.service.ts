@@ -1,5 +1,5 @@
-import API_ROUTES_COMPOSER from "../api-routes/api-routes-composer";
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
+import { APIRoutesComposer}  from "../api-routes/api-routes-composer";
 import { envServices } from "../envConfig";
 import type { composerSendType } from "../types/composer/composer-send-types";
 import type { createAdditionalComposition } from "../types/composer/create-additional-composition";
@@ -20,14 +20,14 @@ import { journeyStepsService } from "./journey-steps.service";
 
 class CompositionsService extends BaseService<Composition, Form_Composition> {
 	public constructor() {
-		super(API_ROUTES_STRAPI.COMPOSITIONS);
+		super(APIRoutesStrapi.COMPOSITIONS);
 	}
 
 	async createReference(
 		data: ReferenceComposition,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.CREATE_REFERENCE}`;
+			const url = `${envServices.COMPOSER_URL}${APIRoutesComposer.CREATE_REFERENCE}`;
 			const response = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -55,7 +55,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		data: QuickWriteModel,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.COMPOSER_QUICK_WRITE}`;
+			const url = `${envServices.COMPOSER_URL}${APIRoutesComposer.COMPOSER_QUICK_WRITE}`;
 			const response = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -82,7 +82,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		data: createAdditionalComposition,
 	): Promise<StandardResponse<string>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.COMPOSER_REGENERATE}`;
+			const url = `${envServices.COMPOSER_URL}${APIRoutesComposer.COMPOSER_REGENERATE}`;
 			const rez = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -109,7 +109,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		data: createComposition,
 	): Promise<StandardResponse<string>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.CREATE_COMPOSITION}`;
+			const url = `${envServices.COMPOSER_URL}${APIRoutesComposer.CREATE_COMPOSITION}`;
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -137,7 +137,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		try {
-			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.COMPOSITION_DUPLICATE}`;
+			const url = `${envServices.STRAPI_URL}${APIRoutesStrapi.COMPOSITION_DUPLICATE}`;
 
 			const response = await fetch(url, {
 				method: "POST",
@@ -190,7 +190,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 
 		if (!passed_step) {
 			const base = envServices.COMPOSER_URL;
-			const url = new URL(API_ROUTES_COMPOSER.SEND_TO_CHANNELS, base);
+			const url = new URL(APIRoutesComposer.SEND_TO_CHANNELS, base);
 
 			const response = await fetch(url, {
 				method: "POST",

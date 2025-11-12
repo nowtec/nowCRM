@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
 import type {
 	ContactSalutation,
 	Form_ContactSalutation,
@@ -10,7 +10,7 @@ class ContactSalutationsService extends BaseService<
 	Form_ContactSalutation
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.CONTACT_SALUTATIONS);
+		super(APIRoutesStrapi.CONTACT_SALUTATIONS);
 	}
 }
 

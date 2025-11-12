@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
 import { envServices } from "../envConfig";
 import type Asset from "../types/common/asset";
 import type {
@@ -17,7 +17,7 @@ class CompositionItemsService extends BaseService<
 	Form_CompositionItem
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.COMPOSITION_ITEM);
+		super(APIRoutesStrapi.COMPOSITION_ITEM);
 	}
 
 	async uploadFile(
@@ -25,7 +25,7 @@ class CompositionItemsService extends BaseService<
 		compositionItemId: number,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.UPLOAD}`;
+		const url = `${envServices.STRAPI_URL}${APIRoutesStrapi.UPLOAD}`;
 
 		const formData = new FormData();
 		for (let i = 0; i < files.length; i++) {

@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
 import type {
 	ContactDocument,
 	Form_ContactDocument,
@@ -10,7 +10,7 @@ class ContactDocumentsService extends BaseService<
 	Form_ContactDocument
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.CONTACT_DOCUMENTS);
+		super(APIRoutesStrapi.CONTACT_DOCUMENTS);
 	}
 }
 

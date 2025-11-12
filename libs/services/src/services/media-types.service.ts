@@ -1,10 +1,10 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type { Form_MediaType, MediaType } from "../types/media-type";
 import BaseService from "./common/base.service";
 
 class MediaTypesService extends BaseService<MediaType, Form_MediaType> {
 	public constructor() {
-		super(API_ROUTES_STRAPI.MEDIA_TYPES);
+		super(APIRoutesStrapi.MEDIA_TYPES);
 	}
 }
 

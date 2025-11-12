@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type {
 	Form_SettingCredential,
 	SettingCredential,
@@ -10,7 +10,7 @@ class SettingCredentialsService extends BaseService<
 	Form_SettingCredential
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.SETTING_CREDENTIALS);
+		super(APIRoutesStrapi.SETTING_CREDENTIALS);
 	}
 }
 
