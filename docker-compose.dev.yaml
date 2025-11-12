@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ${STRAPI_DATABASE_PASSWORD:-postgres}
       POSTGRES_DB: ${STRAPI_DATABASE_NAME:-postgres}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${STRAPI_DATABASE_USERNAME:-postgres}"]
+      test: ["CMD-SHELL","pg_isready -U ${STRAPI_DATABASE_USERNAME} -d ${STRAPI_DATABASE_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10

@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type {
 	CampaignCategory,
 	Form_CampaignCategory,
@@ -10,7 +10,7 @@ class CampaignCategoriesService extends BaseService<
 	Form_CampaignCategory
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.CAMPAIGN_CATEGORIES);
+		super(APIRoutesStrapi.CAMPAIGN_CATEGORIES);
 	}
 }
 

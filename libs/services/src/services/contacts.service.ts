@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type { CommunicationChannelKeys } from "../static/communication-channel";
 import type { Contact, Form_Contact } from "../types/contact";
 import BaseService from "./common/base.service";
@@ -7,7 +7,7 @@ import { settingsService } from "./settings.service";
 
 class ContactsService extends BaseService<Contact, Form_Contact> {
 	public constructor() {
-		super(API_ROUTES_STRAPI.CONTACTS);
+		super(APIRoutesStrapi.CONTACTS);
 	}
 
 	async checkSubscription(

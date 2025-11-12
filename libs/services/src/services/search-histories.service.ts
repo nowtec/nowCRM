@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type {
 	Form_SearchHistory,
 	SearchHistory,
@@ -10,7 +10,7 @@ class SearchHistoriesService extends BaseService<
 	Form_SearchHistory
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.SEARCH_HISTORIES);
+		super(APIRoutesStrapi.SEARCH_HISTORIES);
 	}
 }
 

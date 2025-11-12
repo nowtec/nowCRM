@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type {
 	Form_UnipileIdentity,
 	UnipileIdentity,
@@ -10,7 +10,7 @@ class UnipileIdentitiesService extends BaseService<
 	Form_UnipileIdentity
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.UNIPILE_IDENTITIES);
+		super(APIRoutesStrapi.UNIPILE_IDENTITIES);
 	}
 }
 

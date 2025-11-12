@@ -1,4 +1,5 @@
 export * from "./api-routes/api-routes-composer";
+export * from "./api-routes/api-routes-dal";
 export * from "./api-routes/api-routes-strapi";
 export * from "./static/action-types";
 export * from "./static/ai-models";

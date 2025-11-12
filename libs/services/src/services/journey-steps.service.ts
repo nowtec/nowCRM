@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type { DocumentId } from "../types/common/base_type";
 import type { Form_JourneyStep, JourneyStep } from "../types/journey-step";
 import { actionsService } from "./action.service";
@@ -8,7 +8,7 @@ import { journeyPassedStepService } from "./journey-passed-step.service";
 
 class JourneyStepsService extends BaseService<JourneyStep, Form_JourneyStep> {
 	public constructor() {
-		super(API_ROUTES_STRAPI.JOURNEY_STEPS);
+		super(APIRoutesStrapi.JOURNEY_STEPS);
 	}
 
 	async checkPassedStep(

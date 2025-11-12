@@ -1,0 +1,39 @@
+# Dependencies
+**/node_modules
+**/.cache
+**/.turbo
+**/.next
+**/build
+
+# Environment & configs
+**/.env
+**/.env.*
+**/biome.json
+
+# Logs & temp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.swp
+.swo
+*~
+
+# IDE & metadata
+.idea
+.vscode
+.DS_Store
+.cursor
+.github
+ISSUE_TEMPLATE
+**/.gitignore
+
+# Tests & coverage
+coverage
+.pytest_cache
+__pycache__
+
+# Misc
+*.md
+*.mdc
+.vercel

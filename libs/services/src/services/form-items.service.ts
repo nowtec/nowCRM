@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type { Form_FormEntityItem, FormEntityItem } from "../types/form-item";
 import BaseService from "./common/base.service";
 
@@ -7,7 +7,7 @@ class FormItemsService extends BaseService<
 	Form_FormEntityItem
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.FORM_ITEMS);
+		super(APIRoutesStrapi.FORM_ITEMS);
 	}
 }
 

@@ -1,4 +1,4 @@
-import API_ROUTES_STRAPI from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type {
 	ContactJobTitle,
 	Form_ContactJobTitle,
@@ -10,7 +10,7 @@ class ContactJobTitlesService extends BaseService<
 	Form_ContactJobTitle
 > {
 	public constructor() {
-		super(API_ROUTES_STRAPI.CONTACT_JOB_TITLES);
+		super(APIRoutesStrapi.CONTACT_JOB_TITLES);
 	}
 }
 

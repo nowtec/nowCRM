@@ -35,7 +35,7 @@ const APIRoutes = {
 	JOURNEY_RULES: "journey-step-rules",
 
 	KEYWORDS: "keywords",
-	RANKS: "ranks",
+	RANKS: "contact-ranks",
 	SOURCES: "sources",
 	ACTIONS: "actions",
 	FREQUENCIES: "frequencies",
@@ -84,7 +84,7 @@ const APIRoutes = {
 	COMPOSITIONS: "compositions",
 	COMPOSITIONS_ITEMS: "composition-items",
 	TEXTBLOCKS: "text-blocks",
-	NOTES: "notes",
+	NOTES: "contact-notes",
 	COMPOSITION_TO_CHANNEL_NEW: "composition-news/push-to-channel",
 	COMPOSITIONS_SCHEDULED: "compositions-scheduled",
 	COMPOSITION_CREATE_NEW: "composition-news/create-composition",
