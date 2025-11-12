@@ -268,10 +268,10 @@ export const seedData = {
         { name: "Membership Proof", contact: 3, publishedAt: Date.now() }
       ],
     contact_note: [
-        { name: "First Call", text: [{ type: "paragraph", children: [{ text: "Contacted about new project." }] }], contact: 1, publishedAt: Date.now() },
-        { name: "Follow-up", text: [{ type: "paragraph", children: [{ text: "Requested more information via email." }] }], contact: 2, publishedAt: Date.now() },
-        { name: "Meeting Scheduled", text: [{ type: "paragraph", children: [{ text: "Set meeting for next week." }] }], contact: 3, publishedAt: Date.now() }
-      ],
+      { name: "First Call", text: [{ type: "paragraph", children: [{ type: "text", text: "Contacted about new project." }] }], contact: 1 },
+      { name: "Follow-up", text: [{ type: "paragraph", children: [{ type: "text", text: "Requested more information via email." }] }], contact: 2 },
+      { name: "Meeting Scheduled", text: [{ type: "paragraph", children: [{ type: "text", text: "Set meeting for next week." }] }], contact: 3 }
+    ],
     donation_subscription: [
         { amount: 25.00, contact: 1, payment_method: "credit_card", currency: "CHF", payment_provider: "Stripe", interval: "monthly", subscription_token: "sub_001", raw_data: "{}", publishedAt: Date.now() },
         { amount: 50.00, contact: 2, payment_method: "paypal", currency: "CHF", payment_provider: "PayPal", interval: "yearly", subscription_token: "sub_002", raw_data: "{}", publishedAt: Date.now() },

@@ -37,20 +37,20 @@ check-env:
 				env_path="$$dir/.env"; \
 				sample_path="$$dir/.env.sample"; \
 				if [ -f $$env_path ]; then \
-					sed -i '' "s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
+					sed -i '' "/^CUSTOMER_DOMAIN=/! s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
 					echo "🔁 Updated $$env_path"; \
 				elif [ -f $$sample_path ]; then \
 					cp $$sample_path $$env_path; \
-					sed -i '' "s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
+					sed -i '' "/^CUSTOMER_DOMAIN=/! s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
 					echo "🆕 Created $$env_path and replaced CUSTOMER_DOMAIN"; \
 				else \
-					echo "⚠️  No .env or .env.sample in $$dir — skipping"; \
+					echo "⚠️  No .env or .env.sample in $$dir, skipping"; \
 				fi; \
 			fi; \
 		done; \
 		echo "✨ All CUSTOMER_DOMAIN replacements complete."; \
 	else \
-		echo "✔️  $(ENV_FILE) already exists — skipping domain setup"; \
+		echo "✔️  $(ENV_FILE) already exists, skipping domain setup"; \
 	fi
 
 
