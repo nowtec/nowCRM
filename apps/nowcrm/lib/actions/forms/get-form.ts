@@ -42,7 +42,7 @@ export async function getFormBySlugOrId(
 		const isId = checkDocumentId(identifier);
 
 		const filters = isId
-			? { docuemntId: { $eq: identifier } }
+			? { documentId: { $eq: identifier } }
 			: { slug: { $eq: String(identifier) } };
 
 		// 2. Fetch with the chosen filter
@@ -78,7 +78,7 @@ export async function getFormBySlugOrId(
  * @returns Success status and message
  */
 export async function submitFormData(formData: {
-	formId: number | undefined;
+	formId: DocumentId | undefined;
 	identifier: string;
 	formData: Record<string, any>;
 }): Promise<{ success: boolean; message?: string }> {

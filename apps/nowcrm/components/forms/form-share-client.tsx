@@ -2,7 +2,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { FormEntity, FormEntityItem } from "@nowcrm/services";
+import type { DocumentId, FormEntity, FormEntityItem } from "@nowcrm/services";
 import { format } from "date-fns";
 import {
 	Check,
@@ -106,7 +106,7 @@ const FormShareClient: React.FC<FormShareClientProps> = ({
 	// ===== STATE MANAGEMENT =====
 	// Form data and loading states
 	const [loading, setLoading] = useState(true);
-	const [formId, setFormId] = useState<number | undefined>(undefined);
+	const [formId, setFormId] = useState<DocumentId | undefined>(undefined);
 	const [submitSuccess, setSubmitSuccess] = useState(false);
 	const [submitDisabled, setSubmitDisabled] = useState(false);
 	const [formData, setFormData] = useState<FormEntity>({} as FormEntity);
@@ -337,7 +337,7 @@ const FormShareClient: React.FC<FormShareClientProps> = ({
 				}
 
 				const loadedForm = forms[0];
-				setFormId(loadedForm.id);
+				setFormId(loadedForm.documentId);
 				setFormData(loadedForm);
 				setFormMode(loadedForm.form_view ? "list" : "step");
 
@@ -603,6 +603,7 @@ const FormShareClient: React.FC<FormShareClientProps> = ({
 			const response = await submitFormData(formSubmitData);
 
 			if (!response.success) {
+				console.log(response)
 				setError(response.message || "Form submission failed");
 				return;
 			}

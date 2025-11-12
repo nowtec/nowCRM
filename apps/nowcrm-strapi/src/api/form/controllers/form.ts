@@ -17,18 +17,6 @@ async function cloneAssetIfNeeded(
   return asset.id;
 }
 
-function toIdOrNull(x: any): number | null {
-  return x && typeof x === 'object' && 'id' in x ? x.id : null;
-}
-
-function toIds(value: any): number[] | number | null {
-  if (!value) return null;
-  if (Array.isArray(value)) {
-    return value.map(v => toIdOrNull(v)).filter(Boolean) as number[];
-  }
-  return toIdOrNull(value);
-}
-
 async function uniqueSlug(
   strapi: Core.Strapi,
   baseSlug: string
@@ -209,8 +197,8 @@ async duplicate(ctx) {
 
 		// 1️⃣ Fetch form with override_contact
 		const form = await strapi.db.query('api::form.form').findOne({
-			where: { id: body.formId, active: true },
-			select: ['id', 'name', 'slug', 'override_contact', 'keep_contact', 'webhook_url', 'submit_confirm_text']
+			where: { documentId: body.formId, active: true },
+			select: ['documentId', 'name', 'slug', 'override_contact', 'keep_contact', 'webhook_url', 'submit_confirm_text']
 		});
 
 		if (!form) {
@@ -343,7 +331,7 @@ async duplicate(ctx) {
 						console.log(`🏢 Linked existing organization: ${value}`);
 					}
 
-					updates.organization = org.id;
+					updates.organization = org.documentId;
 				} else {
 					updates[match] = value;
 				}
@@ -364,9 +352,6 @@ async duplicate(ctx) {
 			([key, val]) => normalize(key).includes('subscribe') && String(val).toLowerCase() === 'true'
 		);
 
-		console.log("Should subscribe?");
-		console.log(shouldSubscribe);
-
 		if (contact && shouldSubscribe) {
 			try {
 				const now = new Date().toISOString();
@@ -385,15 +370,15 @@ async duplicate(ctx) {
 					// 2️⃣ Check for existing subscription
 					const existing = await strapi.db.query('api::subscription.subscription').findOne({
 						where: {
-							channel: channel.id,
-							contact: contact.id
+							channel: channel.documentId,
+							contact: contact.documentId
 						}
 					});
 
 					if (existing) {
 						// Reactivate existing subscription
 						await strapi.db.query('api::subscription.subscription').update({
-							where: { id: existing.id },
+							where: { documentId: existing.documentId },
 							data: {
 								active: true,
 								unsubscribed_at: null,
@@ -405,8 +390,8 @@ async duplicate(ctx) {
 					} else {
 						// 3️⃣ Create new subscription
 						const data = {
-							channel: channel.id,
-							contact: contact.id,
+							channel: channel.documentId,		
+							contact: contact.documentId,
 							subscribed_at: now,
 							active: true,
 							publishedAt: now
@@ -426,9 +411,9 @@ async duplicate(ctx) {
 		const surveyData : any = {
 			form_id: body.formId,
 			name: form.name,
-			publishedAt: new Date().toISOString()
+			publishedAt: new Date()
 		};
-		if (contact) surveyData.contact = contact.id;
+		if (contact) surveyData.contact = contact.documentId;
 
 		const survey = await strapi.db.query('api::survey.survey').create({ data: surveyData });
 
@@ -444,13 +429,13 @@ async duplicate(ctx) {
 			const file = files?.[fileKey];
 
 			const itemData : any = {
-				survey: survey.id,
+				survey: survey.documentId,
 				question: key,
 				answer: typeof value === 'string' ? value : undefined,
 				publishedAt: new Date().toISOString()
 			};
 
-			if (contact) itemData.contact = contact.id;
+			if (contact) itemData.contact = contact.documentId;
 
 			const createOptions : any = { data: itemData };
 
@@ -469,14 +454,14 @@ async duplicate(ctx) {
 		// 6️⃣ Log event
 		const eventData : any = {
 			action: 'formSubmit',
-			external_id: form.id,
+			external_id: form.documentId,
 			title: form.name,
 			source: ip,
 			status: 'success',
 			payload: JSON.stringify(body),
 			publishedAt: new Date().toISOString()
 		};
-		if (contact) eventData.contact = contact.id;
+		if (contact) eventData.contact = contact.documentId;
 		if (body.identifier) eventData.destination = body.identifier;
 
 		await strapi.db.query('api::event.event').create({ data: eventData });
@@ -490,7 +475,7 @@ async duplicate(ctx) {
 					body: JSON.stringify({
 						identifier: body.identifier || null,
 						formId: body.formId,
-						surveyId: survey.id,
+						surveyId: survey.documentId,
 						formData: body.formData,
 						originalForm: form
 					})
@@ -541,7 +526,7 @@ async duplicate(ctx) {
 					.sendConfirmationEmail({
 						to: contact.email,
 						text: finalText,
-						submissionId: survey.id,
+						submissionId: survey.documentId,
 						subject: `${form.name}`,
 					});
 			} catch (err) {

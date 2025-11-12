@@ -87,6 +87,7 @@ const SwitchAction: React.FC<{ form: FormEntity }> = ({ form }) => {
 		<Switch
 			defaultChecked={form.active}
 			onCheckedChange={async (value) => {
+				console.log(form.documentId)
 				const res = await updateForm(form.documentId, { active: value });
 				if (!res.success) {
 					toast.error(res.errorMessage ?? "Failed to update form");
