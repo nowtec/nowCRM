@@ -1,4 +1,4 @@
-import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import { envServices } from "../envConfig";
 import type Asset from "../types/common/asset";
 import type {

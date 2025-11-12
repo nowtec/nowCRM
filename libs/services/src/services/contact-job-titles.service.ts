@@ -1,4 +1,4 @@
-import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type {
 	ContactJobTitle,
 	Form_ContactJobTitle,

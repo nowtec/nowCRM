@@ -1,4 +1,4 @@
-import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type { Campaign, Form_Campaign } from "../types/campaign";
 import BaseService from "./common/base.service";
 

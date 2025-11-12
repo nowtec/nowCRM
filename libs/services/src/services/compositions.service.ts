@@ -1,5 +1,5 @@
-import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
-import { APIRoutesComposer}  from "../api-routes/api-routes-composer";
+import { APIRoutesComposer } from "../api-routes/api-routes-composer";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import { envServices } from "../envConfig";
 import type { composerSendType } from "../types/composer/composer-send-types";
 import type { createAdditionalComposition } from "../types/composer/create-additional-composition";

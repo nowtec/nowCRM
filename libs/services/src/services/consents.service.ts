@@ -1,4 +1,4 @@
-import {APIRoutesStrapi} from "../api-routes/api-routes-strapi";
+import { APIRoutesStrapi } from "../api-routes/api-routes-strapi";
 import type { Consent, Form_Consent } from "../types/consent";
 import BaseService from "./common/base.service";
 
