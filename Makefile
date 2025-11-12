@@ -5,6 +5,7 @@ NETWORK_NAME=my_net
 SERVICES = apps/composer apps/journeys apps/dal
 STRAPI_SERVICE = strapi
 TOKEN_NAME = crm_journeys_dal_composer
+SHELL := /bin/bash
 
 # ============================================================
 # Checks
@@ -12,15 +13,46 @@ TOKEN_NAME = crm_journeys_dal_composer
 
 check-env:
 	@if [ ! -f $(ENV_FILE) ]; then \
-		echo "⚠️  $(ENV_FILE) not found. Creating from .env.sample if exists..."; \
+		echo "⚠️  $(ENV_FILE) not found."; \
 		if [ -f .env.sample ]; then \
 			cp .env.sample $(ENV_FILE); \
 			echo "✅ Created $(ENV_FILE) from .env.sample"; \
 		else \
-			echo "❌ .env.sample not found! Please create .env manually."; \
+			echo "❌ .env.sample not found! Creating empty .env..."; \
+			touch $(ENV_FILE); \
+		fi; \
+		read -p "🌐 Enter CUSTOMER_DOMAIN (e.g. example.com): " CUSTOMER_DOMAIN; \
+		if [ -z "$$CUSTOMER_DOMAIN" ]; then \
+			echo "❌ CUSTOMER_DOMAIN cannot be empty. Aborting."; \
 			exit 1; \
-		fi \
+		fi; \
+		if grep -q '^CUSTOMER_DOMAIN=' $(ENV_FILE); then \
+			sed -i '' "s|^CUSTOMER_DOMAIN=.*|CUSTOMER_DOMAIN=$$CUSTOMER_DOMAIN|" $(ENV_FILE); \
+		else \
+			echo "CUSTOMER_DOMAIN=$$CUSTOMER_DOMAIN" >> $(ENV_FILE); \
+		fi; \
+		echo "✅ Added CUSTOMER_DOMAIN=$$CUSTOMER_DOMAIN to $(ENV_FILE)"; \
+		for dir in . $(SERVICES); do \
+			if [ "$$dir" = "." ] || [ -d $$dir ]; then \
+				env_path="$$dir/.env"; \
+				sample_path="$$dir/.env.sample"; \
+				if [ -f $$env_path ]; then \
+					sed -i '' "s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
+					echo "🔁 Updated $$env_path"; \
+				elif [ -f $$sample_path ]; then \
+					cp $$sample_path $$env_path; \
+					sed -i '' "s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
+					echo "🆕 Created $$env_path and replaced CUSTOMER_DOMAIN"; \
+				else \
+					echo "⚠️  No .env or .env.sample in $$dir — skipping"; \
+				fi; \
+			fi; \
+		done; \
+		echo "✨ All CUSTOMER_DOMAIN replacements complete."; \
+	else \
+		echo "✔️  $(ENV_FILE) already exists — skipping domain setup"; \
 	fi
+
 
 check-network:
 	@if [ -z "$$(docker network ls --filter name=$(NETWORK_NAME) -q)" ]; then \
