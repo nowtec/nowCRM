@@ -24,20 +24,6 @@ class QueueServiceApi {
 		const status = params.status;
 
 		try {
-			const loginRes = await client(`${baseUrl}/login`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					username: env.COMPOSER_BASIC_AUTH_USERNAME,
-					password: env.COMPOSER_BASIC_AUTH_PASSWORD,
-				}),
-			});
-			if (!loginRes.ok) {
-				throw new Error(
-					`Login failed: ${loginRes.status} ${loginRes.statusText}`,
-				);
-			}
-
 			const queuesUrl = new URL(`${baseUrl}/admin/queues/api/queues`);
 			queuesUrl.searchParams.set("activeQueue", queueName);
 			queuesUrl.searchParams.set("status", status);

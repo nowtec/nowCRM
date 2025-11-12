@@ -19,7 +19,6 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_REDIS_HOST: host({ devDefault: testOnly("localhost") }),
 	JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: num({ devDefault: testOnly(1) }),
 	JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS: num({ devDefault: testOnly(1) }),
-	JOURNEYS_SESSION_SECRET: str({ devDefault: testOnly("secret") }),
 	RABBITMQ_URL: str({
 		devDefault: testOnly("amqp://guest:guest@localhost:5672"),
 	}),

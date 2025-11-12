@@ -43,10 +43,6 @@ app.use(rateLimiter);
 // Request logging
 app.use(requestLogger);
 
-// Authentication middleware
-const _validUsername = env.COMPOSER_BASIC_AUTH_USERNAME || "admin";
-const _validPassword = env.COMPOSER_BASIC_AUTH_PASSWORD || "admin";
-
 app.use("/health-check", healthCheckRouter);
 app.use("/admin/queues", serverAdapter.getRouter());
 app.use("/composer", composerRouter);
