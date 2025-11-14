@@ -150,7 +150,7 @@ DAL uses **BullMQ** queues backed by Redis.
 2. `sendQueue` processes each contact job, sending messages and applying exponential backoff on failure.
 
 **Observability:**
-- New Reilc, or Prometheus + Graphana
+- New Relic, or Prometheus + Graphana
 
 ---
 
