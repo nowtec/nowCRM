@@ -7,7 +7,7 @@
 # nowCRM Developer Guide
 
 **nowCRM** is the central customer relationship management platform developed by **nowtec solutions AG**.  
-It connects several microservices (Strapi, Composer, Journeys, and DAL) into one modular ecosystem.  
+It connects several microservices (Strapi, Composer, Journeys, and DAL) into one modular solution.  
 
 > Licensed under the [GNU Affero General Public License v3.0](./LICENSE).  
 > Attribution required — see [NOTICE](./NOTICE).
@@ -20,10 +20,10 @@ nowCRM relies on the following core services:
 
 | Service | Description |
 |----------|-------------|
-| **Strapi** | Headless CMS used as the universal data backend, authentication layer, and admin panel. |
+| **Strapi 5** | Headless CMS used as the universal data backend, authentication layer, and admin panel. |
 | **Composer** | Handles content generation, channel dispatch, and AWS SES event ingestion. |
 | **Journeys** | Manages automated multi-step marketing journeys. |
-| **DAL (Data Action Layer)** | Orchestrates heavy asynchronous or bulk operations using BullMQ. |
+| **DAL (Data Access Layer)** | Orchestrates heavy asynchronous or bulk operations. |
 | **nowCRM (Frontend)** | The Next.js 15 web interface connecting users to all backend services. |
 
 ---
@@ -32,12 +32,9 @@ nowCRM relies on the following core services:
 
 Before starting local development, ensure you have:
 
-- Node.js v20+
-- Yarn v1.22+
+- Node.js, 20+
+- pnpm
 - Docker + Docker Compose
-- Redis
-- PostgreSQL
-- Access to the internal Strapi and Composer APIs
 
 ---
 
@@ -153,9 +150,7 @@ DAL uses **BullMQ** queues backed by Redis.
 2. `sendQueue` processes each contact job, sending messages and applying exponential backoff on failure.
 
 **Observability:**
-- Dashboard: [Bull Board / Arena]
-- Metrics: Prometheus + Grafana
-- Alerts: Redis connection checks and queue depth monitors
+- New Reilc, or Prometheus + Graphana
 
 ---
 
@@ -192,23 +187,6 @@ Manual step: set the configuration set in AWS SES Console.
 
 ---
 
-## 🧩 Shared Module (`nowtec-shared`)
-
-A private NPM package consolidating Strapi service logic, types, and utilities.  
-Used by all services to unify data access patterns.
-
-### Development Workflow
-
-```bash
-cd shared
-yarn build
-npm pack
-```
-
-Always bump version tags manually in `package.json` before merging shared updates.
-
----
-
 ## 🧰 Strapi Setup
 
 **Purpose:** Central content hub and backend API for all apps.
@@ -224,13 +202,13 @@ Always bump version tags manually in `package.json` before merging shared update
 
 ```bash
 cd strapi-app
-yarn develop
+pnpm develop
 ```
 
 Production mode:
 ```bash
-yarn build
-yarn start
+pnpm build
+pnpm start
 ```
 
 ### Docker Notes
@@ -255,8 +233,8 @@ pool: { min: 10, max: 500, acquireTimeoutMillis: 60000 }
 Before pushing:
 
 ```bash
-yarn lint:fix
-yarn build
+pnpm lint:fix
+pnpm build
 ```
 
 ---
