@@ -1,6 +1,7 @@
 // src/bootstrap/admin-and-tokens.ts
 import type { Core } from "@strapi/strapi";
 
+
 /**
  * Create SuperAdmin user if it doesn't exist.
  */
@@ -299,5 +300,58 @@ export async function createApiTokenTest(strapi: Core.Strapi): Promise<void> {
     }
   } catch (err: any) {
     console.error("❌ Error creating test API tokens:", err.message);
+  }
+}
+
+/**
+ * Create Users-Permissions admin user once.
+ * Uses STRAPI_STANDART_EMAIL for username and email.
+ * Logs credentials only on the first creation.
+ */
+export async function createUsersPermissionsAdminIfNotExist(
+  strapi: Core.Strapi,
+  email: string,
+  password: string
+): Promise<void> {
+  try {
+    // find Admin role created in createAdminRole()
+    const adminRole = await strapi.db
+      .query("plugin::users-permissions.role")
+      .findOne({ where: { name: "Admin" } })
+
+    if (!adminRole) {
+      console.error("Users-Permissions Admin role not found. createAdminRole() must run before.")
+      return
+    }
+
+    // check if user exists
+    const existing = await strapi.db
+      .query("plugin::users-permissions.user")
+      .findOne({
+        where: { email }
+      })
+
+    if (existing) {
+      console.log(`U&P Admin user (${email}) already exists`)
+      return
+    }
+
+    // create new Users-Permissions admin user
+    await strapi.db.query("plugin::users-permissions.user").create({
+      data: {
+        username: email,
+        email,
+        password,
+        confirmed: true,
+        blocked: false,
+        role: adminRole.id
+      }
+    })
+
+    console.info("✔ Users-Permissions Admin user created")
+    console.info(`🔑 U&P Admin (username=email): ${email} ${password} role=Admin`)
+
+  } catch (err: any) {
+    console.error("❌ Error creating U&P Admin user:", err.message)
   }
 }

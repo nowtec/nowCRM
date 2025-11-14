@@ -11,45 +11,64 @@ export async function onSubmitLogin(values: {
 	email: string;
 }) {
 	try {
-		// First, check if user exists and verify password
+		console.log("Login attempt:", {
+			email: values.email,
+			hasPassword: Boolean(values.password),
+		});
+
+		console.log("Calling authenticateCredentials...");
 		const user = await usersService.authenticateCredentials(
 			values.email,
 			values.password,
 			env.CRM_STRAPI_API_TOKEN,
 		);
 
+		console.log("authenticateCredentials response:", user);
+
 		if (!user) {
+			console.log("User not found or wrong password");
 			return { error: "Invalid email or password" };
 		}
 
-		// Check if user has 2FA enabled
+		console.log("User found:", {
+			id: user.id,
+			email: user.email,
+			is2FAEnabled: user.is2FAEnabled,
+			hasTotpSecret: Boolean(user.totpSecret),
+		});
+
 		if (user.is2FAEnabled && user.totpSecret) {
-			// Store pending login state for second factor verification
+			console.log("2FA required for user:", user.id);
+
 			const cookieStore = await cookies();
 
 			cookieStore.set("pendingLoginUserId", user.id.toString(), {
 				httpOnly: true,
 				secure: process.env.NODE_ENV === "production",
 				sameSite: "lax",
-				maxAge: 60 * 10, // 10 minutes
+				maxAge: 60 * 10,
 			});
 
 			cookieStore.set("pendingLoginEmail", values.email, {
 				httpOnly: true,
 				secure: process.env.NODE_ENV === "production",
 				sameSite: "lax",
-				maxAge: 60 * 10, // 10 minutes
+				maxAge: 60 * 10,
 			});
 
-			// Redirect to 2FA verification
+			console.log("Pending login cookies set");
+
 			return { success: false, redirectTo: RouteConfig.auth.verify_otp };
 		} else {
-			// No 2FA - proceed with normal NextAuth sign in
-			console.log("No 2fa");
-			await signIn("credentials", {
+			console.log("2FA not enabled. Proceeding with NextAuth login");
+
+			const nextAuthResult = await signIn("credentials", {
 				...values,
 				redirect: false,
 			});
+
+			console.log("NextAuth signIn result:", nextAuthResult);
+
 			return { success: true, redirectTo: RouteConfig.home };
 		}
 	} catch (error: any) {
@@ -60,38 +79,40 @@ export async function onSubmitLogin(values: {
 	}
 }
 
-/**
- * Complete login after 2FA verification
- * This is called from the verify-otp page after successful TOTP verification
- */
 export async function completeLoginAfter2FA(userId: number) {
 	try {
 		const cookieStore = await cookies();
 		const pendingEmail = cookieStore.get("pendingLoginEmail")?.value;
 
-		console.log("Completing 2FA login for:", { pendingEmail, userId });
+		console.log("Completing 2FA login:", { pendingEmail, userId });
 
 		if (!pendingEmail) {
+			console.log("Pending email not found");
 			throw new Error("No pending login found");
 		}
 
-		// Get user data to complete the sign in
+		console.log("Fetching user by id:", userId);
 		const user = await usersService.getById(userId, env.CRM_STRAPI_API_TOKEN);
 
+		console.log("Received user:", user);
+
 		if (!user) {
+			console.log("User not found for 2FA completion");
 			throw new Error("User not found");
 		}
 
-		// Complete the NextAuth sign in
-		await signIn("credentials", {
+		console.log("Calling NextAuth signIn for 2FA finalization");
+		const finalSignInRes = await signIn("credentials", {
 			email: pendingEmail,
 			password: "__2fa-token-auth__",
 			redirect: false,
 		});
 
-		// Clear pending login cookies
+		console.log("2FA final signIn result:", finalSignInRes);
+
 		cookieStore.delete("pendingLoginUserId");
 		cookieStore.delete("pendingLoginEmail");
+		console.log("Pending cookies cleared");
 
 		return { success: true, redirectTo: RouteConfig.home };
 	} catch (error: any) {

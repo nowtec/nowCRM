@@ -17,7 +17,7 @@ export const createContactExtraFields = async (
 
 	for (const field of extraFields) {
 		try {
-			await fetchJson(`${env.DAL_STRAPI_API_URL}/api/contact-extra-fields`, {
+			await fetchJson(`${env.DAL_STRAPI_API_URL}contact-extra-fields`, {
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,

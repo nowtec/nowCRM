@@ -32,7 +32,7 @@ export const deleteEntityItems = async (
 			);
 
 			const response = await fetch(
-				`${env.DAL_STRAPI_API_URL}/api/${entity}/bulk-delete`,
+				`${env.DAL_STRAPI_API_URL}${entity}/bulk-delete`,
 				{
 					method: "POST",
 					headers: {

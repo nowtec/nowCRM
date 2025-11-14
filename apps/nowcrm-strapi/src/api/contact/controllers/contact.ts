@@ -348,7 +348,7 @@ export default factories.createCoreController('api::contact.contact', ({ strapi 
     }
 
     try {
-      const docs = await strapi.documents('api::contact.contact').findMany( where );
+      const docs = await strapi.documents('api::contact.contact').findMany({ filters: where });
       for (const doc of docs) {
         await strapi.documents('api::contact.contact').delete({ documentId: doc.documentId });
       }

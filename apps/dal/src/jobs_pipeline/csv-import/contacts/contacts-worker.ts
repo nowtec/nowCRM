@@ -236,7 +236,7 @@ export const startContactsWorkers = () => {
 					`[${workerId}] START job ${job.id} at ${new Date(jobStart).toISOString()} - ${contacts.length} contacts`,
 				);
 
-				await waitForStrapi();
+				// await waitForStrapi();
 				await sleep(300);
 
 				const newContacts: any[] = [];

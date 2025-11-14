@@ -16,7 +16,7 @@ import { startUpdateSubscriptionWorker } from "./update-subscription/update-subs
 (async () => {
 	try {
 		console.log(" Checking if Strapi is ready...");
-		await waitForStrapi();
+		// await waitForStrapi();
 		console.log(" Starting workers...");
 		startContactsWorkers();
 		startOrganizationsWorkers();

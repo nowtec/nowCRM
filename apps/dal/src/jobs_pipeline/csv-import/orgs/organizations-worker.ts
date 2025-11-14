@@ -232,7 +232,7 @@ export const startOrganizationsWorkers = () => {
 					`[${workerId}] START job ${job.id} (${uniqueOrgs.length}/${organizations.length} orgs after dedup)`,
 				);
 
-				await waitForStrapi();
+				// await waitForStrapi();
 				await sleep(300);
 
 				const newOrgs: any[] = [];

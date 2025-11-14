@@ -17,7 +17,7 @@ export const startAddToListWorker = () => {
 				logger.info(`[${workerId}] START job ${job.id}`);
 				const { items, listId } = job.data;
 
-				if (!listId || typeof listId !== "number") {
+				if (!listId || typeof listId !== "string") {
 					logger.error(`[${workerId}] Invalid or missing listId`);
 					throw new Error("Missing listId in job data");
 				}

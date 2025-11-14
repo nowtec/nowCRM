@@ -49,7 +49,7 @@ export const createList = async (
 	try {
 		const listResponse = await fetchJson<{
 			data: { id: number; attributes: any };
-		}>(`${env.DAL_STRAPI_API_URL}/api/lists`, {
+		}>(`${env.DAL_STRAPI_API_URL}lists`, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
@@ -82,7 +82,7 @@ export const createList = async (
 				try {
 					const response = await fetchJson<{
 						data: any;
-					}>(`${env.DAL_STRAPI_API_URL}/api/contacts/${contactId}`, {
+					}>(`${env.DAL_STRAPI_API_URL}contacts/${contactId}`, {
 						method: "PUT",
 						headers: {
 							Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,

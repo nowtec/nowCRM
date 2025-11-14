@@ -50,73 +50,91 @@ git clone https://github.com/nowtec/nowCRM.git
 cd nowCRM
 ```
 
-### 2. Environment Configuration
 
-Use the provided `.env.sample` files for each component to create `.env`:
+### 2. You can start nowCRM in two main ways:
 
-| Service | Example file |
-|----------|---------------|
-| nowCRM | `.env.sample` |
-| Composer | `composer/.env.example` |
-| DAL | `dal/.env.example` |
-| Strapi | `strapi-app/.env.example` |
-
-Example for **nowCRM**:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:1337
-NEXTAUTH_SECRET=your-secret
-NEXT_PUBLIC_STRAPI_URL=http://localhost:1337/api
-NEXT_PUBLIC_COMPOSER_URL=http://localhost:3020
-```
+* **Option A**: One step Docker setup with `make up`
+* **Option B**: Local step by step setup with `make dev` and per service commands
 
 ---
 
-### 3. Start Dependencies (Redis, PostgreSQL, Strapi)
+### Option A: Full Docker setup with `make up`
 
-```bash
-sudo docker-compose -f docker-compose-dev.yaml up redis strapi
-```
+This is the quickest way to get a complete environment running.
 
-> Ensure PostgreSQL is available and credentials match your Strapi `.env`.
+1. Make sure Docker and Docker Compose are running on your machine.
+
+2. From the project root, run:
+
+   ```bash
+   make up
+   ```
+
+3. You will be prompted to enter your **customer domain**
+   For example:
+
+   ```text
+   Enter your customer domain (e.g. nowtec.solutions):
+   ```
+
+4. After you confirm the domain, the full setup will run automatically inside Docker
+   All required services will be started and wired together.
 
 ---
 
-### 4. Run Each Service
+### Option B: Local development, service by service
 
-#### nowCRM (Frontend)
+If you prefer to run everything locally outside of Docker, you can bring up the environment step by step.
 
-```bash
-yarn install
-yarn dev
-```
+#### 1. Prepare the dev environment
 
-#### Composer
+From the project root, run:
 
 ```bash
-cd composer
-yarn build
-yarn start
+make dev
 ```
 
-> Use `yarn build` even in dev mode due to ESM loader requirements.
+This command prepares the local development environment (dependencies, configs, etc.) for all services.
 
-#### DAL
+#### 2. Start backend services
+
+For **DAL**, **Composer** and **Journeys**, go into each service root folder and run:
+
+```bash
+pnpm build
+pnpm start
+```
+
+Examples:
 
 ```bash
 cd dal
-yarn build
-yarn start
+pnpm build
+pnpm start
 ```
 
-#### Journeys (if used)
+```bash
+cd composer
+pnpm build
+pnpm start
+```
 
 ```bash
 cd journeys
-yarn dev
+pnpm build
+pnpm start
 ```
 
----
+#### 3. Start nowCRM frontend
+
+From the `nowcrm` (frontend) root folder:
+
+```bash
+pnpm dev
+```
+
+The frontend will start in development mode and connect to the locally running backend services.
+
 
 ## 🔨 Queueing System (DAL)
 

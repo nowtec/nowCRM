@@ -3,6 +3,7 @@ import helmet from "helmet";
 import { pino } from "pino";
 import { healthCheckRouter } from "@/api/health-check/health-check-router";
 import { openAPIRouter } from "@/api-docs/open-API-router";
+import { massActionsRouter } from "@/api/mass-actions/mass-actions-router";
 import errorHandler from "@/common/middleware/error-handler";
 import rateLimiter from "@/common/middleware/rate-limiter";
 import requestLogger from "@/common/middleware/request-logger";
@@ -33,6 +34,7 @@ app.use(rateLimiter);
 
 // Request logging
 app.use(requestLogger);
+app.use("/mass-actions", massActionsRouter);
 
 app.use("/health-check", healthCheckRouter);
 // Swagger UI

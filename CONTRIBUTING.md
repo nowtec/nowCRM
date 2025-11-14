@@ -37,7 +37,7 @@ Before opening a new issue, please:
 4. **Run the Makefile**
 
    ```bash
-   make -f Makefile
+   make up
    ```
 
 5. **Test and Lint**

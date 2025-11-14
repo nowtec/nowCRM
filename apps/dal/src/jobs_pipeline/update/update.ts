@@ -66,7 +66,7 @@ async function resolveRelationIds(
 				"filters[name][$eq]": name,
 			});
 			const resp = await fetch(
-				`${env.DAL_STRAPI_API_URL}/api/${endpoint}?${params}`,
+				`${env.DAL_STRAPI_API_URL}${endpoint}?${params}`,
 				{ headers },
 			);
 			if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
@@ -90,7 +90,7 @@ async function resolveRelationIds(
 
 		try {
 			const createResp = await fetch(
-				`${env.DAL_STRAPI_API_URL}/api/${endpoint}`,
+				`${env.DAL_STRAPI_API_URL}${endpoint}`,
 				{
 					method: "POST",
 					headers,
@@ -172,7 +172,7 @@ export const updateEntityItems = async (
 
 			try {
 				const resp = await fetch(
-					`${env.DAL_STRAPI_API_URL}/api/${entity}/bulk-update`,
+					`${env.DAL_STRAPI_API_URL}${entity}/bulk-update`,
 					{
 						method: "POST",
 						headers: {
