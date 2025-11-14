@@ -5,6 +5,8 @@ import { generatePassword } from './bootstrap/utils/generatePassword';
 import { seedData } from './bootstrap/data/seedData';
 import industriesData from "./bootstrap/data/industries.json";
 import { createUsersPermissionsAdminIfNotExist } from './bootstrap/admin-and-tokens'
+import { createCrmToken } from './bootstrap/admin-and-tokens';
+
 import {
   ensureLocalesAndConsents,
   populateStartupEntry,
@@ -20,7 +22,7 @@ import {
   createSuperAdminUserIfNotExist,
   createSuperAdminTest,
   createApiTokenTest,
-  createCrmJourneysDalComposerToken,
+  createJourneysDalComposerToken,
 } from './bootstrap/admin-and-tokens';
 import { setUpJourneysWebhook } from './bootstrap/create-journeys-webhooks';
 
@@ -99,7 +101,8 @@ export default {
       );
 
       await createApiTokenTest(strapi);
-      await createCrmJourneysDalComposerToken(strapi);
+      await createJourneysDalComposerToken(strapi);
+      await createCrmToken(strapi); 
 
       seedCommonEntities(strapi);
       seedEntities(strapi);

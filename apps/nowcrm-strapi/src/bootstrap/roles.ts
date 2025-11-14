@@ -10,52 +10,47 @@ export async function assignRolePermissions(
   permissions: Record<string, string[]>
 ): Promise<void> {
   try {
-    const entries = Object.entries(permissions);
-    const lastKey = entries[entries.length - 1][0];
-    const permissionIds: number[] = [];
+    // remove old permissions
+    await strapi.db
+      .query("plugin::users-permissions.permission")
+      .deleteMany({ where: { role: roleId } });
 
-    for (const [key, actions] of entries) {
+    for (const [subject, actions] of Object.entries(permissions)) {
       for (const action of actions) {
-        const permissionName = `${key}.${action}`;
-
-        const createdPermission = await strapi.db
+        await strapi.db
           .query("plugin::users-permissions.permission")
-          .create({ data: { action: permissionName } });
-
-        permissionIds.push(createdPermission.id);
-
-        if (key === lastKey) {
-          await strapi.db
-            .query("plugin::users-permissions.role")
-            .update({
-              where: { id: roleId },
-              data: { permissions: permissionIds },
-            });
-          console.log(`✅ Updated permissions for role id ${roleId}`);
-        }
+          .create({
+            data: {
+              action: `${subject}.${action}`,
+              role: roleId,
+            },
+          });
       }
     }
+
+    console.log(`permissions updated for role ${roleId}`);
   } catch (err) {
-    console.error("❌ Error assigning role permissions:", err);
+    console.error("permission assignment error:", err);
   }
 }
 
 /**
- * Clean up permissions containing "::" in their action name.
+ * Clean up permissions containing "::"
  */
 export async function cleanupPermissions(strapi: Core.Strapi): Promise<void> {
   try {
-    const deleted = await strapi.db
+    await strapi.db
       .query("plugin::users-permissions.permission")
       .deleteMany({ where: { action: { $contains: "::" } } });
-    console.log(`🧹 Cleaned old permissions`);
+
+    console.log("old permissions cleaned");
   } catch (err) {
-    console.error("❌ Failed to clean permissions:", err);
+    console.error("cleanup failed:", err);
   }
 }
 
 /**
- * Create ReadOnly role with permissions
+ * Create ReadOnly role
  */
 export async function createReadonlyRole(strapi: Core.Strapi): Promise<void> {
   const readonlyPermissions: Record<string, string[]> = {
@@ -114,26 +109,27 @@ export async function createReadonlyRole(strapi: Core.Strapi): Promise<void> {
       .findOne({ where: { name: "ReadOnly" } });
 
     if (!existing) {
-      const newRole = await strapi.db
+      const role = await strapi.db
         .query("plugin::users-permissions.role")
         .create({
           data: {
             name: "ReadOnly",
             type: "readonly",
-            description: "This user has read only role",
+            description: "read only role",
           },
         });
 
-      console.log("🟢 READONLY ROLE CREATED");
-      await assignRolePermissions(strapi, newRole.id, readonlyPermissions);
+      console.log("readonly role created");
+
+      await assignRolePermissions(strapi, role.id, readonlyPermissions);
     }
   } catch (err) {
-    console.error("❌ ROLE CREATION ERROR (ReadOnly):", err);
+    console.error("readonly role error:", err);
   }
 }
 
 /**
- * Create Admin role with full permissions
+ * Create Admin role with all permissions
  */
 export async function createAdminRole(strapi: Core.Strapi): Promise<void> {
   const basic = ["find", "findOne", "create", "update", "delete"];
@@ -147,10 +143,7 @@ export async function createAdminRole(strapi: Core.Strapi): Promise<void> {
     "api::activity-log.activity-log": basic,
     "api::category.category": basicLoc,
     "api::channel.channel": basic,
-    "api::composition.composition": [
-      ...basic,
-      "duplicate",
-    ],
+    "api::composition.composition": [...basic, "duplicate"],
     "api::composition-item.composition-item": basic,
     "api::composition-prompt.composition-prompt": basic,
     "api::composition-template.composition-template": basic,
@@ -161,9 +154,9 @@ export async function createAdminRole(strapi: Core.Strapi): Promise<void> {
       "anonymizeUserData",
       "exportUserData",
       "duplicate",
-      "bulkCreate",  
+      "bulkCreate",
       "bulkUpdate",
-      "bulkDelete", 
+      "bulkDelete",
     ],
     "api::contact-interest.contact-interest": basic,
     "api::contact-title.contact-title": basic,
@@ -245,27 +238,26 @@ export async function createAdminRole(strapi: Core.Strapi): Promise<void> {
   };
 
   try {
-    const existing = await strapi.db
+    let admin = await strapi.db
       .query("plugin::users-permissions.role")
       .findOne({ where: { name: "Admin" } });
 
-    if (!existing) {
-      const newRole = await strapi.db
+    if (!admin) {
+      admin = await strapi.db
         .query("plugin::users-permissions.role")
         .create({
           data: {
             name: "Admin",
             type: "admin",
-            description: "Has access to everything",
+            description: "full access",
           },
         });
 
-      console.log("🟢 ADMIN ROLE CREATED");
-      await assignRolePermissions(strapi, newRole.id, adminPermissions);
-    } else {
-      await assignRolePermissions(strapi, existing.id, adminPermissions);
+      console.log("admin role created");
     }
+
+    await assignRolePermissions(strapi, admin.id, adminPermissions);
   } catch (err) {
-    console.error("❌ ROLE CREATION ERROR (Admin):", err);
+    console.error("admin role error:", err);
   }
 }
