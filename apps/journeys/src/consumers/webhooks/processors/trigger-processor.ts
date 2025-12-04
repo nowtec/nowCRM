@@ -215,23 +215,35 @@ export async function processTriggerMessage(data: any) {
 			}
 		}
 	}
+	// Batch job creation to reduce sequential awaits
+	const jobPromises: Promise<void>[] = [];
+	
 	for (const step of filtered_steps) {
 		if (step.connections_from_this_step?.length) {
 			for (const connection_step of step.connections_from_this_step) {
 				logger.info(
 					`Creating job for -> connection step ${connection_step.documentId} with target ${connection_step.target_step.documentId}`,
 				);
-				await createJob({
-					contact: contactId,
-					journey: step.journey.documentId,
-					type: connection_step.target_step.type,
-					journey_step: connection_step.target_step.documentId,
-					channel: connection_step.target_step.channel?.documentId,
-					composition: connection_step.target_step.composition?.documentId,
-					timing: connection_step.target_step.timing,
-					ignoreSubscription: true,
-				});
+				// Collect all job creation promises
+				jobPromises.push(
+					createJob({
+						contact: contactId,
+						journey: step.journey.documentId,
+						type: connection_step.target_step.type,
+						journey_step: connection_step.target_step.documentId,
+						channel: connection_step.target_step.channel?.documentId,
+						composition: connection_step.target_step.composition?.documentId,
+						timing: connection_step.target_step.timing,
+						ignoreSubscription: true,
+					}),
+				);
 			}
 		}
+	}
+	
+	// Execute all job creations in parallel
+	if (jobPromises.length > 0) {
+		await Promise.allSettled(jobPromises);
+		logger.info(`Created ${jobPromises.length} jobs for contact ${contactId}`);
 	}
 }
