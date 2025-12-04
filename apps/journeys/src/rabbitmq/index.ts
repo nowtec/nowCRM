@@ -175,8 +175,10 @@ export async function setupRabbitMQ() {
 			throw new Error("RABBITMQ_URL environment variable is not set");
 		}
 
-		logger.info(`Connecting to RabbitMQ at ${RABBITMQ_URL.replace(/:[^:@]+@/, ":****@")}`);
-		
+		logger.info(
+			`Connecting to RabbitMQ at ${RABBITMQ_URL.replace(/:[^:@]+@/, ":****@")}`,
+		);
+
 		// Type assertion needed due to incomplete type definitions
 		const conn = (await amqp.connect(
 			RABBITMQ_URL,
@@ -228,40 +230,69 @@ export async function publishToJourneyQueue(
 
 	return new Promise((resolve, reject) => {
 		try {
+			// Only set x-delay header if delay > 0
+			const headers: Record<string, any> = {
+				persistent: true,
+				messageId: data.jobKey, // for avoiding deduplicates
+			};
+
+			if (delayMs > 0) {
+				headers["x-delay"] = delayMs;
+			}
+
 			const published = confirmChannel?.publish(
 				EXCHANGE_NAME_JOURNEY,
 				JOURNEY_QUEUES[queue],
 				Buffer.from(JSON.stringify(data)),
-				{
-					persistent: true,
-					headers: { "x-delay": delayMs },
-					messageId: data.jobKey, // for avoiding deduplicates
-				},
+				headers,
 			);
 
 			if (!published) {
 				confirmChannel?.once("drain", () => {
-					logger.warn("RabbitMQ channel drained, message published");
+					logger.warn(
+						{ queue: JOURNEY_QUEUES[queue], delayMs },
+						"RabbitMQ channel drained, message published",
+					);
 					resolve();
 				});
 			} else {
-				// waitForConfirms returns a Promise in newer versions
-				// Using callback-based approach for compatibility
-				(
-					confirmChannel?.waitForConfirms as (
-						callback?: (err?: Error) => void,
-					) => void
-				)((err?: Error) => {
-					if (err) {
-						logger.error({ err }, "Failed to confirm message publish");
-						reject(err);
-					} else {
-						resolve();
+				// waitForConfirms waits for all pending confirms
+				// Use setTimeout to ensure the publish is registered before waiting
+				setTimeout(() => {
+					try {
+						(
+							confirmChannel?.waitForConfirms as (
+								callback?: (err?: Error) => void,
+							) => void
+						)((err?: Error) => {
+							if (err) {
+								logger.error(
+									{ err, queue: JOURNEY_QUEUES[queue], delayMs },
+									"Failed to confirm message publish",
+								);
+								reject(err);
+							} else {
+								logger.debug(
+									{ queue: JOURNEY_QUEUES[queue], delayMs, jobId: data.jobId },
+									"Message published and confirmed",
+								);
+								resolve();
+							}
+						});
+					} catch (confirmErr) {
+						logger.error(
+							{ err: confirmErr, queue: JOURNEY_QUEUES[queue] },
+							"Error waiting for confirmation",
+						);
+						reject(confirmErr);
 					}
-				});
+				}, 0);
 			}
 		} catch (err) {
-			logger.error({ err }, "Error publishing to journey queue");
+			logger.error(
+				{ err, queue: JOURNEY_QUEUES[queue], delayMs },
+				"Error publishing to journey queue",
+			);
 			reject(err);
 		}
 	});
@@ -282,39 +313,66 @@ export async function publishToTriggerQueue(
 
 	return new Promise((resolve, reject) => {
 		try {
+			// Only set x-delay header if delay > 0
+			const headers: Record<string, any> = {
+				persistent: true,
+			};
+
+			if (delayMs > 0) {
+				headers["x-delay"] = delayMs;
+			}
+
 			const published = confirmChannel?.publish(
 				EXCHANGE_NAME_TRIGGER,
 				TRIGGER_QUEUES[queue],
 				Buffer.from(JSON.stringify(data)),
-				{
-					persistent: true,
-					headers: { "x-delay": delayMs },
-				},
+				headers,
 			);
 
 			if (!published) {
 				confirmChannel?.once("drain", () => {
-					logger.warn("RabbitMQ channel drained, message published");
+					logger.warn(
+						{ queue: TRIGGER_QUEUES[queue], delayMs },
+						"RabbitMQ channel drained, message published",
+					);
 					resolve();
 				});
 			} else {
-				// waitForConfirms returns a Promise in newer versions
-				// Using callback-based approach for compatibility
-				(
-					confirmChannel?.waitForConfirms as (
-						callback?: (err?: Error) => void,
-					) => void
-				)((err?: Error) => {
-					if (err) {
-						logger.error({ err }, "Failed to confirm message publish");
-						reject(err);
-					} else {
-						resolve();
+				setTimeout(() => {
+					try {
+						(
+							confirmChannel?.waitForConfirms as (
+								callback?: (err?: Error) => void,
+							) => void
+						)((err?: Error) => {
+							if (err) {
+								logger.error(
+									{ err, queue: TRIGGER_QUEUES[queue], delayMs },
+									"Failed to confirm message publish",
+								);
+								reject(err);
+							} else {
+								logger.debug(
+									{ queue: TRIGGER_QUEUES[queue], delayMs },
+									"Message published and confirmed",
+								);
+								resolve();
+							}
+						});
+					} catch (confirmErr) {
+						logger.error(
+							{ err: confirmErr, queue: TRIGGER_QUEUES[queue] },
+							"Error waiting for confirmation",
+						);
+						reject(confirmErr);
 					}
-				});
+				}, 0);
 			}
 		} catch (err) {
-			logger.error({ err }, "Error publishing to trigger queue");
+			logger.error(
+				{ err, queue: TRIGGER_QUEUES[queue], delayMs },
+				"Error publishing to trigger queue",
+			);
 			reject(err);
 		}
 	});

@@ -177,14 +177,14 @@
 
 @layer utilities {
 	.input-autofill-fix {
-		box-shadow: 0 0 0 1000px var(--background) inset !important;
+		box-shadow: 0 0 0 1000px var(--background) inset;
 	}
 }
 
 @utility container {
 	margin-inline: auto;
 	padding-inline: 2rem;
-	display: block !important;
+	display: block;
 
 	@media (width >= --theme(--breakpoint-sm)) {
 		max-width: none;

@@ -623,26 +623,23 @@ export function TriggerPanel({
 														Event Type
 													</label>
 													<Select
-														value={
-															(() => {
-																// For subscription with same event values, use label to identify selection
-																if (
-																	config.entity === "subscription" &&
-																	config.event === "entry.update" &&
-																	config.attribute
-																) {
-																	const attributeValue = config.attribute.value;
-																	const selected = selectedEventOptions.find(
-																		(e) =>
-																			e.value === config.event &&
-																			e.presetAttribute?.value ===
-																				attributeValue,
-																	);
-																	return selected?.label ?? config.event ?? "";
-																}
-																return config.event ?? "";
-															})()
-														}
+														value={(() => {
+															// For subscription with same event values, use label to identify selection
+															if (
+																config.entity === "subscription" &&
+																config.event === "entry.update" &&
+																config.attribute
+															) {
+																const attributeValue = config.attribute.value;
+																const selected = selectedEventOptions.find(
+																	(e) =>
+																		e.value === config.event &&
+																		e.presetAttribute?.value === attributeValue,
+																);
+																return selected?.label ?? config.event ?? "";
+															}
+															return config.event ?? "";
+														})()}
 														onValueChange={onEventChange}
 														disabled={selectedEventOptions.length === 0}
 													>

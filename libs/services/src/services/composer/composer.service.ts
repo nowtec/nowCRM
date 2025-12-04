@@ -107,11 +107,12 @@ class ComposerService {
 						success: false,
 					};
 				}
-				if (check.data) return {
-					data: null,
-					status: 200,
-					success: true,
-				}
+				if (check.data)
+					return {
+						data: null,
+						status: 200,
+						success: true,
+					};
 			}
 
 			const response = await fetch(url, {

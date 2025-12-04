@@ -89,6 +89,16 @@ export async function createJob(jobData: {
 				new Date(String(jobData.timing.value)).getTime() - Date.now(),
 			);
 		}
+		logger.info(
+			{
+				jobKey,
+				delay,
+				delayMinutes: delay / (60 * 1000),
+				timingType: jobData.timing.type,
+				timingValue: jobData.timing.value,
+			},
+			`Publishing job to DELAYED queue with ${delay}ms delay`,
+		);
 		await publishToJourneyQueue("DELAYED", jobDataRedis, delay);
 	} else {
 		await publishToJourneyQueue("JOB", jobDataRedis);

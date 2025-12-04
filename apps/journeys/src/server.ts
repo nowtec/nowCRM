@@ -47,9 +47,9 @@ async function initJobs() {
 initJobs().catch((err) => {
 	const errorMessage = err instanceof Error ? err.message : String(err);
 	const errorStack = err instanceof Error ? err.stack : undefined;
-	
+
 	logger.error(
-		{ 
+		{
 			err,
 			errorMessage,
 			errorStack,
@@ -57,17 +57,20 @@ initJobs().catch((err) => {
 		},
 		"Failed to init job processors: RabbitMQ connection could not be initialized",
 	);
-	
+
 	// Give a helpful error message
-	if (errorMessage.includes("ECONNREFUSED") || errorMessage.includes("ENOTFOUND")) {
-		logger.error(
-			"RabbitMQ server appears to be unreachable. Please check:",
-		);
+	if (
+		errorMessage.includes("ECONNREFUSED") ||
+		errorMessage.includes("ENOTFOUND")
+	) {
+		logger.error("RabbitMQ server appears to be unreachable. Please check:");
 		logger.error("1. Is RabbitMQ running?");
 		logger.error("2. Is RABBITMQ_URL environment variable set correctly?");
-		logger.error(`3. Current RABBITMQ_URL: ${process.env.RABBITMQ_URL?.replace(/:[^:@]+@/, ":****@") || "NOT SET"}`);
+		logger.error(
+			`3. Current RABBITMQ_URL: ${process.env.RABBITMQ_URL?.replace(/:[^:@]+@/, ":****@") || "NOT SET"}`,
+		);
 	}
-	
+
 	process.exit(1);
 });
 

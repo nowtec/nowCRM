@@ -61,6 +61,7 @@ function createRetryHeaders(
 
 /**
  * Publishes message to retry queue with exponential backoff
+ * For DELAYED queue messages, retries immediately (delay = 0) since original delay already passed
  */
 async function republishWithRetry(
 	isJourneyQueue: boolean,
@@ -69,11 +70,16 @@ async function republishWithRetry(
 	metadata: RetryMetadata,
 	error: Error,
 ): Promise<void> {
-	const delay = calculateBackoffDelay(
-		metadata.retryCount,
-		env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
-		env.RABBITMQ_RETRY_MAX_DELAY_MS,
-	);
+	// For delayed messages, retry immediately since the original delay has already passed
+	// For other queues, use exponential backoff
+	const isDelayedQueue = queueType === "DELAYED";
+	const delay = isDelayedQueue
+		? 0 // Retry immediately for delayed messages
+		: calculateBackoffDelay(
+				metadata.retryCount,
+				env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+				env.RABBITMQ_RETRY_MAX_DELAY_MS,
+			);
 
 	const retryHeaders = createRetryHeaders(metadata, error);
 	const retryData = {
@@ -87,14 +93,17 @@ async function republishWithRetry(
 			retryCount: metadata.retryCount + 1,
 			maxRetries: env.RABBITMQ_MAX_RETRIES,
 			delay,
+			isDelayedQueue,
 			error: error.message,
 		},
 		`Republishing message to ${queueType} queue with retry`,
 	);
 
 	if (isJourneyQueue) {
+		// For delayed queue, republish to JOB queue immediately (not DELAYED) to avoid double delay
+		const targetQueue = isDelayedQueue ? "JOB" : queueType;
 		await publishToJourneyQueue(
-			queueType as JourneyQueueType,
+			targetQueue as JourneyQueueType,
 			retryData,
 			delay,
 		);

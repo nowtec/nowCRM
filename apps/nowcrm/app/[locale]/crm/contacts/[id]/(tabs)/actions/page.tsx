@@ -38,7 +38,7 @@ export default async function Page(props: {
 		},
 		filters: {
 			$or: [
-				{ action_type: { name: { $containsi: search } }},
+				{ action_type: { name: { $containsi: search } } },
 				{ entity: { $containsi: search } },
 				{ payload: { $containsi: search } },
 			],

@@ -11,12 +11,35 @@ export function delayedConsumer() {
 	channel.consume(
 		JOURNEY_QUEUES.DELAYED,
 		async (msg) => {
-			if (!msg) return;
+			if (!msg) {
+				logger.warn("Received null message in delayed consumer");
+				return;
+			}
 
 			const startTime = Date.now();
 			let data: any;
 			try {
-				data = JSON.parse(msg.content.toString());
+				const messageContent = msg.content.toString();
+				logger.debug(
+					{
+						queue: JOURNEY_QUEUES.DELAYED,
+						messageSize: messageContent.length,
+						headers: msg.properties?.headers,
+					},
+					"Received delayed message",
+				);
+
+				data = JSON.parse(messageContent);
+				logger.info(
+					{
+						jobId: data.jobId,
+						contactId: data.contactId,
+						stepId: data.stepId,
+						delay: msg.properties?.headers?.["x-delay"],
+					},
+					`Processing delayed job: ${data.jobId}`,
+				);
+
 				await processDelayedMessage(data);
 				channel.ack(msg);
 
