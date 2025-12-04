@@ -305,7 +305,10 @@ export function TriggerPanel({
 
 	// When an event is selected, apply any presetAttribute into config.attribute.
 	const onEventChange = (value: string) => {
-		const selected = selectedEventOptions.find((e) => e.value === value);
+		// Find by label since subscription options may have same event value
+		const selected = selectedEventOptions.find(
+			(e) => e.label === value || e.value === value,
+		);
 		const updates: Partial<TriggerConfig> = { event: selected?.value ?? null };
 
 		// For presets, set attribute here
@@ -572,7 +575,8 @@ export function TriggerPanel({
 															onValueChange={(val) =>
 																handleConfigChange({
 																	attribute: {
-																		label: "action_type",
+																		label: val.label,
+																		attribute_name: "action_type.name",
 																		value: val.value,
 																	},
 																})
@@ -598,7 +602,8 @@ export function TriggerPanel({
 															onValueChange={(val) =>
 																handleConfigChange({
 																	attribute: {
-																		label: "form_id",
+																		label: val.label,
+																		attribute_name: "form_id",
 																		value: val.value,
 																	},
 																})
@@ -618,7 +623,26 @@ export function TriggerPanel({
 														Event Type
 													</label>
 													<Select
-														value={config.event ?? ""}
+														value={
+															(() => {
+																// For subscription with same event values, use label to identify selection
+																if (
+																	config.entity === "subscription" &&
+																	config.event === "entry.update" &&
+																	config.attribute
+																) {
+																	const attributeValue = config.attribute.value;
+																	const selected = selectedEventOptions.find(
+																		(e) =>
+																			e.value === config.event &&
+																			e.presetAttribute?.value ===
+																				attributeValue,
+																	);
+																	return selected?.label ?? config.event ?? "";
+																}
+																return config.event ?? "";
+															})()
+														}
 														onValueChange={onEventChange}
 														disabled={selectedEventOptions.length === 0}
 													>
@@ -629,7 +653,15 @@ export function TriggerPanel({
 															{selectedEventOptions.map((event) => (
 																<SelectItem
 																	key={event.label}
-																	value={event.value}
+																	value={
+																		// Use label as value for subscription events with same event value
+																		config.entity === "subscription" &&
+																		selectedEventOptions.filter(
+																			(e) => e.value === event.value,
+																		).length > 1
+																			? event.label
+																			: event.value
+																	}
 																>
 																	<div>
 																		<div className="font-medium">
