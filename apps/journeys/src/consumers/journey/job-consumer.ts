@@ -1,6 +1,7 @@
 import { JOURNEY_QUEUES } from "../../config";
 import { logger } from "../../logger";
 import { getChannel } from "../../rabbitmq";
+import { handleMessageRetry } from "../../lib/functions/helpers/retry-handler";
 import { processJobMessage } from "./processors/job-processor";
 
 export function jobConsumer() {
@@ -13,8 +14,9 @@ export function jobConsumer() {
 			if (!msg) return;
 			
 			const startTime = Date.now();
+			let data: any;
 			try {
-				const data = JSON.parse(msg.content.toString());
+				data = JSON.parse(msg.content.toString());
 				await processJobMessage(data);
 				channel.ack(msg);
 				
@@ -25,12 +27,41 @@ export function jobConsumer() {
 				);
 			} catch (error) {
 				const duration = Date.now() - startTime;
+				const err = error instanceof Error ? error : new Error(String(error));
+				
 				logger.error(
-					{ err: error, duration, queue: JOURNEY_QUEUES.JOB },
+					{ err, duration, queue: JOURNEY_QUEUES.JOB },
 					"Error processing job message",
 				);
-				// Nack without requeue to send to DLX
-				channel.nack(msg, false, false);
+				
+				// Parse data if not already parsed
+				if (!data) {
+					try {
+						data = JSON.parse(msg.content.toString());
+					} catch (parseError) {
+						logger.error({ err: parseError }, "Failed to parse message for retry");
+						channel.nack(msg, false, false);
+						return;
+					}
+				}
+				
+				// Try to retry with exponential backoff
+				const wasRetried = await handleMessageRetry(
+					true, // isJourneyQueue
+					"JOB",
+					JOURNEY_QUEUES.JOB,
+					msg,
+					data,
+					err,
+				);
+				
+				if (wasRetried) {
+					// Message was requeued for retry, acknowledge original message
+					channel.ack(msg);
+				} else {
+					// Max retries exceeded or non-retryable error, send to DLX
+					channel.nack(msg, false, false);
+				}
 			}
 		},
 		{ noAck: false },
