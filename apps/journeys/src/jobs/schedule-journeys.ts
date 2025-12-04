@@ -34,6 +34,6 @@ export async function scheduleJourneys() {
 			processedDate: new Date().toISOString(),
 		};
 		await redis.set(redisKey, JSON.stringify(newJob));
-		publishToJourneyQueue("JOURNEY", newJob);
+		await publishToJourneyQueue("JOURNEY", newJob);
 	}
 }

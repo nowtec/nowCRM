@@ -25,7 +25,7 @@ export async function processRuleMessage(data: ruleProcessorJobData) {
 	);
 	if (!connections.responseObject) {
 		logger.info(`Requeuing rule job ${jobId} after delay`);
-		publishToJourneyQueue("RULE_CHECK", data, CHECK_JOB_TTL_SEC * 1000);
+		await publishToJourneyQueue("RULE_CHECK", data, CHECK_JOB_TTL_SEC * 1000);
 		return;
 	}
 

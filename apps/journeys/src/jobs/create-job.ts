@@ -77,9 +77,9 @@ export async function createJob(jobData: {
 				new Date(String(jobData.timing.value)).getTime() - Date.now(),
 			);
 		}
-		publishToJourneyQueue("DELAYED", jobDataRedis, delay);
+		await publishToJourneyQueue("DELAYED", jobDataRedis, delay);
 	} else {
-		publishToJourneyQueue("JOB", jobDataRedis);
+		await publishToJourneyQueue("JOB", jobDataRedis);
 	}
 
 	logger.info(`New job created: ${jobKey}`);
@@ -89,7 +89,7 @@ export async function createRuleCheckJob(jobDataRedis: any) {
 	const ruleJobKey = `${jobDataRedis.jobId}-rule_check:true`;
 	const newJobData = { ...jobDataRedis, ruleCheck: true, jobKey: ruleJobKey };
 
-	publishToJourneyQueue("RULE_CHECK", newJobData);
+	await publishToJourneyQueue("RULE_CHECK", newJobData);
 	logger.info(`Rule check job created: ${ruleJobKey}`);
 }
 

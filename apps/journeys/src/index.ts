@@ -8,8 +8,17 @@ const server = app.listen(env.JOURNEYS_PORT, () => {
 	);
 });
 
-const onCloseSignal = () => {
+const onCloseSignal = async () => {
 	logger.info("sigint received, shutting down");
+	
+	// Close RabbitMQ connections gracefully
+	try {
+		const { closeRabbitMQ } = await import("./rabbitmq/index.js");
+		await closeRabbitMQ();
+	} catch (err) {
+		logger.error({ err }, "Error closing RabbitMQ");
+	}
+	
 	server.close(() => {
 		logger.info("server closed");
 		process.exit();
