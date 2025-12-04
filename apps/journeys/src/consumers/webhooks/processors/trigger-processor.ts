@@ -51,6 +51,22 @@ function readWebhookAttributeValue(data: any, attribute?: string | null) {
 	if (!attribute) return undefined;
 	const entry = data?.entry ?? {};
 
+	// Handle nested attribute paths like "action_type.name"
+	if (attribute.includes(".")) {
+		const parts = attribute.split(".");
+		let current: any = entry;
+
+		for (const part of parts) {
+			if (current === null || current === undefined) {
+				return undefined;
+			}
+			current = current[part];
+		}
+
+		return current;
+	}
+
+	// Handle simple attribute names
 	if (attribute in entry) return entry[attribute];
 
 	return undefined;
