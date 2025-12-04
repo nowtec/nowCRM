@@ -170,6 +170,13 @@ async function reconnect() {
  */
 export async function setupRabbitMQ() {
 	try {
+		// Validate RabbitMQ URL is set
+		if (!RABBITMQ_URL) {
+			throw new Error("RABBITMQ_URL environment variable is not set");
+		}
+
+		logger.info(`Connecting to RabbitMQ at ${RABBITMQ_URL.replace(/:[^:@]+@/, ":****@")}`);
+		
 		// Type assertion needed due to incomplete type definitions
 		const conn = (await amqp.connect(
 			RABBITMQ_URL,
