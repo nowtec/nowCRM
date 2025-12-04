@@ -24,19 +24,50 @@ export async function createJob(jobData: {
 }) {
 	const jobKey = `job-contact:${jobData.contact}-journey:${jobData.journey}-step:${jobData.journey_step}`;
 
+	logger.debug(
+		{
+			jobKey,
+			contactId: jobData.contact,
+			journeyId: jobData.journey,
+			stepId: jobData.journey_step,
+			type: jobData.type,
+			skipValidation: jobData.skipValidation,
+		},
+		"Creating job",
+	);
+
 	if (!jobData.skipValidation) {
-		// First validate step before attempting atomic job creation
+		// Lightweight validation: only check step structure (composition for channel steps)
+		// The "contact has passed step" check is done in journey-processor to avoid duplicate API calls
 		const stepValidation = await checkStepValid(
 			jobData.contact,
 			jobData.journey,
 			jobData.journey_step,
+			// Pass step data if available to avoid refetching
+			{
+				type: jobData.type,
+				composition: jobData.composition
+					? { documentId: jobData.composition }
+					: null,
+			},
 		);
 		if (!stepValidation.valid) {
 			logger.warn(
-				`Step is not valid for contact, skipping job creation: ${jobKey}. Reason: ${stepValidation.reason}`,
+				{
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+					reason: stepValidation.reason,
+				},
+				"Step is not valid for contact, skipping job creation",
 			);
 			return;
 		}
+
+		logger.debug(
+			{ jobKey, contactId: jobData.contact, stepId: jobData.journey_step },
+			"Step validation passed, attempting atomic job key creation",
+		);
 
 		// Atomically set job key - returns false if job already exists (race condition prevented)
 		const wasSet = await setJobKeyAtomic(
@@ -46,11 +77,25 @@ export async function createJob(jobData: {
 		);
 		if (!wasSet) {
 			logger.warn(
-				`Job already exists (race condition prevented), skipping creation: ${jobKey}`,
+				{
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+				},
+				"Job already exists (race condition prevented), skipping creation",
 			);
 			return;
 		}
+
+		logger.debug(
+			{ jobKey, contactId: jobData.contact, stepId: jobData.journey_step },
+			"Job key atomically created in Redis",
+		);
 	} else {
+		logger.debug(
+			{ jobKey },
+			"Skipping validation, using atomic job key creation",
+		);
 		// For skipValidation cases, still use atomic operation but don't check step validity
 		const wasSet = await setJobKeyAtomic(
 			jobData.contact,
@@ -59,7 +104,12 @@ export async function createJob(jobData: {
 		);
 		if (!wasSet) {
 			logger.warn(
-				`Job already exists (race condition prevented), skipping creation: ${jobKey}`,
+				{
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+				},
+				"Job already exists (race condition prevented), skipping creation",
 			);
 			return;
 		}
@@ -79,6 +129,26 @@ export async function createJob(jobData: {
 		ignoreSubscription: jobData.ignoreSubscription,
 	};
 
+	// "wait", "scheduler-trigger", and "publish" steps MUST have timing and go to DELAYED queue
+	// "channel" steps can have timing (delayed send) or go directly to JOB queue
+	const requiresTiming =
+		jobData.type === "wait" ||
+		jobData.type === "scheduler-trigger" ||
+		jobData.type === "publish";
+
+	if (requiresTiming && !jobData.timing?.value) {
+		logger.error(
+			{
+				jobKey,
+				contactId: jobData.contact,
+				stepId: jobData.journey_step,
+				type: jobData.type,
+			},
+			`Step type "${jobData.type}" requires timing but none was provided. Skipping job creation.`,
+		);
+		return;
+	}
+
 	let delay = 0;
 	if (jobData.timing?.value) {
 		if (jobData.timing.type === "delay") {
@@ -92,19 +162,73 @@ export async function createJob(jobData: {
 		logger.info(
 			{
 				jobKey,
+				contactId: jobData.contact,
+				stepId: jobData.journey_step,
+				type: jobData.type,
 				delay,
 				delayMinutes: delay / (60 * 1000),
 				timingType: jobData.timing.type,
 				timingValue: jobData.timing.value,
 			},
-			`Publishing job to DELAYED queue with ${delay}ms delay`,
+			"Publishing job to DELAYED queue",
 		);
 		await publishToJourneyQueue("DELAYED", jobDataRedis, delay);
+		logger.info(
+			{
+				jobKey,
+				contactId: jobData.contact,
+				stepId: jobData.journey_step,
+				type: jobData.type,
+				queue: "DELAYED",
+			},
+			"Job published to DELAYED queue",
+		);
 	} else {
+		// Only "channel" type steps should go to JOB queue (without timing)
+		if (jobData.type !== "channel") {
+			logger.error(
+				{
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+					type: jobData.type,
+				},
+				`Step type "${jobData.type}" without timing should not go to JOB queue. Only "channel" steps can go to JOB queue without timing.`,
+			);
+			return;
+		}
+		logger.info(
+			{
+				jobKey,
+				contactId: jobData.contact,
+				stepId: jobData.journey_step,
+				type: jobData.type,
+			},
+			"Publishing job to JOB queue",
+		);
 		await publishToJourneyQueue("JOB", jobDataRedis);
+		logger.info(
+			{
+				jobKey,
+				contactId: jobData.contact,
+				stepId: jobData.journey_step,
+				type: jobData.type,
+				queue: "JOB",
+			},
+			"Job published to JOB queue",
+		);
 	}
 
-	logger.info(`New job created: ${jobKey}`);
+	logger.info(
+		{
+			jobKey,
+			contactId: jobData.contact,
+			journeyId: jobData.journey,
+			stepId: jobData.journey_step,
+			type: jobData.type,
+		},
+		"New job created successfully",
+	);
 }
 
 export async function createRuleCheckJob(jobDataRedis: any) {

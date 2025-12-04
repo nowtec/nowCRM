@@ -34,6 +34,10 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		//So when time is on and this function is runned we start job for all connected steps or ending if for some reason this is the last one node
 		const step = await getJourneyStep(stepId);
 		if (!step.success || !step.responseObject) throw new Error(step.message);
+
+		// Mark wait step as passed (no composition/channel needed for wait steps)
+		await closeJob(jobId);
+
 		if (step.responseObject.connections_from_this_step?.length) {
 			for (const connection_step of step.responseObject
 				.connections_from_this_step) {

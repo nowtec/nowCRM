@@ -2,7 +2,6 @@ import type { DocumentId } from "@nowcrm/services";
 import { journeyStepsService } from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
-import { getContactCurrentStep } from "../../../lib/functions/helpers/get-contact-current-step";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
@@ -50,24 +49,7 @@ export async function processJourneyMessage({
 					return null;
 				}
 
-				// Check contact's current step in this journey
-				// If contact is on a later step, don't create jobs for earlier steps
-				const currentStepId = await getContactCurrentStep(
-					contact.documentId,
-					journeyId,
-				);
-				if (currentStepId && currentStepId !== step.documentId) {
-					// Contact is already on a different step in this journey
-					// Only create job if this is the current step or if contact hasn't passed any steps yet
-					// Since we can't easily determine step order, we'll be conservative:
-					// If contact has passed any step and this isn't that step, skip it
-					logger.info(
-						`Contact ${contact.documentId} is on step ${currentStepId}, skipping job creation for step ${step.documentId}`,
-					);
-					return null;
-				}
-
-				// Create job (createJob will do additional validation)
+				// Create job with skipValidation=true since we already did the checks above
 				await createJob({
 					contact: contact.documentId,
 					journey: journeyId,
@@ -76,6 +58,7 @@ export async function processJourneyMessage({
 					composition: step.composition?.documentId || undefined,
 					channel: step.channel?.documentId || undefined,
 					timing: step.timing,
+					skipValidation: false, // Still validate step exists and has required fields
 				});
 				return contact.documentId;
 			} catch (error) {

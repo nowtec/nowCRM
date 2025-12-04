@@ -20,8 +20,31 @@ export async function processJob(
 	if (!step.responseObject) {
 		throw new Error(step.message);
 	}
+
+	// Only "channel" type steps require channel, composition, and identity
+	const stepType = step.responseObject.type;
+	if (stepType !== "channel") {
+		throw new Error(
+			`processJob should only be called for "channel" type steps, but got "${stepType}"`,
+		);
+	}
+
+	// Channel is required for "channel" type steps
 	if (!step.responseObject.channel?.name) {
 		throw new Error("Channel is missing in step");
+	}
+
+	// Composition is required for "channel" type steps
+	if (!step.responseObject.composition?.documentId) {
+		throw new Error("Composition is missing in step");
+	}
+
+	const channelName = step.responseObject.channel.name.toLowerCase();
+	const isEmailChannel = channelName === "email";
+
+	// Identity is only required when channel type is email
+	if (isEmailChannel && !step.responseObject.identity?.name) {
+		throw new Error("Identity is missing in step (required for email channel)");
 	}
 
 	const journey = await getJourney(journeyId);
@@ -29,7 +52,18 @@ export async function processJob(
 		throw new Error(journey.message);
 	}
 
-	logger.info(`contact: ${contact} step: ${step} journey: ${journey}`);
+	logger.info(
+		{
+			contactId,
+			stepId,
+			journeyId,
+			stepType,
+			channelName,
+			isEmailChannel,
+		},
+		"Processing channel step job",
+	);
+
 	let check: boolean | null = true;
 	if (!ignoreSubscription) {
 		check = (
@@ -41,27 +75,37 @@ export async function processJob(
 		).data;
 	}
 	if (check) {
-		await composerService.sendComposition(
-			{
-				composition_id: step.responseObject.composition.documentId,
-				channels: [step.responseObject.channel?.name.toLowerCase()],
-				to: contact.responseObject.email,
-				type: "contact",
-				subject:
-					step.responseObject.composition.subject ||
-					step.responseObject.composition.name,
-				from: step.responseObject.identity.name,
-				ignoreSubscription,
-			},
-			{
-				stepId,
-				contactId,
-				token: env.JOURNEYS_STRAPI_API_TOKEN,
-				compositionId: step.responseObject.composition.documentId,
-			},
-		);
+		// Build sendComposition payload - identity only needed for email
+		const compositionPayload: any = {
+			composition_id: step.responseObject.composition.documentId,
+			channels: [channelName],
+			to: contact.responseObject.email,
+			type: "contact",
+			subject:
+				step.responseObject.composition.subject ||
+				step.responseObject.composition.name,
+			ignoreSubscription,
+		};
+
+		// Only add "from" (identity) for email channels
+		if (isEmailChannel && step.responseObject.identity?.name) {
+			compositionPayload.from = step.responseObject.identity.name;
+		}
+
+		await composerService.sendComposition(compositionPayload, {
+			stepId,
+			contactId,
+			token: env.JOURNEYS_STRAPI_API_TOKEN,
+			compositionId: step.responseObject.composition.documentId,
+		});
 	} else {
-		logger.warn(`contact: ${contactId} doesnt have active subscription`);
+		logger.warn(
+			{
+				contactId,
+				channelName,
+			},
+			"Contact doesn't have active subscription",
+		);
 		throw new Error(
 			`contact: ${contactId} doesnt have active subscription for ${step.responseObject.channel.name}`,
 		);

@@ -230,21 +230,22 @@ export async function publishToJourneyQueue(
 
 	return new Promise((resolve, reject) => {
 		try {
-			// Only set x-delay header if delay > 0
-			const headers: Record<string, any> = {
+			// Build options object with persistent and messageId at top level
+			// Custom headers like x-delay go in the headers property
+			const options: amqp.Options.Publish = {
 				persistent: true,
 				messageId: data.jobKey, // for avoiding deduplicates
 			};
 
 			if (delayMs > 0) {
-				headers["x-delay"] = delayMs;
+				options.headers = { "x-delay": delayMs };
 			}
 
 			const published = confirmChannel?.publish(
 				EXCHANGE_NAME_JOURNEY,
 				JOURNEY_QUEUES[queue],
 				Buffer.from(JSON.stringify(data)),
-				headers,
+				options,
 			);
 
 			if (!published) {
@@ -313,20 +314,21 @@ export async function publishToTriggerQueue(
 
 	return new Promise((resolve, reject) => {
 		try {
-			// Only set x-delay header if delay > 0
-			const headers: Record<string, any> = {
+			// Build options object with persistent at top level
+			// Custom headers like x-delay go in the headers property
+			const options: amqp.Options.Publish = {
 				persistent: true,
 			};
 
 			if (delayMs > 0) {
-				headers["x-delay"] = delayMs;
+				options.headers = { "x-delay": delayMs };
 			}
 
 			const published = confirmChannel?.publish(
 				EXCHANGE_NAME_TRIGGER,
 				TRIGGER_QUEUES[queue],
 				Buffer.from(JSON.stringify(data)),
-				headers,
+				options,
 			);
 
 			if (!published) {

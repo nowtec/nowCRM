@@ -102,6 +102,9 @@ export const columns: ColumnDef<Action>[] = [
 	{
 		accessorKey: "action_type",
 		header: ({ column }) => <SortableHeader column={column} label="Type" />,
+		cell: ({ row }) => {
+			return <div>{row.original?.action_type?.name || "-"}</div>;
+		},
 	},
 	{
 		accessorKey: "entity",

@@ -125,16 +125,29 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 		return false;
 	}
 
-	// Don't retry on certain error types (e.g., validation errors)
-	const nonRetryableErrors = [
+	// Don't retry on certain error types (e.g., validation errors, wrong queue routing)
+	const nonRetryableErrorNames = [
 		"ValidationError",
 		"NotFoundError",
 		"UnauthorizedError",
 		"ForbiddenError",
 	];
 
+	const nonRetryableErrorMessages = [
+		"Job processor can only handle",
+		"should only be called for",
+		"Step type",
+		"requires timing but none was provided",
+		"requires a composition but none was found",
+	];
+
 	const errorName = error.constructor.name;
-	if (nonRetryableErrors.includes(errorName)) {
+	if (nonRetryableErrorNames.includes(errorName)) {
+		return false;
+	}
+
+	const errorMessage = error.message || "";
+	if (nonRetryableErrorMessages.some((msg) => errorMessage.includes(msg))) {
 		return false;
 	}
 
