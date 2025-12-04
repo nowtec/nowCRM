@@ -34,6 +34,12 @@ export const env = cleanEnv(process.env, {
 	RABBITMQ_MAX_RETRIES: num({ devDefault: testOnly(3) }),
 	RABBITMQ_RETRY_INITIAL_DELAY_MS: num({ devDefault: testOnly(1000) }),
 	RABBITMQ_RETRY_MAX_DELAY_MS: num({ devDefault: testOnly(30000) }),
+	REDIS_CLEANUP_CRON: str({ devDefault: testOnly("0 2 * * *") }), // Daily at 2 AM
+	STRAPI_PAGINATION_MAX_PAGES: num({ devDefault: testOnly(100) }),
+	STRAPI_PAGINATION_MAX_RECORDS: num({ devDefault: testOnly(10000) }),
+	CIRCUIT_BREAKER_FAILURE_THRESHOLD: num({ devDefault: testOnly(5) }),
+	CIRCUIT_BREAKER_RESET_TIMEOUT_MS: num({ devDefault: testOnly(60000) }),
+	CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS: num({ devDefault: testOnly(3) }),
 	COMPOSER_URL: str({ devDefault: testOnly("http://localhost:3020") }),
 	STRAPI_URL: str({ devDefault: testOnly("http://localhost:1337/api/") }),
 });

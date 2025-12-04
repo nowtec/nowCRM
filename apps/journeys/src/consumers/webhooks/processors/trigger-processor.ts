@@ -13,6 +13,8 @@ import {
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
 import { logger } from "../../../logger";
+import { strapiCircuitBreaker } from "../../../lib/functions/helpers/circuit-breaker";
+import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
 
 /** Allowed webhook event labels */
 type StringEvent =
@@ -135,24 +137,27 @@ export async function processTriggerMessage(data: any) {
 		);
 	}
 
-	const trigger_steps = await journeyStepsService.findAll(
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{
-			filters: {
-				type: { $eq: "trigger" },
-				journey: { active: { $eq: true } },
-			},
-			populate: {
-				journey: true,
-				connections_from_this_step: {
-					populate: {
-						target_step: {
-							populate: { composition: true, channel: true },
+	// Use circuit breaker and pagination limits for Strapi calls
+	const trigger_steps = await strapiCircuitBreaker.execute(() =>
+		journeyStepsService.findAll(
+			env.JOURNEYS_STRAPI_API_TOKEN,
+			enforcePaginationLimits({
+				filters: {
+					type: { $eq: "trigger" },
+					journey: { active: { $eq: true } },
+				},
+				populate: {
+					journey: true,
+					connections_from_this_step: {
+						populate: {
+							target_step: {
+								populate: { composition: true, channel: true },
+							},
 						},
 					},
 				},
-			},
-		},
+			}),
+		),
 	);
 
 	if (!trigger_steps.data) {
