@@ -12,10 +12,7 @@ export const redis = new Redis({
 			times * env.JOURNEYS_REDIS_RETRY_DELAY_MS,
 			3000, // Max 3 seconds between retries
 		);
-		logger.warn(
-			{ times, delay },
-			`Redis connection retry attempt ${times}`,
-		);
+		logger.warn({ times, delay }, `Redis connection retry attempt ${times}`);
 		return delay;
 	},
 	connectTimeout: env.JOURNEYS_REDIS_CONNECT_TIMEOUT,

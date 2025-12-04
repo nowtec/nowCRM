@@ -28,7 +28,7 @@ export async function setJobKeyAtomic(
 ): Promise<boolean> {
 	const jobKey = `job-contact:${contactId}-journey:${journeyId}-step:${stepId}`;
 	const ttlSeconds = 30 * 24 * 60 * 60; // 30 days
-	
+
 	// Use SET with NX (only if not exists) and EX (expiration) for atomic operation
 	// Returns "OK" if key was set, null if key already exists
 	// ioredis syntax: set(key, value, 'EX', seconds, 'NX')
@@ -62,4 +62,3 @@ export async function removeJobKey(
 	const jobKey = `job-contact:${contactId}-journey:${journeyId}-step:${stepId}`;
 	await redis.del(jobKey);
 }
-

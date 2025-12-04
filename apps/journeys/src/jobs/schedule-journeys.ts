@@ -1,9 +1,9 @@
 import { JOURNEY_TIME_CHECK_SEC } from "../config";
+import { withLock } from "../lib/functions/helpers/distributed-lock";
 import { fetchActiveJourneys } from "../lib/functions/helpers/fetch-active-journeys";
 import { logger } from "../logger";
 import { publishToJourneyQueue } from "../rabbitmq";
 import { redis } from "../redis";
-import { withLock } from "../lib/functions/helpers/distributed-lock";
 
 const SCHEDULER_LOCK_KEY = "journey-scheduler:lock";
 const SCHEDULER_LOCK_TTL = 300; // 5 minutes - should be longer than cron execution time
@@ -19,7 +19,7 @@ export async function scheduleJourneys() {
 
 			for (const journey of activeJourneys) {
 				const redisKey = `journey-job:${journey.documentId}`;
-				
+
 				// Use atomic check-and-set to prevent race conditions
 				const jobStr = await redis.get(redisKey);
 
@@ -33,7 +33,9 @@ export async function scheduleJourneys() {
 						);
 						await redis.del(redisKey);
 					} else {
-						logger.info(`Journey ${journey.documentId} job still valid; skipping.`);
+						logger.info(
+							`Journey ${journey.documentId} job still valid; skipping.`,
+						);
 						continue;
 					}
 				}
@@ -44,7 +46,7 @@ export async function scheduleJourneys() {
 					jobKey: redisKey,
 					processedDate: new Date().toISOString(),
 				};
-				
+
 				// Use SET with NX to atomically create job entry
 				const wasSet = await redis.set(
 					redisKey,
@@ -53,7 +55,7 @@ export async function scheduleJourneys() {
 					JOURNEY_TIME_CHECK_SEC,
 					"NX",
 				);
-				
+
 				if (wasSet === "OK") {
 					await publishToJourneyQueue("JOURNEY", newJob);
 					logger.info(`Scheduled journey job for ${journey.documentId}`);
@@ -63,13 +65,15 @@ export async function scheduleJourneys() {
 					);
 				}
 			}
-			
+
 			return { scheduled: activeJourneys.length };
 		},
 		SCHEDULER_LOCK_TTL,
 	);
 
 	if (result === null) {
-		logger.info("Scheduler lock already held by another instance, skipping execution");
+		logger.info(
+			"Scheduler lock already held by another instance, skipping execution",
+		);
 	}
 }

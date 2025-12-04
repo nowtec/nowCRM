@@ -9,7 +9,7 @@ import { getJourney } from "./get-jouney";
  * A step is invalid if:
  * 1. The contact has already passed this step
  * 2. The contact is on a later step in the journey (we shouldn't create jobs for earlier steps)
- * 
+ *
  * Returns { valid: boolean, reason?: string }
  */
 export async function checkStepValid(
@@ -58,7 +58,7 @@ export async function checkStepValid(
 
 		// Check if contact is on a later step in the journey
 		const currentStepId = await getContactCurrentStep(contactId, journeyId);
-		
+
 		if (currentStepId) {
 			// Get the journey to understand step order
 			const journeyRes = await getJourney(journeyId);
@@ -74,12 +74,12 @@ export async function checkStepValid(
 			// For now, we'll be conservative: if contact is on any step, don't create jobs
 			// for steps that are not the current step (unless it's a trigger step which has its own logic)
 			// Actually, we should allow creating jobs for the next step, but not for earlier steps
-			
+
 			// Since we don't have a clear step ordering mechanism in the schema,
 			// we'll use a simpler approach: if contact has passed any step in this journey,
 			// only allow creating jobs for steps that haven't been passed yet
 			// This is already handled by the checkPassedStep above
-			
+
 			// However, we want to prevent creating jobs for steps that are "behind" the current step
 			// Since we can't easily determine step order from the data model,
 			// we'll rely on the fact that if a contact is on step 3, they shouldn't be on step 1's contact list
@@ -94,4 +94,3 @@ export async function checkStepValid(
 		};
 	}
 }
-

@@ -2,10 +2,10 @@ import type { DocumentId } from "@nowcrm/services";
 import { journeyStepsService } from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
+import { getContactCurrentStep } from "../../../lib/functions/helpers/get-contact-current-step";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
-import { getContactCurrentStep } from "../../../lib/functions/helpers/get-contact-current-step";
 
 /**
  * Journey processing is needed for
@@ -25,7 +25,7 @@ export async function processJourneyMessage({
 		if (!step.contacts) continue;
 		//Ignore trigger cause they have own logic of creating jobs
 		if (step.type === "trigger") continue;
-		
+
 		// Process contacts in parallel batches to reduce sequential awaits
 		const contactPromises = step.contacts.map(async (contact) => {
 			try {
@@ -80,20 +80,24 @@ export async function processJourneyMessage({
 				return contact.documentId;
 			} catch (error) {
 				logger.error(
-					{ err: error, contactId: contact.documentId, stepId: step.documentId },
+					{
+						err: error,
+						contactId: contact.documentId,
+						stepId: step.documentId,
+					},
 					"Error processing contact for journey step",
 				);
 				// Don't throw - continue processing other contacts
 				return null;
 			}
 		});
-		
+
 		// Wait for all contacts in this step to be processed
 		const results = await Promise.allSettled(contactPromises);
 		const successful = results.filter(
 			(r) => r.status === "fulfilled" && r.value !== null,
 		).length;
-		
+
 		if (successful > 0) {
 			logger.info(
 				`Processed ${successful} contacts for step ${step.documentId} in journey ${journeyId}`,

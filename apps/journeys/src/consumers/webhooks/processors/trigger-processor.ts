@@ -12,9 +12,9 @@ import {
 } from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
-import { logger } from "../../../logger";
 import { strapiCircuitBreaker } from "../../../lib/functions/helpers/circuit-breaker";
 import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
+import { logger } from "../../../logger";
 
 /** Allowed webhook event labels */
 type StringEvent =
@@ -222,7 +222,7 @@ export async function processTriggerMessage(data: any) {
 	}
 	// Batch job creation to reduce sequential awaits
 	const jobPromises: Promise<void>[] = [];
-	
+
 	for (const step of filtered_steps) {
 		if (step.connections_from_this_step?.length) {
 			for (const connection_step of step.connections_from_this_step) {
@@ -245,7 +245,7 @@ export async function processTriggerMessage(data: any) {
 			}
 		}
 	}
-	
+
 	// Execute all job creations in parallel
 	if (jobPromises.length > 0) {
 		await Promise.allSettled(jobPromises);

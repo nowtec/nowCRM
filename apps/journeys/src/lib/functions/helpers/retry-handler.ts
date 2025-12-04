@@ -1,7 +1,7 @@
 import { env } from "@/common/utils/env-config";
+import type { JOURNEY_QUEUES, TRIGGER_QUEUES } from "@/config";
 import { logger } from "@/logger";
 import { publishToJourneyQueue, publishToTriggerQueue } from "@/rabbitmq";
-import { JOURNEY_QUEUES, TRIGGER_QUEUES } from "@/config";
 
 type JourneyQueueType = keyof typeof JOURNEY_QUEUES;
 type TriggerQueueType = keyof typeof TRIGGER_QUEUES;
@@ -25,7 +25,7 @@ function calculateBackoffDelay(
 	initialDelayMs: number,
 	maxDelayMs: number,
 ): number {
-	const exponentialDelay = initialDelayMs * Math.pow(2, retryCount);
+	const exponentialDelay = initialDelayMs * 2 ** retryCount;
 	const jitter = Math.random() * 0.3 * exponentialDelay; // Add up to 30% jitter
 	const delay = Math.min(exponentialDelay + jitter, maxDelayMs);
 	return Math.floor(delay);
@@ -178,4 +178,3 @@ export async function handleMessageRetry(
 		return false; // Send to DLX
 	}
 }
-

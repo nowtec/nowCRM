@@ -1,4 +1,5 @@
 import * as amqp from "amqplib";
+import { env } from "../common/utils/env-config";
 import {
 	EXCHANGE_NAME_JOURNEY,
 	EXCHANGE_NAME_TRIGGER,
@@ -7,7 +8,6 @@ import {
 	RABBITMQ_URL,
 	TRIGGER_QUEUES,
 } from "../config";
-import { env } from "../common/utils/env-config";
 import { logger } from "../logger";
 
 let connection: amqp.Connection | null = null;
@@ -116,7 +116,7 @@ async function reconnect() {
 
 	const delay =
 		env.RABBITMQ_RECONNECT_DELAY_MS *
-		Math.min(Math.pow(2, reconnectAttempts - 1), 10);
+		Math.min(2 ** (reconnectAttempts - 1), 10);
 
 	logger.info(
 		`Attempting to reconnect to RabbitMQ (attempt ${reconnectAttempts}/${env.RABBITMQ_MAX_RECONNECT_ATTEMPTS}) in ${delay}ms...`,
@@ -126,7 +126,7 @@ async function reconnect() {
 	if (channel) {
 		try {
 			await channel.close();
-		} catch (err) {
+		} catch (_err) {
 			// Ignore errors during cleanup
 		}
 		channel = null;
@@ -135,7 +135,7 @@ async function reconnect() {
 	if (confirmChannel) {
 		try {
 			await confirmChannel.close();
-		} catch (err) {
+		} catch (_err) {
 			// Ignore errors during cleanup
 		}
 		confirmChannel = null;
@@ -145,7 +145,7 @@ async function reconnect() {
 		try {
 			// Connection.close() exists but type definitions may be incomplete
 			await (connection as any).close();
-		} catch (err) {
+		} catch (_err) {
 			// Ignore errors during cleanup
 		}
 		connection = null;
@@ -171,13 +171,17 @@ async function reconnect() {
 export async function setupRabbitMQ() {
 	try {
 		// Type assertion needed due to incomplete type definitions
-		const conn = (await amqp.connect(RABBITMQ_URL)) as unknown as amqp.Connection;
+		const conn = (await amqp.connect(
+			RABBITMQ_URL,
+		)) as unknown as amqp.Connection;
 		connection = conn;
-		
+
 		const ch = (await (conn as any).createChannel()) as amqp.Channel;
 		channel = ch;
-		
-		const confirmCh = (await (conn as any).createConfirmChannel()) as amqp.ConfirmChannel;
+
+		const confirmCh = (await (
+			conn as any
+		).createConfirmChannel()) as amqp.ConfirmChannel;
 		confirmChannel = confirmCh;
 
 		// Set prefetch limit to prevent overwhelming consumers
@@ -217,7 +221,7 @@ export async function publishToJourneyQueue(
 
 	return new Promise((resolve, reject) => {
 		try {
-			const published = confirmChannel!.publish(
+			const published = confirmChannel?.publish(
 				EXCHANGE_NAME_JOURNEY,
 				JOURNEY_QUEUES[queue],
 				Buffer.from(JSON.stringify(data)),
@@ -229,14 +233,18 @@ export async function publishToJourneyQueue(
 			);
 
 			if (!published) {
-				confirmChannel!.once("drain", () => {
+				confirmChannel?.once("drain", () => {
 					logger.warn("RabbitMQ channel drained, message published");
 					resolve();
 				});
 			} else {
 				// waitForConfirms returns a Promise in newer versions
 				// Using callback-based approach for compatibility
-				(confirmChannel!.waitForConfirms as (callback?: (err?: Error) => void) => void)((err?: Error) => {
+				(
+					confirmChannel?.waitForConfirms as (
+						callback?: (err?: Error) => void,
+					) => void
+				)((err?: Error) => {
 					if (err) {
 						logger.error({ err }, "Failed to confirm message publish");
 						reject(err);
@@ -267,7 +275,7 @@ export async function publishToTriggerQueue(
 
 	return new Promise((resolve, reject) => {
 		try {
-			const published = confirmChannel!.publish(
+			const published = confirmChannel?.publish(
 				EXCHANGE_NAME_TRIGGER,
 				TRIGGER_QUEUES[queue],
 				Buffer.from(JSON.stringify(data)),
@@ -278,14 +286,18 @@ export async function publishToTriggerQueue(
 			);
 
 			if (!published) {
-				confirmChannel!.once("drain", () => {
+				confirmChannel?.once("drain", () => {
 					logger.warn("RabbitMQ channel drained, message published");
 					resolve();
 				});
 			} else {
 				// waitForConfirms returns a Promise in newer versions
 				// Using callback-based approach for compatibility
-				(confirmChannel!.waitForConfirms as (callback?: (err?: Error) => void) => void)((err?: Error) => {
+				(
+					confirmChannel?.waitForConfirms as (
+						callback?: (err?: Error) => void,
+					) => void
+				)((err?: Error) => {
 					if (err) {
 						logger.error({ err }, "Failed to confirm message publish");
 						reject(err);

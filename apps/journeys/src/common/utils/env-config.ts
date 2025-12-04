@@ -21,7 +21,10 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_REDIS_RETRY_DELAY_MS: num({ devDefault: testOnly(1000) }),
 	JOURNEYS_REDIS_CONNECT_TIMEOUT: num({ devDefault: testOnly(10000) }),
 	JOURNEYS_REDIS_COMMAND_TIMEOUT: num({ devDefault: testOnly(5000) }),
-	JOURNEYS_REDIS_LAZY_CONNECT: num({ devDefault: testOnly(0), choices: [0, 1] }),
+	JOURNEYS_REDIS_LAZY_CONNECT: num({
+		devDefault: testOnly(0),
+		choices: [0, 1],
+	}),
 	JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: num({ devDefault: testOnly(1) }),
 	JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS: num({ devDefault: testOnly(1) }),
 	RABBITMQ_URL: str({

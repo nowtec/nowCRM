@@ -11,7 +11,7 @@ export async function getContactCurrentStep(
 	journeyId: DocumentId,
 ): Promise<DocumentId | null> {
 	try {
-			const data = await journeyPassedStepService.find(
+		const data = await journeyPassedStepService.find(
 			env.JOURNEYS_STRAPI_API_TOKEN,
 			{
 				filters: {
@@ -36,9 +36,6 @@ export async function getContactCurrentStep(
 
 		return data.data[0].journey_step?.documentId || null;
 	} catch (error: any) {
-		throw new Error(
-			`Failed to get contact current step: ${error.message}`,
-		);
+		throw new Error(`Failed to get contact current step: ${error.message}`);
 	}
 }
-

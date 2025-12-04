@@ -1,15 +1,15 @@
 import type { DocumentId, JourneyTiming } from "@nowcrm/services";
+import {
+	removeJobKey,
+	setJobKeyAtomic,
+} from "../lib/functions/helpers/check-job-exists";
+import { checkStepValid } from "../lib/functions/helpers/check-step-valid";
 import { getJourney } from "../lib/functions/helpers/get-jouney";
 import { getJourneyStep } from "../lib/functions/helpers/get-journey-step";
 import { passContactToNextStep } from "../lib/functions/pass-contact-to-next-step";
 import { createFinishActions } from "../lib/functions/rules/create-finish-action";
 import { logger } from "../logger";
 import { publishToJourneyQueue } from "../rabbitmq";
-import {
-	setJobKeyAtomic,
-	removeJobKey,
-} from "../lib/functions/helpers/check-job-exists";
-import { checkStepValid } from "../lib/functions/helpers/check-step-valid";
 
 export async function createJob(jobData: {
 	contact: DocumentId;
@@ -20,7 +20,7 @@ export async function createJob(jobData: {
 	channel?: DocumentId;
 	timing?: JourneyTiming;
 	ignoreSubscription?: boolean;
-	skipValidation?: boolean; 
+	skipValidation?: boolean;
 }) {
 	const jobKey = `job-contact:${jobData.contact}-journey:${jobData.journey}-step:${jobData.journey_step}`;
 
@@ -107,7 +107,7 @@ export async function createRuleCheckJob(jobDataRedis: any) {
 
 export async function closeJob(jobId: string) {
 	logger.info(`Job closed: ${jobId}`);
-	
+
 	const match = jobId.match(/^job-contact:(.+?)-journey:(.+?)-step:(.+)$/);
 	if (match) {
 		const [, contactId, journeyId, stepId] = match;
@@ -140,7 +140,7 @@ export async function createNextJob(
 			composition: next.composition?.documentId || undefined,
 			channel: next.channel?.documentId || undefined,
 			timing: next.timing,
-			skipValidation: true, 
+			skipValidation: true,
 		});
 	} else {
 		//if no target step we assume that this is last step of journey

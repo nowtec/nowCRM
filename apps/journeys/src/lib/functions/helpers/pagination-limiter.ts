@@ -6,9 +6,7 @@ import { env } from "@/common/utils/env-config";
  * @param options - Original Strapi query options
  * @returns Modified options with pagination limits enforced
  */
-export function enforcePaginationLimits<T>(
-	options?: StrapiQuery<T>,
-): any {
+export function enforcePaginationLimits<T>(options?: StrapiQuery<T>): any {
 	const maxPages = env.STRAPI_PAGINATION_MAX_PAGES;
 	const maxRecords = env.STRAPI_PAGINATION_MAX_RECORDS;
 	const defaultPageSize = 100;
@@ -29,21 +27,15 @@ export function enforcePaginationLimits<T>(
 	const effectivePageSize = Math.min(maxPageSize, defaultPageSize);
 
 	// Enforce max pages limit
-	const maxPage = Math.min(
-		maxPages,
-		Math.ceil(maxRecords / effectivePageSize),
-	);
+	const maxPage = Math.min(maxPages, Math.ceil(maxRecords / effectivePageSize));
 
 	(modifiedOptions as any).pagination = {
 		...(modifiedOptions as any)?.pagination,
 		pageSize: effectivePageSize,
 		// If user requested a specific page, ensure it doesn't exceed max
-		...(modifiedOptions as any)?.pagination?.page && {
-			page: Math.min(
-				Number((modifiedOptions as any).pagination.page),
-				maxPage,
-			),
-		},
+		...((modifiedOptions as any)?.pagination?.page && {
+			page: Math.min(Number((modifiedOptions as any).pagination.page), maxPage),
+		}),
 	};
 
 	return modifiedOptions;
@@ -59,7 +51,7 @@ export function enforcePaginationLimits<T>(
 export function validatePaginationResults(
 	data: any[],
 	page: number,
-	pageSize: number,
+	_pageSize: number,
 ): void {
 	const maxPages = env.STRAPI_PAGINATION_MAX_PAGES;
 	const maxRecords = env.STRAPI_PAGINATION_MAX_RECORDS;
@@ -76,4 +68,3 @@ export function validatePaginationResults(
 		);
 	}
 }
-

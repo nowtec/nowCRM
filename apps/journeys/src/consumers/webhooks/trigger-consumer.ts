@@ -1,13 +1,13 @@
 import { TRIGGER_QUEUES } from "../../config";
+import { handleMessageRetry } from "../../lib/functions/helpers/retry-handler";
 import { logger } from "../../logger";
 import { getChannel } from "../../rabbitmq";
-import { handleMessageRetry } from "../../lib/functions/helpers/retry-handler";
 import { processTriggerMessage } from "./processors/trigger-processor";
 
 export function triggerConsumer() {
 	const channel = getChannel();
 	logger.info(`Starting trigger consumer for queue: ${TRIGGER_QUEUES.TRIGGER}`);
-	
+
 	channel.consume(
 		TRIGGER_QUEUES.TRIGGER,
 		async (msg) => {
@@ -18,7 +18,7 @@ export function triggerConsumer() {
 				data = JSON.parse(msg.content.toString());
 				await processTriggerMessage(data);
 				channel.ack(msg);
-				
+
 				const duration = Date.now() - startTime;
 				logger.debug(
 					{ duration, queue: TRIGGER_QUEUES.TRIGGER },
@@ -27,12 +27,12 @@ export function triggerConsumer() {
 			} catch (error) {
 				const duration = Date.now() - startTime;
 				const err = error instanceof Error ? error : new Error(String(error));
-				
+
 				logger.error(
 					{ err, duration, queue: TRIGGER_QUEUES.TRIGGER },
 					"Error processing trigger message",
 				);
-				
+
 				// Try to retry with exponential backoff
 				const wasRetried = await handleMessageRetry(
 					false, // isJourneyQueue (trigger queue)
@@ -42,7 +42,7 @@ export function triggerConsumer() {
 					data,
 					err,
 				);
-				
+
 				if (wasRetried) {
 					// Message was requeued for retry, acknowledge original message
 					channel.ack(msg);

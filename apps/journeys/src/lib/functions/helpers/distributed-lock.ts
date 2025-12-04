@@ -1,5 +1,5 @@
-import { redis } from "../../../redis";
 import { logger } from "../../../logger";
+import { redis } from "../../../redis";
 
 /**
  * Acquires a distributed lock using Redis SETNX
@@ -54,7 +54,10 @@ export async function withLock<T>(
 	const acquired = await redis.set(lockKey, lockValue, "EX", ttlSeconds, "NX");
 
 	if (acquired !== "OK") {
-		logger.warn({ lockKey }, "Could not acquire distributed lock, skipping execution");
+		logger.warn(
+			{ lockKey },
+			"Could not acquire distributed lock, skipping execution",
+		);
 		return null;
 	}
 
@@ -64,4 +67,3 @@ export async function withLock<T>(
 		await releaseLock(lockKey, lockValue);
 	}
 }
-

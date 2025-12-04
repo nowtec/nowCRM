@@ -1,5 +1,5 @@
-import { logger } from "@/logger";
 import { env } from "@/common/utils/env-config";
+import { logger } from "@/logger";
 
 type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
@@ -153,4 +153,3 @@ export const strapiCircuitBreaker = new CircuitBreaker({
 	resetTimeout: env.CIRCUIT_BREAKER_RESET_TIMEOUT_MS,
 	halfOpenMaxCalls: env.CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS,
 });
-
