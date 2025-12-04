@@ -96,7 +96,7 @@ export async function createRuleCheckJob(jobDataRedis: any) {
 export async function closeJob(jobId: string) {
 	logger.info(`Job closed: ${jobId}`);
 	
-	const match = jobId.match(/^job-contact:(.+)-journey:(.+)-step:(.+)$/);
+	const match = jobId.match(/^job-contact:(.+?)-journey:(.+?)-step:(.+)$/);
 	if (match) {
 		const [, contactId, journeyId, stepId] = match;
 		await removeJobKey(contactId, journeyId, stepId);
