@@ -4,17 +4,33 @@ import { getChannel } from "../../rabbitmq";
 import { processTriggerMessage } from "./processors/trigger-processor";
 
 export function triggerConsumer() {
-	getChannel().consume(
+	const channel = getChannel();
+	logger.info(`Starting trigger consumer for queue: ${TRIGGER_QUEUES.TRIGGER}`);
+	
+	channel.consume(
 		TRIGGER_QUEUES.TRIGGER,
 		async (msg) => {
 			if (!msg) return;
+			
+			const startTime = Date.now();
 			try {
 				const data = JSON.parse(msg.content.toString());
 				await processTriggerMessage(data);
-				getChannel().ack(msg);
+				channel.ack(msg);
+				
+				const duration = Date.now() - startTime;
+				logger.debug(
+					{ duration, queue: TRIGGER_QUEUES.TRIGGER },
+					"Trigger message processed successfully",
+				);
 			} catch (error) {
-				logger.error(`Error processing trigger message: ${error}`);
-				getChannel().nack(msg, false, false);
+				const duration = Date.now() - startTime;
+				logger.error(
+					{ err: error, duration, queue: TRIGGER_QUEUES.TRIGGER },
+					"Error processing trigger message",
+				);
+				// Nack without requeue to send to DLX
+				channel.nack(msg, false, false);
 			}
 		},
 		{ noAck: false },

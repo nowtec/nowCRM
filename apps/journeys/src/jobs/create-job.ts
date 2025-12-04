@@ -6,8 +6,7 @@ import { createFinishActions } from "../lib/functions/rules/create-finish-action
 import { logger } from "../logger";
 import { publishToJourneyQueue } from "../rabbitmq";
 import {
-	checkJobExists,
-	setJobKey,
+	setJobKeyAtomic,
 	removeJobKey,
 } from "../lib/functions/helpers/check-job-exists";
 import { checkStepValid } from "../lib/functions/helpers/check-step-valid";
@@ -26,18 +25,7 @@ export async function createJob(jobData: {
 	const jobKey = `job-contact:${jobData.contact}-journey:${jobData.journey}-step:${jobData.journey_step}`;
 
 	if (!jobData.skipValidation) {
-		const jobExists = await checkJobExists(
-			jobData.contact,
-			jobData.journey,
-			jobData.journey_step,
-		);
-		if (jobExists) {
-			logger.warn(
-				`Job already exists, skipping creation: ${jobKey}`,
-			);
-			return;
-		}
-
+		// First validate step before attempting atomic job creation
 		const stepValidation = await checkStepValid(
 			jobData.contact,
 			jobData.journey,
@@ -49,9 +37,33 @@ export async function createJob(jobData: {
 			);
 			return;
 		}
-	}
 
-	await setJobKey(jobData.contact, jobData.journey, jobData.journey_step);
+		// Atomically set job key - returns false if job already exists (race condition prevented)
+		const wasSet = await setJobKeyAtomic(
+			jobData.contact,
+			jobData.journey,
+			jobData.journey_step,
+		);
+		if (!wasSet) {
+			logger.warn(
+				`Job already exists (race condition prevented), skipping creation: ${jobKey}`,
+			);
+			return;
+		}
+	} else {
+		// For skipValidation cases, still use atomic operation but don't check step validity
+		const wasSet = await setJobKeyAtomic(
+			jobData.contact,
+			jobData.journey,
+			jobData.journey_step,
+		);
+		if (!wasSet) {
+			logger.warn(
+				`Job already exists (race condition prevented), skipping creation: ${jobKey}`,
+			);
+			return;
+		}
+	}
 
 	const jobDataRedis = {
 		jobId: jobKey,

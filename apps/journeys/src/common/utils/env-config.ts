@@ -25,6 +25,7 @@ export const env = cleanEnv(process.env, {
 	RABBITMQ_PREFETCH_COUNT: num({ devDefault: testOnly(10) }),
 	RABBITMQ_RECONNECT_DELAY_MS: num({ devDefault: testOnly(5000) }),
 	RABBITMQ_MAX_RECONNECT_ATTEMPTS: num({ devDefault: testOnly(10) }),
+	RABBITMQ_CONSUMER_CONCURRENCY: num({ devDefault: testOnly(5) }),
 	COMPOSER_URL: str({ devDefault: testOnly("http://localhost:3020") }),
 	STRAPI_URL: str({ devDefault: testOnly("http://localhost:1337/api/") }),
 });

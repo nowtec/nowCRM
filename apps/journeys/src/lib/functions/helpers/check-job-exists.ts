@@ -16,8 +16,30 @@ export async function checkJobExists(
 }
 
 /**
+ * Atomically sets a job key in Redis if it doesn't exist (prevents race conditions)
+ * Uses SETNX (SET if Not eXists) for atomic check-and-set operation
+ * The key expires after 30 days to prevent Redis from growing indefinitely
+ * @returns true if the key was set (job didn't exist), false if it already existed
+ */
+export async function setJobKeyAtomic(
+	contactId: DocumentId,
+	journeyId: DocumentId,
+	stepId: DocumentId,
+): Promise<boolean> {
+	const jobKey = `job-contact:${contactId}-journey:${journeyId}-step:${stepId}`;
+	const ttlSeconds = 30 * 24 * 60 * 60; // 30 days
+	
+	// Use SET with NX (only if not exists) and EX (expiration) for atomic operation
+	// Returns "OK" if key was set, null if key already exists
+	// ioredis syntax: set(key, value, 'EX', seconds, 'NX')
+	const result = await redis.set(jobKey, "1", "EX", ttlSeconds, "NX");
+	return result === "OK";
+}
+
+/**
  * Sets a job key in Redis to track that a job has been created
  * The key expires after 30 days to prevent Redis from growing indefinitely
+ * @deprecated Use setJobKeyAtomic instead to prevent race conditions
  */
 export async function setJobKey(
 	contactId: DocumentId,
