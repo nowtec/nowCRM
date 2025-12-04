@@ -5,6 +5,12 @@ import { passContactToNextStep } from "../lib/functions/pass-contact-to-next-ste
 import { createFinishActions } from "../lib/functions/rules/create-finish-action";
 import { logger } from "../logger";
 import { publishToJourneyQueue } from "../rabbitmq";
+import {
+	checkJobExists,
+	setJobKey,
+	removeJobKey,
+} from "../lib/functions/helpers/check-job-exists";
+import { checkStepValid } from "../lib/functions/helpers/check-step-valid";
 
 export async function createJob(jobData: {
 	contact: DocumentId;
@@ -15,8 +21,37 @@ export async function createJob(jobData: {
 	channel?: DocumentId;
 	timing?: JourneyTiming;
 	ignoreSubscription?: boolean;
+	skipValidation?: boolean; 
 }) {
 	const jobKey = `job-contact:${jobData.contact}-journey:${jobData.journey}-step:${jobData.journey_step}`;
+
+	if (!jobData.skipValidation) {
+		const jobExists = await checkJobExists(
+			jobData.contact,
+			jobData.journey,
+			jobData.journey_step,
+		);
+		if (jobExists) {
+			logger.warn(
+				`Job already exists, skipping creation: ${jobKey}`,
+			);
+			return;
+		}
+
+		const stepValidation = await checkStepValid(
+			jobData.contact,
+			jobData.journey,
+			jobData.journey_step,
+		);
+		if (!stepValidation.valid) {
+			logger.warn(
+				`Step is not valid for contact, skipping job creation: ${jobKey}. Reason: ${stepValidation.reason}`,
+			);
+			return;
+		}
+	}
+
+	await setJobKey(jobData.contact, jobData.journey, jobData.journey_step);
 
 	const jobDataRedis = {
 		jobId: jobKey,
@@ -60,6 +95,15 @@ export async function createRuleCheckJob(jobDataRedis: any) {
 
 export async function closeJob(jobId: string) {
 	logger.info(`Job closed: ${jobId}`);
+	
+	const match = jobId.match(/^job-contact:(.+)-journey:(.+)-step:(.+)$/);
+	if (match) {
+		const [, contactId, journeyId, stepId] = match;
+		await removeJobKey(contactId, journeyId, stepId);
+		logger.info(`Removed job key from Redis: ${jobId}`);
+	} else {
+		logger.warn(`Could not parse jobId to remove from Redis: ${jobId}`);
+	}
 }
 
 export async function createNextJob(
@@ -84,6 +128,7 @@ export async function createNextJob(
 			composition: next.composition?.documentId || undefined,
 			channel: next.channel?.documentId || undefined,
 			timing: next.timing,
+			skipValidation: true, 
 		});
 	} else {
 		//if no target step we assume that this is last step of journey

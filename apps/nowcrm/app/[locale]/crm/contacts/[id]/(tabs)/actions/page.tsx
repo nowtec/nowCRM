@@ -1,4 +1,4 @@
-import type { PaginationParams } from "@nowcrm/services";
+import type { DocumentId, PaginationParams } from "@nowcrm/services";
 import { actionsService } from "@nowcrm/services/server";
 import type { Metadata } from "next";
 import type { Session } from "next-auth";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function Page(props: {
 	searchParams: Promise<PaginationParams>;
-	params: Promise<{ id: number }>;
+	params: Promise<{ id: DocumentId }>;
 }) {
 	const t = await getTranslations("Contacts.topBar");
 	const params = await props.params;
@@ -38,13 +38,14 @@ export default async function Page(props: {
 		},
 		filters: {
 			$or: [
-				{ action_type: { $containsi: search } as any },
+				{ action_type: { name: { $containsi: search } }},
 				{ entity: { $containsi: search } },
 				{ payload: { $containsi: search } },
 			],
-			contact: { id: { $eq: params.id } },
+			contact: { documentId: { $eq: params.id } },
 		},
 	});
+	console.log(response);
 
 	if (!response.success || !response.data || !response.meta) {
 		return <ErrorMessage response={response} />;

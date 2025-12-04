@@ -5,6 +5,7 @@ import { createJob } from "../../../jobs/create-job";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
+import { getContactCurrentStep } from "../../../lib/functions/helpers/get-contact-current-step";
 
 /**
  * Journey processing is needed for
@@ -24,6 +25,7 @@ export async function processJourneyMessage({
 		//Ignore trigger cause they have own logic of creating jobs
 		if (step.type === "trigger") continue;
 		for (const contact of step.contacts) {
+			// Check if contact has already processed this step
 			const check = await journeyStepsService.checkStepAction(
 				env.JOURNEYS_STRAPI_API_TOKEN,
 				step.documentId,
@@ -33,13 +35,35 @@ export async function processJourneyMessage({
 				throw new Error(check.errorMessage);
 			}
 			if (check.data.find) {
+				// Contact already processed this step, move to next step
 				await passContactToNextStep(
 					contact.documentId,
 					step.documentId,
 					journeyId,
 					check.data.target_step,
 				);
+				// Skip creating job for this step since it's already been processed
+				continue;
 			}
+
+			// Check contact's current step in this journey
+			// If contact is on a later step, don't create jobs for earlier steps
+			const currentStepId = await getContactCurrentStep(
+				contact.documentId,
+				journeyId,
+			);
+			if (currentStepId && currentStepId !== step.documentId) {
+				// Contact is already on a different step in this journey
+				// Only create job if this is the current step or if contact hasn't passed any steps yet
+				// Since we can't easily determine step order, we'll be conservative:
+				// If contact has passed any step and this isn't that step, skip it
+				logger.info(
+					`Contact ${contact.documentId} is on step ${currentStepId}, skipping job creation for step ${step.documentId}`,
+				);
+				continue;
+			}
+
+			// Create job (createJob will do additional validation)
 			await createJob({
 				contact: contact.documentId,
 				journey: journeyId,
