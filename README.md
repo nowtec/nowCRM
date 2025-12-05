@@ -116,6 +116,9 @@ This is the quickest way to get a complete environment running.
 4. After you confirm the domain, the full setup will run automatically inside Docker
    All required services will be started and wired together.
 
+
+   
+
 ---
 
 ### Option B: Local development, service by service
