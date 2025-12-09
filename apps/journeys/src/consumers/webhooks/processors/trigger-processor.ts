@@ -29,8 +29,9 @@ type AdditionalData = {
 	event?: StringEvent;
 	attribute?: {
 		label?: string | null;
-		value?: boolean | string | DocumentId | null;
+		value?: boolean | string | DocumentId | number | null;
 		attribute_name?: string | null;
+		operator?: "gt" | "lt" | "eq" | null;
 	};
 	[k: string]: any;
 };
@@ -80,8 +81,9 @@ function eventMatches(
 	data: any,
 	attribute?: {
 		label?: string | null;
-		value?: boolean | string | DocumentId | null;
+		value?: boolean | string | DocumentId | number | null;
 		attribute_name?: string | null;
+		operator?: "gt" | "lt" | "eq" | null;
 	},
 ): boolean {
 	if (!stepEvent) return false;
@@ -110,8 +112,44 @@ function eventMatches(
 		return Boolean(rawActual) === boolExpected;
 	}
 
+	// --- Numeric comparison with operator (for donation amounts, etc.) ---
+	// Check this before documentId to handle numeric comparisons first
+	if (
+		attribute.operator &&
+		(typeof expected === "number" ||
+			(typeof expected === "string" && !isNaN(Number(expected))))
+	) {
+		const numExpected =
+			typeof expected === "number" ? expected : Number(expected);
+		const numActual =
+			typeof rawActual === "number"
+				? rawActual
+				: typeof rawActual === "string"
+					? Number(rawActual)
+					: null;
+
+		if (numActual === null || isNaN(numActual)) {
+			return false;
+		}
+
+		switch (attribute.operator) {
+			case "gt":
+				return numActual > numExpected;
+			case "lt":
+				return numActual < numExpected;
+			case "eq":
+				return numActual === numExpected;
+			default:
+				return numActual === numExpected;
+		}
+	}
+
 	// --- documentId (ID) handling ---
-	if (expected && checkDocumentId(expected)) {
+	if (
+		expected &&
+		typeof expected === "string" &&
+		checkDocumentId(expected)
+	) {
 		return rawActual?.documentId === expected;
 	}
 
