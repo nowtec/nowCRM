@@ -100,7 +100,7 @@ export async function passContactToNextStep(
 
 		while (retryCount < maxRetries) {
 			const retryDelay = (100 + Math.random() * 200) * (retryCount + 1); // Increasing delay with jitter
-			logger.info(
+			logger.debug(
 				{
 					contactId,
 					journeyId,

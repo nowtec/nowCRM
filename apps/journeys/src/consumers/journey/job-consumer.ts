@@ -34,7 +34,7 @@ export function jobConsumer() {
 				try {
 					channel.ack(msg);
 					const duration = Date.now() - startTime;
-					logger.info(
+					logger.debug(
 						{ duration, queue: JOURNEY_QUEUES.JOB, jobId: data.jobId },
 						"Job message processed and acked successfully",
 					);
@@ -95,7 +95,7 @@ export function jobConsumer() {
 						// Message was requeued for retry, acknowledge original message
 						try {
 							channel.ack(msg);
-							logger.info(
+							logger.debug(
 								{
 									queue: JOURNEY_QUEUES.JOB,
 									jobId: data.jobId,
@@ -124,7 +124,7 @@ export function jobConsumer() {
 						// Max retries exceeded or non-retryable error, send to DLX
 						try {
 							channel.nack(msg, false, false);
-							logger.info(
+							logger.debug(
 								{
 									queue: JOURNEY_QUEUES.JOB,
 									jobId: data.jobId,

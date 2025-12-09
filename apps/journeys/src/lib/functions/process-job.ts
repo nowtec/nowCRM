@@ -52,7 +52,7 @@ export async function processJob(
 		throw new Error(journey.message);
 	}
 
-	logger.info(
+	logger.debug(
 		{
 			contactId,
 			stepId,

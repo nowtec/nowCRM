@@ -20,7 +20,7 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		compositionId,
 		ignoreSubscription,
 	} = data;
-	logger.info(`Processing job ${jobId}`);
+	logger.debug(`Processing job ${jobId}`);
 
 	// Get step to verify it's a "channel" type
 	// JOB queue should only process "channel" type steps

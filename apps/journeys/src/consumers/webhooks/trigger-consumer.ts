@@ -21,7 +21,7 @@ export function triggerConsumer() {
 				channel.ack(msg);
 
 				const duration = Date.now() - startTime;
-				logger.info(
+				logger.debug(
 					{ duration, queue: TRIGGER_QUEUES.TRIGGER },
 					"Trigger message processed successfully",
 				);

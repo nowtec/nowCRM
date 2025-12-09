@@ -22,7 +22,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		timing,
 		ignoreSubscription,
 	} = data;
-	logger.info(`Processing delayed job: ${jobId}`);
+	logger.debug(`Processing delayed job: ${jobId}`);
 
 	if (!timing) {
 		const error = new Error(
@@ -47,7 +47,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 			for (const connection_step of step.responseObject
 				.connections_from_this_step) {
 				try {
-					logger.info(
+					logger.debug(
 						{
 							contactId,
 							journeyId,
@@ -79,7 +79,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 					});
 					await Promise.race([createJobPromise, timeoutPromise]);
 					jobsCreated++;
-					logger.info(
+					logger.debug(
 						{
 							contactId,
 							journeyId,
@@ -106,7 +106,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 				}
 			}
 			// Wait step completed, all next jobs created
-			logger.info(
+			logger.debug(
 				{
 					contactId,
 					journeyId,
@@ -124,7 +124,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 			const scoreResp = await createContactActionAndScore(stepId, contactId);
 			if (!scoreResp.success) throw new Error(scoreResp.message);
 			await createNextJob(data, null);
-			logger.info(
+			logger.debug(
 				{ contactId, journeyId, stepId, type },
 				"Wait step completed, journey finished, removing contact from journey",
 			);

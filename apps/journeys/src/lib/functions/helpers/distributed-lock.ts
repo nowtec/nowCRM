@@ -54,7 +54,7 @@ export async function withLock<T>(
 	const acquired = await redis.set(lockKey, lockValue, "EX", ttlSeconds, "NX");
 
 	if (acquired !== "OK") {
-		logger.warn(
+		logger.debug(
 			{ lockKey },
 			"Could not acquire distributed lock, skipping execution",
 		);

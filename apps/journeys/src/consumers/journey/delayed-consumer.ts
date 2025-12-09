@@ -32,7 +32,7 @@ export function delayedConsumer() {
 			let messageAcked = false;
 			try {
 				const messageContent = msg.content.toString();
-				logger.info(
+				logger.debug(
 					{
 						queue: JOURNEY_QUEUES.DELAYED,
 						messageSize: messageContent.length,
@@ -42,7 +42,7 @@ export function delayedConsumer() {
 				);
 
 				data = JSON.parse(messageContent);
-				logger.info(
+				logger.debug(
 					{
 						jobId: data.jobId,
 						contactId: data.contactId,
@@ -73,7 +73,7 @@ export function delayedConsumer() {
 					channel.ack(msg);
 					messageAcked = true;
 					const duration = Date.now() - startTime;
-					logger.info(
+					logger.debug(
 						{ duration, queue: JOURNEY_QUEUES.DELAYED, jobId: data.jobId },
 						"Delayed message processed and acked successfully",
 					);
@@ -137,7 +137,7 @@ export function delayedConsumer() {
 						// Message was requeued for retry, acknowledge original message
 						channel.ack(msg);
 						messageAcked = true;
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.DELAYED,
 								jobId: data.jobId,
@@ -150,7 +150,7 @@ export function delayedConsumer() {
 						// Max retries exceeded or non-retryable error, send to DLX
 						channel.nack(msg, false, false);
 						messageAcked = true; // Mark as handled (nacked to DLX)
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.DELAYED,
 								jobId: data.jobId,
@@ -185,7 +185,7 @@ export function delayedConsumer() {
 					try {
 						// Try to ack - if it fails, the message will be requeued by RabbitMQ
 						channel.ack(msg);
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.DELAYED,
 								jobId: data?.jobId,
@@ -204,7 +204,7 @@ export function delayedConsumer() {
 						);
 						try {
 							channel.nack(msg, false, false);
-							logger.info(
+							logger.debug(
 								{
 									queue: JOURNEY_QUEUES.DELAYED,
 									jobId: data?.jobId,

@@ -52,11 +52,11 @@ export async function scheduleJourneys() {
 		const result = await withLock(
 			SCHEDULER_LOCK_KEY,
 			async () => {
-				logger.info("Scheduling journey processing jobs...");
+				logger.debug("Scheduling journey processing jobs...");
 
 				// 1. Fetch only active journeys
 				const activeJourneys = await fetchActiveJourneys();
-				logger.info(
+				logger.debug(
 					{
 						activeJourneysCount: activeJourneys.length,
 						activeJourneyIds: activeJourneys.map((j) => j.documentId),
@@ -71,7 +71,7 @@ export async function scheduleJourneys() {
 				let scheduledJourneyIds: string[] = [];
 				try {
 					scheduledJourneyIds = await getScheduledJourneyIds();
-					logger.info(
+					logger.debug(
 						{
 							scheduledJourneyIdsCount: scheduledJourneyIds.length,
 							scheduledJourneyIds,
@@ -87,7 +87,7 @@ export async function scheduleJourneys() {
 				}
 
 				// 3. Cancel jobs for journeys that are no longer active
-				logger.info(
+				logger.debug(
 					{
 						scheduledJourneyIdsCount: scheduledJourneyIds.length,
 						activeJourneyIdsCount: activeJourneyIds.size,
@@ -100,12 +100,12 @@ export async function scheduleJourneys() {
 						await cancelJourneyJob(scheduledJourneyId);
 					}
 				}
-				logger.info("Finished checking for journeys to cancel");
+				logger.debug("Finished checking for journeys to cancel");
 
 				// 4. For each active journey, check if job already exists
 				let scheduledCount = 0;
 				let skippedCount = 0;
-				logger.info(
+				logger.debug(
 					{
 						activeJourneysCount: activeJourneys.length,
 					},
@@ -114,7 +114,7 @@ export async function scheduleJourneys() {
 
 				for (const journey of activeJourneys) {
 					const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journey.documentId}`;
-					logger.info(
+					logger.debug(
 						{
 							journeyId: journey.documentId,
 							redisKey,
@@ -127,7 +127,7 @@ export async function scheduleJourneys() {
 					try {
 						// Check if job already exists
 						const jobExists = await redis.exists(redisKey);
-						logger.info(
+						logger.debug(
 							{
 								journeyId: journey.documentId,
 								redisKey,
@@ -136,7 +136,7 @@ export async function scheduleJourneys() {
 							"Checked if journey job exists in Redis",
 						);
 						if (jobExists) {
-							logger.info(
+							logger.debug(
 								{
 									journeyId: journey.documentId,
 									redisKey,
@@ -166,7 +166,7 @@ export async function scheduleJourneys() {
 					};
 
 					try {
-						logger.info(
+						logger.debug(
 							{
 								journeyId: journey.documentId,
 								redisKey,
@@ -183,7 +183,7 @@ export async function scheduleJourneys() {
 							"NX",
 						);
 
-						logger.info(
+						logger.debug(
 							{
 								journeyId: journey.documentId,
 								redisKey,
@@ -193,14 +193,14 @@ export async function scheduleJourneys() {
 						);
 
 						if (wasSet === "OK") {
-							logger.info(
+							logger.debug(
 								{
 									journeyId: journey.documentId,
 								},
 								"Publishing journey job to queue",
 							);
 							await publishToJourneyQueue("JOURNEY", newJob);
-							logger.info(
+							logger.debug(
 								{
 									journeyId: journey.documentId,
 									redisKey,
@@ -232,7 +232,7 @@ export async function scheduleJourneys() {
 					}
 				}
 
-				logger.info(
+				logger.debug(
 					{
 						scheduledCount,
 						skippedCount,
@@ -242,7 +242,7 @@ export async function scheduleJourneys() {
 					"Finished processing all active journeys",
 				);
 
-				logger.info(
+				logger.debug(
 					{
 						activeJourneys: activeJourneys.length,
 						activeJourneyIds: Array.from(activeJourneyIds),
@@ -264,11 +264,11 @@ export async function scheduleJourneys() {
 		);
 
 		if (result === null) {
-			logger.info(
+			logger.debug(
 				"Scheduler lock already held by another instance, skipping execution",
 			);
 		} else if (result) {
-			logger.info({ result }, "Scheduler completed successfully");
+			logger.debug({ result }, "Scheduler completed successfully");
 		}
 	} catch (error) {
 		logger.error(

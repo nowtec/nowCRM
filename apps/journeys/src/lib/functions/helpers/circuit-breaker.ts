@@ -91,7 +91,7 @@ export class CircuitBreaker {
 
 		if (this.stats.state === "HALF_OPEN") {
 			// Service recovered, close the circuit
-			logger.info(
+			logger.debug(
 				{ circuitBreaker: this.options.name },
 				"Circuit breaker transitioning to CLOSED - service recovered",
 			);
@@ -128,7 +128,7 @@ export class CircuitBreaker {
 	}
 
 	private transitionToHalfOpen(): void {
-		logger.info(
+		logger.debug(
 			{ circuitBreaker: this.options.name },
 			"Circuit breaker transitioning to HALF_OPEN - testing service recovery",
 		);

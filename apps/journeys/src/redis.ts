@@ -12,7 +12,7 @@ export const redis = new Redis({
 			times * env.JOURNEYS_REDIS_RETRY_DELAY_MS,
 			3000, // Max 3 seconds between retries
 		);
-		logger.warn({ times, delay }, `Redis connection retry attempt ${times}`);
+		logger.debug({ times, delay }, `Redis connection retry attempt ${times}`);
 		return delay;
 	},
 	connectTimeout: env.JOURNEYS_REDIS_CONNECT_TIMEOUT,
@@ -41,7 +41,7 @@ redis.on("close", () => {
 });
 
 redis.on("reconnecting", (delay: number) => {
-	logger.info({ delay }, "Redis reconnecting");
+	logger.debug({ delay }, "Redis reconnecting");
 });
 
 redis.on("end", () => {
@@ -50,11 +50,11 @@ redis.on("end", () => {
 
 // Graceful shutdown handler
 process.on("SIGINT", async () => {
-	logger.info("Closing Redis connection...");
+	logger.debug("Closing Redis connection...");
 	await redis.quit();
 });
 
 process.on("SIGTERM", async () => {
-	logger.info("Closing Redis connection...");
+	logger.debug("Closing Redis connection...");
 	await redis.quit();
 });

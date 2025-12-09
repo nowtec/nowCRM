@@ -57,7 +57,7 @@ async function scheduleNextRun(journeyId: DocumentId): Promise<void> {
 	// Schedule job to run after delay using delayed queue
 	await publishToJourneyQueue("JOURNEY", newJob, delayMs);
 
-	logger.info(
+	logger.debug(
 		{
 			journeyId,
 			delayMs,
@@ -77,12 +77,12 @@ export async function processJourneyMessage({
 }: {
 	journeyId: DocumentId;
 }) {
-	logger.info({ journeyId }, "Processing journey");
+	logger.debug({ journeyId }, "Processing journey");
 
 	// Check if journey is still active before processing
 	const isActive = await isJourneyActive(journeyId);
 	if (!isActive) {
-		logger.info(
+		logger.debug(
 			{ journeyId },
 			"Journey is no longer active, cancelling scheduled job and removing from Redis",
 		);
@@ -90,7 +90,7 @@ export async function processJourneyMessage({
 		const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journeyId}`;
 		try {
 			await redis.del(redisKey);
-			logger.info(
+			logger.debug(
 				{ journeyId, redisKey },
 				"Removed Redis key for inactive journey",
 			);
@@ -176,7 +176,7 @@ export async function processJourneyMessage({
 		totalContactsProcessed += successful;
 
 		if (successful > 0) {
-			logger.info(
+			logger.debug(
 				{
 					journeyId,
 					stepId: step.documentId,
@@ -187,7 +187,7 @@ export async function processJourneyMessage({
 		}
 	}
 
-	logger.info(
+	logger.debug(
 		{
 			journeyId,
 			totalContactsProcessed,
@@ -202,7 +202,7 @@ export async function processJourneyMessage({
 		if (stillActive) {
 			await scheduleNextRun(journeyId);
 		} else {
-			logger.info(
+			logger.debug(
 				{ journeyId },
 				"Journey became inactive during processing, not scheduling next run",
 			);

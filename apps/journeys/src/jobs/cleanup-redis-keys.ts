@@ -69,13 +69,13 @@ export async function cleanupOrphanedRedisKeys(): Promise<void> {
 	const result = await withLock(
 		CLEANUP_LOCK_KEY,
 		async () => {
-			logger.info("Starting Redis key cleanup...");
+			logger.debug("Starting Redis key cleanup...");
 			let totalCleaned = 0;
 			let totalScanned = 0;
 
 			// Clean up job keys
 			for (const [patternName, pattern] of Object.entries(KEY_PATTERNS)) {
-				logger.info(`Scanning pattern: ${pattern}`);
+				logger.debug(`Scanning pattern: ${pattern}`);
 				let patternCleaned = 0;
 				let patternScanned = 0;
 
@@ -98,7 +98,7 @@ export async function cleanupOrphanedRedisKeys(): Promise<void> {
 						patternCleaned += orphanedKeys.length;
 						totalCleaned += orphanedKeys.length;
 
-						logger.info(
+						logger.debug(
 							{ pattern: patternName, cleaned: orphanedKeys.length },
 							`Cleaned up ${orphanedKeys.length} orphaned keys`,
 						);
@@ -110,7 +110,7 @@ export async function cleanupOrphanedRedisKeys(): Promise<void> {
 					}
 				}
 
-				logger.info(
+				logger.debug(
 					{
 						pattern: patternName,
 						scanned: patternScanned,
@@ -120,7 +120,7 @@ export async function cleanupOrphanedRedisKeys(): Promise<void> {
 				);
 			}
 
-			logger.info(
+			logger.debug(
 				{ totalScanned, totalCleaned },
 				`Redis cleanup completed: scanned ${totalScanned} keys, cleaned ${totalCleaned} orphaned keys`,
 			);
@@ -131,7 +131,7 @@ export async function cleanupOrphanedRedisKeys(): Promise<void> {
 	);
 
 	if (result === null) {
-		logger.info(
+		logger.debug(
 			"Cleanup lock already held by another instance, skipping execution",
 		);
 	}

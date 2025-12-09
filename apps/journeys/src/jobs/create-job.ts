@@ -23,7 +23,7 @@ export async function createJob(jobData: {
 }) {
 	const jobKey = `job-contact:${jobData.contact}-journey:${jobData.journey}-step:${jobData.journey_step}`;
 
-	logger.info(
+	logger.debug(
 		{
 			jobKey,
 			contactId: jobData.contact,
@@ -63,7 +63,7 @@ export async function createJob(jobData: {
 			return;
 		}
 
-		logger.info(
+		logger.debug(
 			{ jobKey, contactId: jobData.contact, stepId: jobData.journey_step },
 			"Step validation passed, attempting atomic job key creation",
 		);
@@ -86,12 +86,12 @@ export async function createJob(jobData: {
 			return;
 		}
 
-		logger.info(
+		logger.debug(
 			{ jobKey, contactId: jobData.contact, stepId: jobData.journey_step },
 			"Job key atomically created in Redis",
 		);
 	} else {
-		logger.info(
+		logger.debug(
 			{ jobKey },
 			"Skipping validation, using atomic job key creation",
 		);
@@ -158,7 +158,7 @@ export async function createJob(jobData: {
 				new Date(String(jobData.timing.value)).getTime() - Date.now(),
 			);
 		}
-		logger.info(
+		logger.debug(
 			{
 				jobKey,
 				contactId: jobData.contact,
@@ -173,7 +173,7 @@ export async function createJob(jobData: {
 		);
 		try {
 			await publishToJourneyQueue("DELAYED", jobDataRedis, delay);
-			logger.info(
+			logger.debug(
 				{
 					jobKey,
 					contactId: jobData.contact,
@@ -212,7 +212,7 @@ export async function createJob(jobData: {
 			);
 			return;
 		}
-		logger.info(
+		logger.debug(
 			{
 				jobKey,
 				contactId: jobData.contact,
@@ -223,7 +223,7 @@ export async function createJob(jobData: {
 		);
 		try {
 			await publishToJourneyQueue("JOB", jobDataRedis);
-			logger.info(
+			logger.debug(
 				{
 					jobKey,
 					contactId: jobData.contact,
@@ -249,7 +249,7 @@ export async function createJob(jobData: {
 		}
 	}
 
-	logger.info(
+	logger.debug(
 		{
 			jobKey,
 			contactId: jobData.contact,
@@ -266,17 +266,17 @@ export async function createRuleCheckJob(jobDataRedis: any) {
 	const newJobData = { ...jobDataRedis, ruleCheck: true, jobKey: ruleJobKey };
 
 	await publishToJourneyQueue("RULE_CHECK", newJobData);
-	logger.info(`Rule check job created: ${ruleJobKey}`);
+	logger.debug(`Rule check job created: ${ruleJobKey}`);
 }
 
 export async function closeJob(jobId: string) {
-	logger.info(`Job closed: ${jobId}`);
+	logger.debug(`Job closed: ${jobId}`);
 
 	const match = jobId.match(/^job-contact:(.+?)-journey:(.+?)-step:(.+)$/);
 	if (match) {
 		const [, contactId, journeyId, stepId] = match;
 		await removeJobKey(contactId, journeyId, stepId);
-		logger.info(`Removed job key from Redis: ${jobId}`);
+		logger.debug(`Removed job key from Redis: ${jobId}`);
 	} else {
 		logger.warn(`Could not parse jobId to remove from Redis: ${jobId}`);
 	}
@@ -314,7 +314,7 @@ export async function createNextJob(
 		// Remove contact from journey and create finish action
 		await passContactToNextStep(contactId, stepId, journeyId, null);
 		await createFinishActions(contactId, journeyId);
-		logger.info(
+		logger.debug(
 			{ contactId, journeyId, stepId },
 			"Journey completed, contact removed from journey",
 		);

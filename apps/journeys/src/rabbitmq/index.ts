@@ -77,7 +77,7 @@ async function logQueueStatus(ch: amqp.Channel) {
 		for (const queueName of allQueues) {
 			const queueInfo = await ch.checkQueue(queueName);
 			if (queueInfo.messageCount > 0 || queueInfo.consumerCount > 0) {
-				logger.info(
+				logger.debug(
 					{
 						queue: queueName,
 						ready: queueInfo.messageCount,
@@ -250,7 +250,7 @@ export async function setupRabbitMQ() {
 		await ch.prefetch(prefetchCount);
 		await confirmCh.prefetch(prefetchCount);
 
-		logger.info(
+		logger.debug(
 			`RabbitMQ prefetch count set to ${prefetchCount} messages per consumer`,
 		);
 
@@ -323,7 +323,7 @@ export async function publishToJourneyQueue(
 
 				confirmChannel?.once("drain", () => {
 					clearTimeout(drainTimeoutId);
-					logger.info(
+					logger.debug(
 						{
 							queue: JOURNEY_QUEUES[queue],
 							delayMs,
@@ -338,7 +338,7 @@ export async function publishToJourneyQueue(
 				// On a confirm channel, this means the message was sent to RabbitMQ
 				// The confirm channel will handle confirmations asynchronously
 				// If there's an error, the error handlers will catch it
-				logger.info(
+				logger.debug(
 					{
 						queue: JOURNEY_QUEUES[queue],
 						delayMs,
@@ -409,7 +409,7 @@ export async function publishToTriggerQueue(
 
 				confirmChannel?.once("drain", () => {
 					clearTimeout(drainTimeoutId);
-					logger.info(
+					logger.debug(
 						{
 							queue: TRIGGER_QUEUES[queue],
 							delayMs,
@@ -423,7 +423,7 @@ export async function publishToTriggerQueue(
 				// On a confirm channel, this means the message was sent to RabbitMQ
 				// The confirm channel will handle confirmations asynchronously
 				// If there's an error, the error handlers will catch it
-				logger.info(
+				logger.debug(
 					{
 						queue: TRIGGER_QUEUES[queue],
 						delayMs,
@@ -468,7 +468,7 @@ export async function closeRabbitMQ(): Promise<void> {
 	if (confirmChannel) {
 		try {
 			await confirmChannel.close();
-			logger.info("ConfirmChannel closed - unacked messages will be requeued");
+			logger.debug("ConfirmChannel closed - unacked messages will be requeued");
 		} catch (err) {
 			logger.error({ err }, "Error closing confirmChannel");
 		}
@@ -478,7 +478,7 @@ export async function closeRabbitMQ(): Promise<void> {
 	if (channel) {
 		try {
 			await channel.close();
-			logger.info("Channel closed - unacked messages will be requeued");
+			logger.debug("Channel closed - unacked messages will be requeued");
 		} catch (err) {
 			logger.error({ err }, "Error closing channel");
 		}
@@ -496,7 +496,7 @@ export async function closeRabbitMQ(): Promise<void> {
 		connection = null;
 	}
 
-	logger.info(
+	logger.debug(
 		"RabbitMQ connections closed - all unacked messages have been requeued",
 	);
 }

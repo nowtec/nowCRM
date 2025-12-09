@@ -127,7 +127,7 @@ function getContactIdFromWebhook(data: any): DocumentId | undefined {
 
 export async function processTriggerMessage(data: any) {
 	const normalizedEvent = normalizeWebhookEvent(data?.event);
-	logger.info(`Finding trigger nodes for ${normalizedEvent ?? data?.event}`);
+	logger.debug(`Finding trigger nodes for ${normalizedEvent ?? data?.event}`);
 
 	const contactId = getContactIdFromWebhook(data);
 	if (!contactId) {
@@ -226,7 +226,7 @@ export async function processTriggerMessage(data: any) {
 	for (const step of filtered_steps) {
 		if (step.connections_from_this_step?.length) {
 			for (const connection_step of step.connections_from_this_step) {
-				logger.info(
+				logger.debug(
 					`Creating job for -> connection step ${connection_step.documentId} with target ${connection_step.target_step.documentId}`,
 				);
 				// Collect all job creation promises
@@ -249,6 +249,6 @@ export async function processTriggerMessage(data: any) {
 	// Execute all job creations in parallel
 	if (jobPromises.length > 0) {
 		await Promise.allSettled(jobPromises);
-		logger.info(`Created ${jobPromises.length} jobs for contact ${contactId}`);
+		logger.debug(`Created ${jobPromises.length} jobs for contact ${contactId}`);
 	}
 }

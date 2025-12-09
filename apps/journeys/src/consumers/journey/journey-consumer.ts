@@ -35,7 +35,7 @@ export function journeyConsumer() {
 				channel.ack(msg);
 				messageAcked = true;
 				const duration = Date.now() - startTime;
-				logger.info(
+				logger.debug(
 					{
 						duration,
 						queue: JOURNEY_QUEUES.JOURNEY,
@@ -81,7 +81,7 @@ export function journeyConsumer() {
 						// Message was requeued for retry, acknowledge original message
 						channel.ack(msg);
 						messageAcked = true;
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.JOURNEY,
 								journeyId: data.journeyId,
@@ -92,7 +92,7 @@ export function journeyConsumer() {
 						// Max retries exceeded or non-retryable error, send to DLX
 						channel.nack(msg, false, false);
 						messageAcked = true; // Mark as handled (nacked to DLX)
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.JOURNEY,
 								journeyId: data.journeyId,
@@ -125,7 +125,7 @@ export function journeyConsumer() {
 					);
 					try {
 						channel.ack(msg);
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.JOURNEY,
 								journeyId: data?.journeyId || data?.jobId,
@@ -143,7 +143,7 @@ export function journeyConsumer() {
 						);
 						try {
 							channel.nack(msg, false, false);
-							logger.info(
+							logger.debug(
 								{
 									queue: JOURNEY_QUEUES.JOURNEY,
 									journeyId: data?.journeyId || data?.jobId,

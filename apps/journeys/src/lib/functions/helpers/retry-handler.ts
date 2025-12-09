@@ -117,7 +117,7 @@ async function republishWithRetry(
 		_retryMetadata: retryHeaders,
 	};
 
-	logger.warn(
+	logger.debug(
 		{
 			queueType,
 			retryCount: metadata.retryCount + 1,

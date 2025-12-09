@@ -35,7 +35,7 @@ export function ruleConsumer() {
 				channel.ack(msg);
 				messageAcked = true;
 				const duration = Date.now() - startTime;
-				logger.info(
+				logger.debug(
 					{ duration, queue: JOURNEY_QUEUES.RULE_CHECK, jobId: data.jobId },
 					"Rule message processed and acked successfully",
 				);
@@ -77,7 +77,7 @@ export function ruleConsumer() {
 						// Message was requeued for retry, acknowledge original message
 						channel.ack(msg);
 						messageAcked = true;
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.RULE_CHECK,
 								jobId: data.jobId,
@@ -88,7 +88,7 @@ export function ruleConsumer() {
 						// Max retries exceeded or non-retryable error, send to DLX
 						channel.nack(msg, false, false);
 						messageAcked = true; // Mark as handled (nacked to DLX)
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.RULE_CHECK,
 								jobId: data.jobId,
@@ -121,7 +121,7 @@ export function ruleConsumer() {
 					);
 					try {
 						channel.ack(msg);
-						logger.info(
+						logger.debug(
 							{
 								queue: JOURNEY_QUEUES.RULE_CHECK,
 								jobId: data?.jobId,
@@ -139,7 +139,7 @@ export function ruleConsumer() {
 						);
 						try {
 							channel.nack(msg, false, false);
-							logger.info(
+							logger.debug(
 								{
 									queue: JOURNEY_QUEUES.RULE_CHECK,
 									jobId: data?.jobId,

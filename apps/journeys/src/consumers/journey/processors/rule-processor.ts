@@ -9,7 +9,7 @@ import { publishToJourneyQueue } from "../../../rabbitmq";
 
 export async function processRuleMessage(data: ruleProcessorJobData) {
 	const { jobId, contactId, stepId } = data;
-	logger.info(`Checking rules for job ${jobId}`);
+	logger.debug(`Checking rules for job ${jobId}`);
 
 	const stepResp = await getJourneyStep(stepId);
 	if (!stepResp.success || !stepResp.responseObject)
@@ -18,7 +18,7 @@ export async function processRuleMessage(data: ruleProcessorJobData) {
 	const step = stepResp.responseObject;
 	// no connections means its last step - close the job and finish
 	if (!step.connections_from_this_step) {
-		logger.info(
+		logger.debug(
 			{ jobId, contactId, stepId },
 			"Rule check: no connections from step, journey completed",
 		);
@@ -58,7 +58,7 @@ export async function processRuleMessage(data: ruleProcessorJobData) {
 			return; // Consumer will ack the message
 		}
 
-		logger.info(
+		logger.debug(
 			{ jobId, contactId, stepId, retryCount, maxRuleRetries },
 			`Requeuing rule job ${jobId} after delay - connections not ready yet (retry ${retryCount + 1}/${maxRuleRetries})`,
 		);
