@@ -117,7 +117,7 @@ function eventMatches(
 	if (
 		attribute.operator &&
 		(typeof expected === "number" ||
-			(typeof expected === "string" && !isNaN(Number(expected))))
+			(typeof expected === "string" && !Number.isNaN(Number(expected))))
 	) {
 		const numExpected =
 			typeof expected === "number" ? expected : Number(expected);
@@ -128,7 +128,7 @@ function eventMatches(
 					? Number(rawActual)
 					: null;
 
-		if (numActual === null || isNaN(numActual)) {
+		if (numActual === null || Number.isNaN(numActual)) {
 			return false;
 		}
 
@@ -145,11 +145,7 @@ function eventMatches(
 	}
 
 	// --- documentId (ID) handling ---
-	if (
-		expected &&
-		typeof expected === "string" &&
-		checkDocumentId(expected)
-	) {
+	if (expected && typeof expected === "string" && checkDocumentId(expected)) {
 		return rawActual?.documentId === expected;
 	}
 

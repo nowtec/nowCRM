@@ -7,13 +7,13 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Contact,
+	CreditCardIcon,
 	FormInputIcon,
 	Mail,
 	Power,
 	PowerOff,
 	Settings,
 	Zap,
-	CreditCardIcon,
 } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -42,7 +42,12 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-type TriggerEntity = "contact" | "action" | "survey" | "subscription" | "donation-transaction";
+type TriggerEntity =
+	| "contact"
+	| "action"
+	| "survey"
+	| "subscription"
+	| "donation-transaction";
 
 export type EventValue = "entry.create" | "entry.update" | "entry.unpublish";
 
@@ -660,10 +665,13 @@ export function TriggerPanel({
 																</label>
 																<Select
 																	value={config.attribute.operator}
-																	onValueChange={(operator: "gt" | "lt" | "eq") =>
+																	onValueChange={(
+																		operator: "gt" | "lt" | "eq",
+																	) =>
 																		handleConfigChange({
 																			attribute: {
-																				label: config.attribute?.label ?? "amount",
+																				label:
+																					config.attribute?.label ?? "amount",
 																				value: config.attribute?.value ?? 0,
 																				attribute_name:
 																					config.attribute?.attribute_name ??
@@ -683,7 +691,9 @@ export function TriggerPanel({
 																		<SelectItem value="lt">
 																			Less Than (&lt;)
 																		</SelectItem>
-																		<SelectItem value="eq">Equal (=)</SelectItem>
+																		<SelectItem value="eq">
+																			Equal (=)
+																		</SelectItem>
 																	</SelectContent>
 																</Select>
 																<p className="text-muted-foreground text-xs">
@@ -706,7 +716,7 @@ export function TriggerPanel({
 																	onChange={(e) => {
 																		const numValue = parseFloat(e.target.value);
 																		if (
-																			!isNaN(numValue) &&
+																			!Number.isNaN(numValue) &&
 																			config.attribute
 																		) {
 																			handleConfigChange({
@@ -796,8 +806,10 @@ export function TriggerPanel({
 																			(e) => e.value === event.value,
 																		).length > 1
 																			? event.label
-																			: config.entity === "donation-transaction" &&
-																					event.presetAttribute?.operator !== undefined
+																			: config.entity ===
+																						"donation-transaction" &&
+																					event.presetAttribute?.operator !==
+																						undefined
 																				? event.label
 																				: event.value
 																	}
