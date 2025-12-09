@@ -12,6 +12,8 @@ import {
 } from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
+import { strapiCircuitBreaker } from "../../../lib/functions/helpers/circuit-breaker";
+import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
 import { logger } from "../../../logger";
 
 /** Allowed webhook event labels */
@@ -27,8 +29,9 @@ type AdditionalData = {
 	event?: StringEvent;
 	attribute?: {
 		label?: string | null;
-		value?: boolean | string | DocumentId | null;
+		value?: boolean | string | DocumentId | number | null;
 		attribute_name?: string | null;
+		operator?: "gt" | "lt" | "eq" | null;
 	};
 	[k: string]: any;
 };
@@ -51,6 +54,22 @@ function readWebhookAttributeValue(data: any, attribute?: string | null) {
 	if (!attribute) return undefined;
 	const entry = data?.entry ?? {};
 
+	// Handle nested attribute paths like "action_type.name"
+	if (attribute.includes(".")) {
+		const parts = attribute.split(".");
+		let current: any = entry;
+
+		for (const part of parts) {
+			if (current === null || current === undefined) {
+				return undefined;
+			}
+			current = current[part];
+		}
+
+		return current;
+	}
+
+	// Handle simple attribute names
 	if (attribute in entry) return entry[attribute];
 
 	return undefined;
@@ -62,8 +81,9 @@ function eventMatches(
 	data: any,
 	attribute?: {
 		label?: string | null;
-		value?: boolean | string | DocumentId | null;
+		value?: boolean | string | DocumentId | number | null;
 		attribute_name?: string | null;
+		operator?: "gt" | "lt" | "eq" | null;
 	},
 ): boolean {
 	if (!stepEvent) return false;
@@ -92,8 +112,40 @@ function eventMatches(
 		return Boolean(rawActual) === boolExpected;
 	}
 
+	// --- Numeric comparison with operator (for donation amounts, etc.) ---
+	// Check this before documentId to handle numeric comparisons first
+	if (
+		attribute.operator &&
+		(typeof expected === "number" ||
+			(typeof expected === "string" && !Number.isNaN(Number(expected))))
+	) {
+		const numExpected =
+			typeof expected === "number" ? expected : Number(expected);
+		const numActual =
+			typeof rawActual === "number"
+				? rawActual
+				: typeof rawActual === "string"
+					? Number(rawActual)
+					: null;
+
+		if (numActual === null || Number.isNaN(numActual)) {
+			return false;
+		}
+
+		switch (attribute.operator) {
+			case "gt":
+				return numActual > numExpected;
+			case "lt":
+				return numActual < numExpected;
+			case "eq":
+				return numActual === numExpected;
+			default:
+				return numActual === numExpected;
+		}
+	}
+
 	// --- documentId (ID) handling ---
-	if (expected && checkDocumentId(expected)) {
+	if (expected && typeof expected === "string" && checkDocumentId(expected)) {
 		return rawActual?.documentId === expected;
 	}
 
@@ -109,7 +161,7 @@ function getContactIdFromWebhook(data: any): DocumentId | undefined {
 
 export async function processTriggerMessage(data: any) {
 	const normalizedEvent = normalizeWebhookEvent(data?.event);
-	logger.info(`Finding trigger nodes for ${normalizedEvent ?? data?.event}`);
+	logger.debug(`Finding trigger nodes for ${normalizedEvent ?? data?.event}`);
 
 	const contactId = getContactIdFromWebhook(data);
 	if (!contactId) {
@@ -119,24 +171,27 @@ export async function processTriggerMessage(data: any) {
 		);
 	}
 
-	const trigger_steps = await journeyStepsService.findAll(
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{
-			filters: {
-				type: { $eq: "trigger" },
-				journey: { active: { $eq: true } },
-			},
-			populate: {
-				journey: true,
-				connections_from_this_step: {
-					populate: {
-						target_step: {
-							populate: { composition: true, channel: true },
+	// Use circuit breaker and pagination limits for Strapi calls
+	const trigger_steps = await strapiCircuitBreaker.execute(() =>
+		journeyStepsService.findAll(
+			env.JOURNEYS_STRAPI_API_TOKEN,
+			enforcePaginationLimits({
+				filters: {
+					type: { $eq: "trigger" },
+					journey: { active: { $eq: true } },
+				},
+				populate: {
+					journey: true,
+					connections_from_this_step: {
+						populate: {
+							target_step: {
+								populate: { composition: true, channel: true },
+							},
 						},
 					},
 				},
-			},
-		},
+			}),
+		),
 	);
 
 	if (!trigger_steps.data) {
@@ -199,23 +254,35 @@ export async function processTriggerMessage(data: any) {
 			}
 		}
 	}
+	// Batch job creation to reduce sequential awaits
+	const jobPromises: Promise<void>[] = [];
+
 	for (const step of filtered_steps) {
 		if (step.connections_from_this_step?.length) {
 			for (const connection_step of step.connections_from_this_step) {
-				logger.info(
+				logger.debug(
 					`Creating job for -> connection step ${connection_step.documentId} with target ${connection_step.target_step.documentId}`,
 				);
-				await createJob({
-					contact: contactId,
-					journey: step.journey.documentId,
-					type: connection_step.target_step.type,
-					journey_step: connection_step.target_step.documentId,
-					channel: connection_step.target_step.channel?.documentId,
-					composition: connection_step.target_step.composition?.documentId,
-					timing: connection_step.target_step.timing,
-					ignoreSubscription: true,
-				});
+				// Collect all job creation promises
+				jobPromises.push(
+					createJob({
+						contact: contactId,
+						journey: step.journey.documentId,
+						type: connection_step.target_step.type,
+						journey_step: connection_step.target_step.documentId,
+						channel: connection_step.target_step.channel?.documentId,
+						composition: connection_step.target_step.composition?.documentId,
+						timing: connection_step.target_step.timing,
+						ignoreSubscription: true,
+					}),
+				);
 			}
 		}
+	}
+
+	// Execute all job creations in parallel
+	if (jobPromises.length > 0) {
+		await Promise.allSettled(jobPromises);
+		logger.debug(`Created ${jobPromises.length} jobs for contact ${contactId}`);
 	}
 }

@@ -20,7 +20,31 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		compositionId,
 		ignoreSubscription,
 	} = data;
-	logger.info(`Processing job ${jobId}`);
+	logger.debug(`Processing job ${jobId}`);
+
+	// Get step to verify it's a "channel" type
+	// JOB queue should only process "channel" type steps
+	// "wait", "scheduler-trigger", and "publish" steps should go through DELAYED queue
+	const stepResp = await getJourneyStep(stepId);
+	if (!stepResp.success || !stepResp.responseObject) {
+		throw new Error(stepResp.message);
+	}
+
+	const stepType = stepResp.responseObject.type;
+	if (stepType !== "channel") {
+		logger.error(
+			{
+				jobId,
+				stepId,
+				stepType,
+				expectedType: "channel",
+			},
+			`Job processor received non-channel step type. This should not happen. Step type "${stepType}" should be processed via DELAYED queue.`,
+		);
+		throw new Error(
+			`Job processor can only handle "channel" type steps, but received "${stepType}". This step should be processed via DELAYED queue.`,
+		);
+	}
 
 	await processJob(contactId, stepId, journeyId, ignoreSubscription);
 	const passedStep = await addJourneyPassedStep(
@@ -34,10 +58,6 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		throw new Error(passedStep.message);
 	}
 	await closeJob(jobId);
-
-	const stepResp = await getJourneyStep(stepId);
-	if (!stepResp.success || !stepResp.responseObject)
-		throw new Error(stepResp.message);
 
 	const step = stepResp.responseObject;
 	if (step.connections_from_this_step?.length) {

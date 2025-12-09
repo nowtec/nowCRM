@@ -7,6 +7,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Contact,
+	CreditCardIcon,
 	FormInputIcon,
 	Mail,
 	Power,
@@ -41,7 +42,12 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-type TriggerEntity = "contact" | "action" | "survey" | "subscription";
+type TriggerEntity =
+	| "contact"
+	| "action"
+	| "survey"
+	| "subscription"
+	| "donation-transaction";
 
 export type EventValue = "entry.create" | "entry.update" | "entry.unpublish";
 
@@ -50,6 +56,7 @@ type LabeledValue = {
 	label: string;
 	value: string | boolean | number;
 	attribute_name?: string;
+	operator?: "gt" | "lt" | "eq"; // greater than, less than, equal
 };
 
 type TriggerConfig = {
@@ -146,6 +153,30 @@ const ENTITY_OPTIONS: EntityOption[] = [
 				value: "entry.create",
 				label: "Form submitted",
 				description: "When a new entry is created",
+			},
+		],
+	},
+	{
+		value: "donation-transaction",
+		label: "Donation Transaction",
+		description: "Monitor donation transactions",
+		icon: CreditCardIcon,
+		event_options: [
+			{
+				value: "entry.create",
+				label: "Donation Transaction Created",
+				description: "When a new donation transaction is created",
+			},
+			{
+				value: "entry.create",
+				label: "Donation Amount",
+				description: "When donation amount matches the specified condition",
+				presetAttribute: {
+					label: "amount",
+					value: 0,
+					attribute_name: "amount",
+					operator: "gt",
+				},
 			},
 		],
 	},
@@ -288,7 +319,12 @@ export function TriggerPanel({
 		!!config.entity &&
 		!!config.event &&
 		// Only require attribute when entity is action
-		(config.entity !== "action" || !!config.attribute);
+		(config.entity !== "action" || !!config.attribute) &&
+		// For donation-transaction with operator, require valid amount value
+		(config.entity !== "donation-transaction" ||
+			!config.attribute?.operator ||
+			(typeof config.attribute.value === "number" &&
+				config.attribute.value >= 0));
 
 	const getProgressValue = () => {
 		if (currentStep === 1) return config.entity ? 50 : 25;
@@ -305,7 +341,10 @@ export function TriggerPanel({
 
 	// When an event is selected, apply any presetAttribute into config.attribute.
 	const onEventChange = (value: string) => {
-		const selected = selectedEventOptions.find((e) => e.value === value);
+		// Find by label since subscription and donation-transaction options may have same event value
+		const selected = selectedEventOptions.find(
+			(e) => e.label === value || e.value === value,
+		);
 		const updates: Partial<TriggerConfig> = { event: selected?.value ?? null };
 
 		// For presets, set attribute here
@@ -314,8 +353,11 @@ export function TriggerPanel({
 		} else {
 			// If entity is not action and the selected event has no preset, do not overwrite
 			// existing attribute. This keeps AsyncSelect selection for action and survey.
-			if (config.entity === "subscription") {
-				// For subscription with no preset, attribute should be null
+			if (
+				config.entity === "subscription" ||
+				config.entity === "donation-transaction"
+			) {
+				// For subscription or donation-transaction with no preset, attribute should be null
 				updates.attribute = null;
 			}
 		}
@@ -572,7 +614,8 @@ export function TriggerPanel({
 															onValueChange={(val) =>
 																handleConfigChange({
 																	attribute: {
-																		label: "action_type",
+																		label: val.label,
+																		attribute_name: "action_type.name",
 																		value: val.value,
 																	},
 																})
@@ -598,7 +641,8 @@ export function TriggerPanel({
 															onValueChange={(val) =>
 																handleConfigChange({
 																	attribute: {
-																		label: "form_id",
+																		label: val.label,
+																		attribute_name: "form_id",
 																		value: val.value,
 																	},
 																})
@@ -612,13 +656,138 @@ export function TriggerPanel({
 													</div>
 												)}
 
+												{config.entity === "donation-transaction" &&
+													config.attribute?.operator && (
+														<div className="space-y-4">
+															<div className="space-y-2">
+																<label className="font-medium text-sm">
+																	Comparison Operator
+																</label>
+																<Select
+																	value={config.attribute.operator}
+																	onValueChange={(
+																		operator: "gt" | "lt" | "eq",
+																	) =>
+																		handleConfigChange({
+																			attribute: {
+																				label:
+																					config.attribute?.label ?? "amount",
+																				value: config.attribute?.value ?? 0,
+																				attribute_name:
+																					config.attribute?.attribute_name ??
+																					"amount",
+																				operator,
+																			},
+																		})
+																	}
+																>
+																	<SelectTrigger>
+																		<SelectValue placeholder="Select operator" />
+																	</SelectTrigger>
+																	<SelectContent>
+																		<SelectItem value="gt">
+																			Greater Than (&gt;)
+																		</SelectItem>
+																		<SelectItem value="lt">
+																			Less Than (&lt;)
+																		</SelectItem>
+																		<SelectItem value="eq">
+																			Equal (=)
+																		</SelectItem>
+																	</SelectContent>
+																</Select>
+																<p className="text-muted-foreground text-xs">
+																	Choose how to compare the donation amount
+																</p>
+															</div>
+															<div className="space-y-2">
+																<label className="font-medium text-sm">
+																	Amount Value
+																</label>
+																<Input
+																	type="number"
+																	step="0.01"
+																	min="0"
+																	value={
+																		typeof config.attribute.value === "number"
+																			? config.attribute.value
+																			: ""
+																	}
+																	onChange={(e) => {
+																		const numValue = parseFloat(e.target.value);
+																		if (
+																			!Number.isNaN(numValue) &&
+																			config.attribute
+																		) {
+																			handleConfigChange({
+																				attribute: {
+																					label: config.attribute.label,
+																					value: numValue,
+																					attribute_name:
+																						config.attribute.attribute_name,
+																					operator: config.attribute.operator,
+																				},
+																			});
+																		} else if (
+																			e.target.value === "" &&
+																			config.attribute
+																		) {
+																			handleConfigChange({
+																				attribute: {
+																					label: config.attribute.label,
+																					value: 0,
+																					attribute_name:
+																						config.attribute.attribute_name,
+																					operator: config.attribute.operator,
+																				},
+																			});
+																		}
+																	}}
+																	placeholder="Enter amount"
+																/>
+																<p className="text-muted-foreground text-xs">
+																	Enter the donation amount threshold
+																</p>
+															</div>
+														</div>
+													)}
+
 												{/* Event Selection from entity event_options */}
 												<div className="space-y-2">
 													<label className="font-medium text-sm">
 														Event Type
 													</label>
 													<Select
-														value={config.event ?? ""}
+														value={(() => {
+															// For subscription with same event values, use label to identify selection
+															if (
+																config.entity === "subscription" &&
+																config.event === "entry.update" &&
+																config.attribute
+															) {
+																const attributeValue = config.attribute.value;
+																const selected = selectedEventOptions.find(
+																	(e) =>
+																		e.value === config.event &&
+																		e.presetAttribute?.value === attributeValue,
+																);
+																return selected?.label ?? config.event ?? "";
+															}
+															// For donation-transaction with amount comparison, use label to identify selection
+															if (
+																config.entity === "donation-transaction" &&
+																config.event === "entry.create" &&
+																config.attribute?.operator
+															) {
+																const selected = selectedEventOptions.find(
+																	(e) =>
+																		e.value === config.event &&
+																		e.presetAttribute?.operator !== undefined,
+																);
+																return selected?.label ?? config.event ?? "";
+															}
+															return config.event ?? "";
+														})()}
 														onValueChange={onEventChange}
 														disabled={selectedEventOptions.length === 0}
 													>
@@ -629,7 +798,21 @@ export function TriggerPanel({
 															{selectedEventOptions.map((event) => (
 																<SelectItem
 																	key={event.label}
-																	value={event.value}
+																	value={
+																		// Use label as value for subscription events with same event value
+																		// For donation-transaction, use label when presetAttribute has operator
+																		config.entity === "subscription" &&
+																		selectedEventOptions.filter(
+																			(e) => e.value === event.value,
+																		).length > 1
+																			? event.label
+																			: config.entity ===
+																						"donation-transaction" &&
+																					event.presetAttribute?.operator !==
+																						undefined
+																				? event.label
+																				: event.value
+																	}
 																>
 																	<div>
 																		<div className="font-medium">
@@ -674,6 +857,18 @@ export function TriggerPanel({
 															<div>
 																<strong>Subscription attribute:</strong>{" "}
 																{config.attribute.label} ={" "}
+																{config.attribute.value}
+															</div>
+														)}
+													{config.entity === "donation-transaction" &&
+														config.attribute?.operator && (
+															<div>
+																<strong>Donation amount:</strong>{" "}
+																{config.attribute.operator === "gt"
+																	? "Greater Than"
+																	: config.attribute.operator === "lt"
+																		? "Less Than"
+																		: "Equal"}{" "}
 																{config.attribute.value}
 															</div>
 														)}

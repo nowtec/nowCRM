@@ -48,23 +48,34 @@ export async function getJourneyStep(
 			null,
 		);
 	}
-	if (!Object.hasOwn(data.data, "channel")) {
-		return ServiceResponse.failure(
-			"Strapi token badly configured for Journeys service (channel)",
-			null,
-		);
-	}
-	if (!Object.hasOwn(data.data, "composition")) {
-		return ServiceResponse.failure(
-			"Strapi token badly configured for Journeys service (composition)",
-			null,
-		);
-	}
-	if (!Object.hasOwn(data.data, "identity")) {
-		return ServiceResponse.failure(
-			"Strapi token badly configured for Journeys service (identity)",
-			null,
-		);
+
+	// Only "channel" and "publish" step types require channel and composition
+	// Identity is only required for email channels
+	const stepType = data.data.type;
+	const requiresChannelAndComposition =
+		stepType === "channel" || stepType === "publish";
+
+	if (requiresChannelAndComposition) {
+		if (!Object.hasOwn(data.data, "channel")) {
+			return ServiceResponse.failure(
+				"Strapi token badly configured for Journeys service (channel)",
+				null,
+			);
+		}
+		if (!Object.hasOwn(data.data, "composition")) {
+			return ServiceResponse.failure(
+				"Strapi token badly configured for Journeys service (composition)",
+				null,
+			);
+		}
+		// Identity is only required for email channels, but we check for the property existence
+		// The actual validation happens in processJob
+		if (!Object.hasOwn(data.data, "identity")) {
+			return ServiceResponse.failure(
+				"Strapi token badly configured for Journeys service (identity)",
+				null,
+			);
+		}
 	}
 	if (!Object.hasOwn(data.data, "connections_from_this_step")) {
 		return ServiceResponse.failure(

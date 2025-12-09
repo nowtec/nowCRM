@@ -10,7 +10,7 @@ export class ComposerServiceApi {
 		try {
 			// we do not check redis data when handling this trigger because each update anyways will be different
 			// so we can ignore redis keys checking
-			publishToTriggerQueue("TRIGGER", _triggerData);
+			await publishToTriggerQueue("TRIGGER", _triggerData);
 			return ServiceResponse.success("", null);
 		} catch (error: any) {
 			logger.error(error);
