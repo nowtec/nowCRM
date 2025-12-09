@@ -1,23 +1,115 @@
 import type { DocumentId } from "@nowcrm/services";
-import { journeyStepsService } from "@nowcrm/services/server";
+import { journeyStepsService, journeysService } from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
+import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
+import { publishToJourneyQueue } from "../../../rabbitmq";
+import { redis } from "../../../redis";
+
+const JOURNEY_JOB_KEY_PREFIX = "journey-job:";
 
 /**
- * Journey processing is needed for
+ * Checks if journey is still active
+ */
+async function isJourneyActive(journeyId: DocumentId): Promise<boolean> {
+	try {
+		const response = await journeysService.findOne(
+			journeyId,
+			env.JOURNEYS_STRAPI_API_TOKEN,
+		);
+		return response.success && response.data?.active === true;
+	} catch (error) {
+		logger.error(
+			{ err: error, journeyId },
+			"Failed to check if journey is active",
+		);
+		// If we can't check, assume it's active to avoid cancelling active journeys
+		return true;
+	}
+}
+
+/**
+ * Schedules the journey job to rerun after JOURNEY_TIME_CHECK_SEC
+ */
+async function scheduleNextRun(journeyId: DocumentId): Promise<void> {
+	const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journeyId}`;
+	const delayMs = JOURNEY_TIME_CHECK_SEC * 1000; // Convert to milliseconds
+
+	// Update Redis key with new scheduled time
+	const newJob = {
+		journeyId,
+		jobKey: redisKey,
+		processedDate: new Date().toISOString(),
+		scheduledFor: new Date(Date.now() + delayMs).toISOString(),
+	};
+
+	// Set Redis key with TTL slightly longer than delay to ensure it exists when job runs
+	await redis.set(
+		redisKey,
+		JSON.stringify(newJob),
+		"EX",
+		JOURNEY_TIME_CHECK_SEC + 60, // Add 60 seconds buffer
+	);
+
+	// Schedule job to run after delay using delayed queue
+	await publishToJourneyQueue("JOURNEY", newJob, delayMs);
+
+	logger.info(
+		{
+			journeyId,
+			delayMs,
+			delayMinutes: delayMs / (60 * 1000),
+			scheduledFor: newJob.scheduledFor,
+		},
+		"Scheduled journey job to rerun after delay",
+	);
+}
+
+/**
+ * Journey processing: checks for new contacts and creates jobs for them
+ * After completion, schedules itself to rerun after JOURNEY_TIME_CHECK_SEC
  */
 export async function processJourneyMessage({
 	journeyId,
 }: {
 	journeyId: DocumentId;
 }) {
-	logger.info(`Processing journey ${journeyId}`);
+	logger.info({ journeyId }, "Processing journey");
+
+	// Check if journey is still active before processing
+	const isActive = await isJourneyActive(journeyId);
+	if (!isActive) {
+		logger.info(
+			{ journeyId },
+			"Journey is no longer active, cancelling scheduled job and removing from Redis",
+		);
+		// Remove Redis key to cancel future runs
+		const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journeyId}`;
+		try {
+			await redis.del(redisKey);
+			logger.info(
+				{ journeyId, redisKey },
+				"Removed Redis key for inactive journey",
+			);
+		} catch (redisError) {
+			logger.error(
+				{ err: redisError, journeyId, redisKey },
+				"Failed to remove Redis key for inactive journey",
+			);
+			// Don't throw - allow message to be acked
+		}
+		// Return early - consumer will ack the message since no error was thrown
+		return;
+	}
+
 	const res = await getJourney(journeyId);
 	if (!res.success || !res.responseObject?.journey_steps)
 		throw new Error(res.message);
+
+	let totalContactsProcessed = 0;
 
 	// Process steps sequentially but contacts in parallel to reduce N+1 queries
 	for (const step of res.responseObject.journey_steps) {
@@ -49,7 +141,7 @@ export async function processJourneyMessage({
 					return null;
 				}
 
-				// Create job with skipValidation=true since we already did the checks above
+				// Create job for new contact that hasn't processed this step yet
 				await createJob({
 					contact: contact.documentId,
 					journey: journeyId,
@@ -81,10 +173,53 @@ export async function processJourneyMessage({
 			(r) => r.status === "fulfilled" && r.value !== null,
 		).length;
 
+		totalContactsProcessed += successful;
+
 		if (successful > 0) {
 			logger.info(
-				`Processed ${successful} contacts for step ${step.documentId} in journey ${journeyId}`,
+				{
+					journeyId,
+					stepId: step.documentId,
+					contactsProcessed: successful,
+				},
+				"Processed contacts for journey step",
 			);
 		}
+	}
+
+	logger.info(
+		{
+			journeyId,
+			totalContactsProcessed,
+		},
+		"Journey processing completed",
+	);
+
+	// After processing, schedule next run if journey is still active
+	// Double-check journey is still active before scheduling
+	try {
+		const stillActive = await isJourneyActive(journeyId);
+		if (stillActive) {
+			await scheduleNextRun(journeyId);
+		} else {
+			logger.info(
+				{ journeyId },
+				"Journey became inactive during processing, not scheduling next run",
+			);
+			// Remove Redis key to cancel future runs
+			const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journeyId}`;
+			await redis.del(redisKey);
+		}
+	} catch (scheduleError) {
+		// If scheduling fails, log error but don't throw - message should still be acked
+		// The journey will be picked up again by cron if needed
+		logger.error(
+			{
+				err: scheduleError,
+				journeyId,
+			},
+			"Failed to schedule next run for journey, will be picked up by cron",
+		);
+		// Don't throw - allow message to be acked so it doesn't get stuck
 	}
 }

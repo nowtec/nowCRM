@@ -64,6 +64,51 @@ async function setupExchangesAndQueues(ch: amqp.Channel) {
 }
 
 /**
+ * Logs queue status to help debug unacked messages
+ * Note: checkQueue doesn't return unacked count, but we log ready messages and consumers
+ */
+async function logQueueStatus(ch: amqp.Channel) {
+	try {
+		const allQueues = [
+			...Object.values(JOURNEY_QUEUES),
+			...Object.values(TRIGGER_QUEUES),
+		];
+
+		for (const queueName of allQueues) {
+			const queueInfo = await ch.checkQueue(queueName);
+			if (queueInfo.messageCount > 0 || queueInfo.consumerCount > 0) {
+				logger.info(
+					{
+						queue: queueName,
+						ready: queueInfo.messageCount,
+						consumers: queueInfo.consumerCount,
+						note: "Unacked messages are not shown here - check RabbitMQ UI for unacked count",
+					},
+					`Queue status: ${queueName}`,
+				);
+			}
+		}
+
+		// Warn if there are ready messages but no consumers (might indicate stale messages)
+		for (const queueName of allQueues) {
+			const queueInfo = await ch.checkQueue(queueName);
+			if (queueInfo.messageCount > 0 && queueInfo.consumerCount === 0) {
+				logger.warn(
+					{
+						queue: queueName,
+						ready: queueInfo.messageCount,
+						note: "Messages in queue but no active consumers. Consumers should start shortly.",
+					},
+					`Queue has messages but no consumers: ${queueName}`,
+				);
+			}
+		}
+	} catch (err) {
+		logger.warn({ err }, "Failed to check queue status");
+	}
+}
+
+/**
  * Sets up error handlers for connection and channels
  */
 function setupErrorHandlers(conn: amqp.Connection, ch: amqp.Channel) {
@@ -90,9 +135,16 @@ function setupErrorHandlers(conn: amqp.Connection, ch: amqp.Channel) {
 
 	ch.on("close", () => {
 		logger.warn("RabbitMQ channel closed");
+		// When channel closes, all unacked messages are automatically requeued by RabbitMQ
 		if (!isReconnecting) {
 			reconnect();
 		}
+	});
+
+	// Handle consumer cancellation (e.g., when queue is deleted or consumer is cancelled)
+	ch.on("cancel", (consumerTag: string) => {
+		logger.warn({ consumerTag }, "RabbitMQ consumer cancelled");
+		// When consumer is cancelled, unacked messages are automatically requeued
 	});
 }
 
@@ -208,6 +260,9 @@ export async function setupRabbitMQ() {
 		// Setup error handlers
 		setupErrorHandlers(conn, ch);
 
+		// Log queue status to help debug unacked messages
+		await logQueueStatus(ch);
+
 		logger.info("RabbitMQ connected and all queues initialized");
 	} catch (err) {
 		logger.error({ err }, "Failed to setup RabbitMQ");
@@ -249,45 +304,49 @@ export async function publishToJourneyQueue(
 			);
 
 			if (!published) {
+				// Channel buffer is full, wait for drain event
+				const drainTimeoutId = setTimeout(() => {
+					logger.error(
+						{
+							queue: JOURNEY_QUEUES[queue],
+							delayMs,
+							jobId: data.jobId,
+						},
+						"Timeout waiting for channel drain",
+					);
+					reject(
+						new Error(
+							`Timeout waiting for channel drain for queue ${JOURNEY_QUEUES[queue]}`,
+						),
+					);
+				}, 10000); // 10 second timeout
+
 				confirmChannel?.once("drain", () => {
-					logger.warn(
-						{ queue: JOURNEY_QUEUES[queue], delayMs },
+					clearTimeout(drainTimeoutId);
+					logger.info(
+						{
+							queue: JOURNEY_QUEUES[queue],
+							delayMs,
+							jobId: data.jobId,
+						},
 						"RabbitMQ channel drained, message published",
 					);
 					resolve();
 				});
 			} else {
-				// waitForConfirms waits for all pending confirms
-				// Use setTimeout to ensure the publish is registered before waiting
-				setTimeout(() => {
-					try {
-						(
-							confirmChannel?.waitForConfirms as (
-								callback?: (err?: Error) => void,
-							) => void
-						)((err?: Error) => {
-							if (err) {
-								logger.error(
-									{ err, queue: JOURNEY_QUEUES[queue], delayMs },
-									"Failed to confirm message publish",
-								);
-								reject(err);
-							} else {
-								logger.debug(
-									{ queue: JOURNEY_QUEUES[queue], delayMs, jobId: data.jobId },
-									"Message published and confirmed",
-								);
-								resolve();
-							}
-						});
-					} catch (confirmErr) {
-						logger.error(
-							{ err: confirmErr, queue: JOURNEY_QUEUES[queue] },
-							"Error waiting for confirmation",
-						);
-						reject(confirmErr);
-					}
-				}, 0);
+				// Message was published immediately (publish returned true)
+				// On a confirm channel, this means the message was sent to RabbitMQ
+				// The confirm channel will handle confirmations asynchronously
+				// If there's an error, the error handlers will catch it
+				logger.info(
+					{
+						queue: JOURNEY_QUEUES[queue],
+						delayMs,
+						jobId: data.jobId,
+					},
+					"Message published successfully (confirmation handled asynchronously)",
+				);
+				resolve();
 			}
 		} catch (err) {
 			logger.error(
@@ -332,43 +391,46 @@ export async function publishToTriggerQueue(
 			);
 
 			if (!published) {
+				// Channel buffer is full, wait for drain event
+				const drainTimeoutId = setTimeout(() => {
+					logger.error(
+						{
+							queue: TRIGGER_QUEUES[queue],
+							delayMs,
+						},
+						"Timeout waiting for channel drain",
+					);
+					reject(
+						new Error(
+							`Timeout waiting for channel drain for queue ${TRIGGER_QUEUES[queue]}`,
+						),
+					);
+				}, 10000); // 10 second timeout
+
 				confirmChannel?.once("drain", () => {
-					logger.warn(
-						{ queue: TRIGGER_QUEUES[queue], delayMs },
+					clearTimeout(drainTimeoutId);
+					logger.info(
+						{
+							queue: TRIGGER_QUEUES[queue],
+							delayMs,
+						},
 						"RabbitMQ channel drained, message published",
 					);
 					resolve();
 				});
 			} else {
-				setTimeout(() => {
-					try {
-						(
-							confirmChannel?.waitForConfirms as (
-								callback?: (err?: Error) => void,
-							) => void
-						)((err?: Error) => {
-							if (err) {
-								logger.error(
-									{ err, queue: TRIGGER_QUEUES[queue], delayMs },
-									"Failed to confirm message publish",
-								);
-								reject(err);
-							} else {
-								logger.debug(
-									{ queue: TRIGGER_QUEUES[queue], delayMs },
-									"Message published and confirmed",
-								);
-								resolve();
-							}
-						});
-					} catch (confirmErr) {
-						logger.error(
-							{ err: confirmErr, queue: TRIGGER_QUEUES[queue] },
-							"Error waiting for confirmation",
-						);
-						reject(confirmErr);
-					}
-				}, 0);
+				// Message was published immediately (publish returned true)
+				// On a confirm channel, this means the message was sent to RabbitMQ
+				// The confirm channel will handle confirmations asynchronously
+				// If there's an error, the error handlers will catch it
+				logger.info(
+					{
+						queue: TRIGGER_QUEUES[queue],
+						delayMs,
+					},
+					"Message published successfully (confirmation handled asynchronously)",
+				);
+				resolve();
 			}
 		} catch (err) {
 			logger.error(
@@ -392,6 +454,7 @@ export function getChannel(): amqp.Channel {
 
 /**
  * Gracefully closes RabbitMQ connections
+ * When channels/connections close, RabbitMQ automatically requeues all unacked messages
  */
 export async function closeRabbitMQ(): Promise<void> {
 	if (reconnectTimer) {
@@ -401,9 +464,11 @@ export async function closeRabbitMQ(): Promise<void> {
 
 	isReconnecting = false;
 
+	// Close channels first - this will cause RabbitMQ to requeue all unacked messages
 	if (confirmChannel) {
 		try {
 			await confirmChannel.close();
+			logger.info("ConfirmChannel closed - unacked messages will be requeued");
 		} catch (err) {
 			logger.error({ err }, "Error closing confirmChannel");
 		}
@@ -413,12 +478,14 @@ export async function closeRabbitMQ(): Promise<void> {
 	if (channel) {
 		try {
 			await channel.close();
+			logger.info("Channel closed - unacked messages will be requeued");
 		} catch (err) {
 			logger.error({ err }, "Error closing channel");
 		}
 		channel = null;
 	}
 
+	// Close connection last
 	if (connection) {
 		try {
 			// Connection.close() exists but type definitions may be incomplete
@@ -429,5 +496,7 @@ export async function closeRabbitMQ(): Promise<void> {
 		connection = null;
 	}
 
-	logger.info("RabbitMQ connections closed");
+	logger.info(
+		"RabbitMQ connections closed - all unacked messages have been requeued",
+	);
 }

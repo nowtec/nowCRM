@@ -98,7 +98,7 @@ export async function cleanupOrphanedRedisKeys(): Promise<void> {
 						patternCleaned += orphanedKeys.length;
 						totalCleaned += orphanedKeys.length;
 
-						logger.debug(
+						logger.info(
 							{ pattern: patternName, cleaned: orphanedKeys.length },
 							`Cleaned up ${orphanedKeys.length} orphaned keys`,
 						);

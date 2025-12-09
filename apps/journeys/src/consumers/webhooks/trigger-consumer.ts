@@ -12,15 +12,16 @@ export function triggerConsumer() {
 		TRIGGER_QUEUES.TRIGGER,
 		async (msg) => {
 			if (!msg) return;
-			let data: any;
+
 			const startTime = Date.now();
+			let data: any;
 			try {
 				data = JSON.parse(msg.content.toString());
 				await processTriggerMessage(data);
 				channel.ack(msg);
 
 				const duration = Date.now() - startTime;
-				logger.debug(
+				logger.info(
 					{ duration, queue: TRIGGER_QUEUES.TRIGGER },
 					"Trigger message processed successfully",
 				);
@@ -33,21 +34,44 @@ export function triggerConsumer() {
 					"Error processing trigger message",
 				);
 
-				// Try to retry with exponential backoff
-				const wasRetried = await handleMessageRetry(
-					false, // isJourneyQueue (trigger queue)
-					"TRIGGER",
-					TRIGGER_QUEUES.TRIGGER,
-					msg,
-					data,
-					err,
-				);
+				// Parse data if not already parsed (e.g., if JSON parsing failed initially)
+				if (!data) {
+					try {
+						data = JSON.parse(msg.content.toString());
+					} catch (parseError) {
+						logger.error(
+							{ err: parseError },
+							"Failed to parse message for retry",
+						);
+						channel.nack(msg, false, false);
+						return;
+					}
+				}
 
-				if (wasRetried) {
-					// Message was requeued for retry, acknowledge original message
-					channel.ack(msg);
-				} else {
-					// Max retries exceeded or non-retryable error, send to DLX
+				// Try to retry with exponential backoff
+				try {
+					const wasRetried = await handleMessageRetry(
+						false, // isJourneyQueue (trigger queue)
+						"TRIGGER",
+						TRIGGER_QUEUES.TRIGGER,
+						msg,
+						data,
+						err,
+					);
+
+					if (wasRetried) {
+						// Message was requeued for retry, acknowledge original message
+						channel.ack(msg);
+					} else {
+						// Max retries exceeded or non-retryable error, send to DLX
+						channel.nack(msg, false, false);
+					}
+				} catch (retryError) {
+					// If retry handler itself fails, send to DLX to prevent infinite loops
+					logger.error(
+						{ err: retryError, queue: TRIGGER_QUEUES.TRIGGER },
+						"Failed to handle message retry, sending to DLX",
+					);
 					channel.nack(msg, false, false);
 				}
 			}

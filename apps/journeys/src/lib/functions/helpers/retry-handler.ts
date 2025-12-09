@@ -60,8 +60,28 @@ function createRetryHeaders(
 }
 
 /**
+ * Checks if error is a transaction/database error or 500 error that requires a delay before retry
+ * 500 errors often indicate transient issues like transaction errors, deadlocks, etc.
+ */
+function isTransactionError(error: Error): boolean {
+	const errorMessage = error.message || "";
+	const transactionErrorPatterns = [
+		"current transaction is aborted",
+		"transaction is aborted",
+		"deadlock detected",
+		"could not serialize access",
+		"lock not available",
+		"500", // 500 errors often indicate transaction errors or other transient issues
+	];
+	return transactionErrorPatterns.some((pattern) =>
+		errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+	);
+}
+
+/**
  * Publishes message to retry queue with exponential backoff
  * For DELAYED queue messages, retries immediately (delay = 0) since original delay already passed
+ * Exception: Transaction errors always get a delay to allow transaction rollback
  */
 async function republishWithRetry(
 	isJourneyQueue: boolean,
@@ -70,16 +90,26 @@ async function republishWithRetry(
 	metadata: RetryMetadata,
 	error: Error,
 ): Promise<void> {
-	// For delayed messages, retry immediately since the original delay has already passed
-	// For other queues, use exponential backoff
+	// Check if this is a transaction error - these need a delay even for DELAYED queue
+	const isTransactionErr = isTransactionError(error);
 	const isDelayedQueue = queueType === "DELAYED";
-	const delay = isDelayedQueue
-		? 0 // Retry immediately for delayed messages
-		: calculateBackoffDelay(
+
+	// Transaction errors always need a delay to allow transaction rollback
+	// For delayed messages, retry immediately unless it's a transaction error
+	// For other queues, use exponential backoff
+	const delay = isTransactionErr
+		? calculateBackoffDelay(
 				metadata.retryCount,
 				env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
 				env.RABBITMQ_RETRY_MAX_DELAY_MS,
-			);
+			)
+		: isDelayedQueue
+			? 0 // Retry immediately for delayed messages (non-transaction errors)
+			: calculateBackoffDelay(
+					metadata.retryCount,
+					env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+					env.RABBITMQ_RETRY_MAX_DELAY_MS,
+				);
 
 	const retryHeaders = createRetryHeaders(metadata, error);
 	const retryData = {
@@ -94,18 +124,19 @@ async function republishWithRetry(
 			maxRetries: env.RABBITMQ_MAX_RETRIES,
 			delay,
 			isDelayedQueue,
+			isTransactionError: isTransactionErr,
 			error: error.message,
 		},
-		`Republishing message to ${queueType} queue with retry`,
+		`Republishing message to ${queueType} queue with retry${isTransactionErr ? " (transaction error - delayed retry)" : ""}`,
 	);
 
 	if (isJourneyQueue) {
-		// For delayed queue, republish to JOB queue immediately (not DELAYED) to avoid double delay
-		const targetQueue = isDelayedQueue ? "JOB" : queueType;
+		// For delayed queue, republish back to DELAYED queue with delay=0 for immediate retry
+		// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue
 		await publishToJourneyQueue(
-			targetQueue as JourneyQueueType,
+			queueType as JourneyQueueType,
 			retryData,
-			delay,
+			delay, // delay=0 for DELAYED queue (immediate retry), exponential backoff for others
 		);
 	} else {
 		await publishToTriggerQueue(
@@ -139,6 +170,7 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 		"Step type",
 		"requires timing but none was provided",
 		"requires a composition but none was found",
+		// Note: Transaction errors are retryable but need a delay (handled in republishWithRetry)
 	];
 
 	const errorName = error.constructor.name;

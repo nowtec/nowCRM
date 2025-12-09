@@ -4,7 +4,6 @@ import {
 	setJobKeyAtomic,
 } from "../lib/functions/helpers/check-job-exists";
 import { checkStepValid } from "../lib/functions/helpers/check-step-valid";
-import { getJourney } from "../lib/functions/helpers/get-jouney";
 import { getJourneyStep } from "../lib/functions/helpers/get-journey-step";
 import { passContactToNextStep } from "../lib/functions/pass-contact-to-next-step";
 import { createFinishActions } from "../lib/functions/rules/create-finish-action";
@@ -24,7 +23,7 @@ export async function createJob(jobData: {
 }) {
 	const jobKey = `job-contact:${jobData.contact}-journey:${jobData.journey}-step:${jobData.journey_step}`;
 
-	logger.debug(
+	logger.info(
 		{
 			jobKey,
 			contactId: jobData.contact,
@@ -64,7 +63,7 @@ export async function createJob(jobData: {
 			return;
 		}
 
-		logger.debug(
+		logger.info(
 			{ jobKey, contactId: jobData.contact, stepId: jobData.journey_step },
 			"Step validation passed, attempting atomic job key creation",
 		);
@@ -87,12 +86,12 @@ export async function createJob(jobData: {
 			return;
 		}
 
-		logger.debug(
+		logger.info(
 			{ jobKey, contactId: jobData.contact, stepId: jobData.journey_step },
 			"Job key atomically created in Redis",
 		);
 	} else {
-		logger.debug(
+		logger.info(
 			{ jobKey },
 			"Skipping validation, using atomic job key creation",
 		);
@@ -172,17 +171,33 @@ export async function createJob(jobData: {
 			},
 			"Publishing job to DELAYED queue",
 		);
-		await publishToJourneyQueue("DELAYED", jobDataRedis, delay);
-		logger.info(
-			{
-				jobKey,
-				contactId: jobData.contact,
-				stepId: jobData.journey_step,
-				type: jobData.type,
-				queue: "DELAYED",
-			},
-			"Job published to DELAYED queue",
-		);
+		try {
+			await publishToJourneyQueue("DELAYED", jobDataRedis, delay);
+			logger.info(
+				{
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+					type: jobData.type,
+					queue: "DELAYED",
+				},
+				"Job published to DELAYED queue",
+			);
+		} catch (publishError) {
+			logger.error(
+				{
+					err: publishError,
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+					type: jobData.type,
+					queue: "DELAYED",
+					delay,
+				},
+				"Failed to publish job to DELAYED queue",
+			);
+			throw publishError;
+		}
 	} else {
 		// Only "channel" type steps should go to JOB queue (without timing)
 		if (jobData.type !== "channel") {
@@ -206,17 +221,32 @@ export async function createJob(jobData: {
 			},
 			"Publishing job to JOB queue",
 		);
-		await publishToJourneyQueue("JOB", jobDataRedis);
-		logger.info(
-			{
-				jobKey,
-				contactId: jobData.contact,
-				stepId: jobData.journey_step,
-				type: jobData.type,
-				queue: "JOB",
-			},
-			"Job published to JOB queue",
-		);
+		try {
+			await publishToJourneyQueue("JOB", jobDataRedis);
+			logger.info(
+				{
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+					type: jobData.type,
+					queue: "JOB",
+				},
+				"Job published to JOB queue",
+			);
+		} catch (publishError) {
+			logger.error(
+				{
+					err: publishError,
+					jobKey,
+					contactId: jobData.contact,
+					stepId: jobData.journey_step,
+					type: jobData.type,
+					queue: "JOB",
+				},
+				"Failed to publish job to JOB queue",
+			);
+			throw publishError;
+		}
 	}
 
 	logger.info(
@@ -257,12 +287,15 @@ export async function createNextJob(
 	targetStep: DocumentId | null,
 ) {
 	const { contactId, journeyId, stepId } = jobData;
-	const journeyRes = await getJourney(journeyId);
-	if (!journeyRes.success || !journeyRes.responseObject) return;
-
 	if (targetStep) {
 		const nextResp = await getJourneyStep(targetStep);
-		if (!nextResp.success || !nextResp.responseObject) return;
+		if (!nextResp.success || !nextResp.responseObject) {
+			logger.error(
+				{ contactId, journeyId, stepId, targetStep },
+				"Failed to get next journey step in createNextJob, cannot proceed",
+			);
+			return;
+		}
 
 		const next = nextResp.responseObject;
 		await passContactToNextStep(contactId, stepId, journeyId, targetStep);
@@ -278,7 +311,12 @@ export async function createNextJob(
 		});
 	} else {
 		//if no target step we assume that this is last step of journey
+		// Remove contact from journey and create finish action
 		await passContactToNextStep(contactId, stepId, journeyId, null);
 		await createFinishActions(contactId, journeyId);
+		logger.info(
+			{ contactId, journeyId, stepId },
+			"Journey completed, contact removed from journey",
+		);
 	}
 }
