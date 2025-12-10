@@ -102,7 +102,7 @@ export default function AssignToListWithFiltersDialog({
 		try {
 			const res = await createList(values.name);
 			if (res.data?.id) {
-				setSelectedOption({ value: res.data.id, label: res.data.name });
+				setSelectedOption({ value: res.data.documentId, label: res.data.name });
 				setListCreated(true);
 				setListCreationSuccess(true);
 				setTimeout(() => setActiveTab("select"), 1000);
@@ -271,6 +271,7 @@ export default function AssignToListWithFiltersDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

@@ -239,6 +239,7 @@ export default function AnonymizeWithFiltersDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

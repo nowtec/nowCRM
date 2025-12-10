@@ -242,6 +242,7 @@ export default function SendCompositionWithFiltersDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

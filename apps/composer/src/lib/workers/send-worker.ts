@@ -6,7 +6,6 @@ import { processSMSChannel } from "@/api/sendToChannels/channelFunctions/sms/pro
 import { telegramPost } from "@/api/sendToChannels/channelFunctions/telegram/create-post";
 import { twitterPost } from "@/api/sendToChannels/channelFunctions/twitter/create-post";
 import { processLinkedInInvitationsChannel } from "@/api/sendToChannels/channelFunctions/unipile/process-linkedin-invitation";
-import { sleep } from "@/api/sendToChannels/channelFunctions/utils/sleep";
 import { processWhatsAppChannel } from "@/api/sendToChannels/channelFunctions/whatsapp/process-whatsapp";
 import { wordpressPost } from "@/api/sendToChannels/channelFunctions/wordpress/create-post";
 import { env } from "@/common/utils/env-config";
@@ -46,7 +45,6 @@ new Worker(
 							logger.info(`Appended error to parent job ${parentJobId} log`);
 						}
 					}
-					if (data.interval) await sleep(data.interval);
 					break;
 				}
 
@@ -56,12 +54,11 @@ new Worker(
 						const parent = await massSendQueue.getJob(parentJobId);
 						if (parent) {
 							await parent.log(
-								`Failed sending to ${JSON.stringify(data.to)}: ${res.message}}`,
+								`Failed sending to ${JSON.stringify(data.to)}: ${res.message}`,
 							);
 							logger.info(`Appended error to parent job ${parentJobId} log`);
 						}
 					}
-					if (data.interval) await sleep(data.interval);
 					break;
 				}
 
@@ -76,7 +73,6 @@ new Worker(
 							logger.info(`Appended error to parent job ${parentJobId} log`);
 						}
 					}
-					if (data.interval) await sleep(data.interval);
 					break;
 				}
 
@@ -124,7 +120,6 @@ new Worker(
 							logger.info(`Appended error to parent job ${parentJobId} log`);
 						}
 					}
-					if (data.interval) await sleep(data.interval);
 					break;
 				}
 
@@ -150,7 +145,7 @@ new Worker(
 				const parent = await massSendQueue.getJob(parentJobId);
 				if (parent) {
 					await parent.log(
-						`Error ${channel} to ${JSON.stringify(data.to)}: ${msg}}`,
+						`Error ${channel} to ${JSON.stringify(data.to)}: ${msg}`,
 					);
 					logger.info(`Appended error to parent job ${parentJobId} log`);
 				}
@@ -162,5 +157,6 @@ new Worker(
 			host: env.COMPOSER_REDIS_HOST,
 			port: env.COMPOSER_REDIS_PORT,
 		},
+		concurrency: 1,
 	},
 );

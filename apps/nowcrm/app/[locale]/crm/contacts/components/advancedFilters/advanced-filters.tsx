@@ -61,6 +61,7 @@ interface AdvancedFiltersProps {
 	isLoading?: boolean;
 	entityType?: "contacts" | "organizations";
 	currentSearch?: string;
+	inline?: boolean;
 }
 
 const AdvancedFilters = forwardRef<
@@ -77,6 +78,7 @@ const AdvancedFilters = forwardRef<
 		isLoading = false,
 		entityType = "contacts",
 		currentSearch,
+		inline,
 	},
 	ref,
 ) {
@@ -314,9 +316,172 @@ const AdvancedFilters = forwardRef<
 		}
 	}
 
+	function renderContent() {
+		const content = (
+			<div className="flex h-full flex-col p-0">
+				<DialogHeader className="px-6 pt-6 pb-4">
+					<DialogTitle>Advanced Filters</DialogTitle>
+					<DialogDescription>
+						Apply advanced filters to refine your search
+					</DialogDescription>
+				</DialogHeader>
+
+				<div className="flex flex-1 overflow-hidden">
+					{/* Search History Sidebar */}
+					{(mode === "search" || inline) && entityType && (
+						<div className="w-80 shrink-0">
+							<SearchHistoryPanel
+								entityType={entityType}
+								onLoadFilters={(filterValues) => {
+									// Load the saved filter values into the form
+									if (
+										filterValues &&
+										Array.isArray(filterValues.groups) &&
+										filterValues.groupLogic
+									) {
+										// Save to localStorage first so filters persist
+										saveFiltersToStorage(entityType, filterValues, session);
+										// Reset form with loaded values
+										form.reset(filterValues);
+										replace(filterValues.groups);
+										// Update active filters count
+										setTimeout(() => {
+											setActiveFiltersCount(calculateActiveFilters());
+										}, 50);
+									}
+								}}
+								onApplySearch={(filters, search) => {
+									// When applying a saved search, update search term first if provided
+									// This updates the state
+									if (search !== undefined && onSearchChange) {
+										onSearchChange(search, filters);
+									}
+									// Then apply filters to parent - pass search along so fetchData can use it
+									// This triggers the fetch with both filters and search
+									if (onSubmitComplete) {
+										onSubmitComplete(filters, search);
+									}
+									// Keep dialog open so user can see the loaded filters
+								}}
+							/>
+						</div>
+					)}
+
+					{/* Filters Content */}
+					<div className="flex-1 overflow-y-auto px-6 pb-6">
+						<Form {...form}>
+							<form
+								onSubmit={form.handleSubmit(onSubmit)}
+								className="space-y-4"
+							>
+								{/* Group Logic Selector */}
+								{groups.length > 1 && (
+									<div className="flex items-center gap-2 rounded-lg border p-3">
+										<span className="font-medium text-sm">
+											Combine groups with:
+										</span>
+										<Select
+											value={groupLogic}
+											onValueChange={(value: "AND" | "OR") =>
+												form.setValue("groupLogic", value)
+											}
+										>
+											<SelectTrigger className="h-8 w-24">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="AND">AND</SelectItem>
+												<SelectItem value="OR">OR</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+								)}
+
+								{/* Filter Groups */}
+								<div className="space-y-1">
+									{groups.map((group, index) => (
+										<div
+											key={typeof group.key === "string" ? group.key : group.id}
+											className="relative"
+										>
+											<FilterGroupComponent
+												form={form}
+												groupIndex={index}
+												control={form.control}
+												onUpdateGroup={(updates) =>
+													handleUpdateGroup(index, updates)
+												}
+												onRemoveGroup={() => handleRemoveGroup(index)}
+												config={{
+													FIELD_TYPES,
+													FILTER_CATEGORIES,
+													RELATION_META,
+												}}
+											/>
+											{/* Logic connector between groups */}
+											{index < groups.length - 1 && (
+												<div className="flex justify-center p-2">
+													<Badge variant="outline" className="bg-background">
+														{groupLogic}
+													</Badge>
+												</div>
+											)}
+										</div>
+									))}
+								</div>
+
+								{/* Add Group Button */}
+								<Button
+									type="button"
+									variant="outline"
+									onClick={handleAddGroup}
+									className="w-full border-dashed"
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Add Filter Group
+								</Button>
+							</form>
+						</Form>
+					</div>
+				</div>
+
+				{/* Footer Actions */}
+				<FilterDialogFooter
+					onCancel={() => {
+						if (mode === "mass-action" && onClose) {
+							onClose(false);
+						} else {
+							setOpenState(false);
+						}
+					}}
+					onReset={handleReset}
+					onApply={form.handleSubmit(onSubmit)}
+					isSubmitting={isSubmitting}
+					isResetting={isResetting}
+				/>
+			</div>
+		);
+
+		if (inline) {
+			return <div className="h-auto rounded-lg border p-0">{content}</div>;
+		}
+
+		return (
+			<Dialog
+				open={open}
+				onOpenChange={setOpenState}
+				modal={mode !== "mass-action"}
+			>
+				<DialogContent className="flex h-[95vh] min-w-[95vw] flex-col p-0">
+					{content}
+				</DialogContent>
+			</Dialog>
+		);
+	}
+
 	return (
 		<div className="ml-1">
-			{showTrigger && (
+			{!inline && showTrigger && (
 				<Button
 					variant="outline"
 					size="sm"
@@ -333,156 +498,7 @@ const AdvancedFilters = forwardRef<
 				</Button>
 			)}
 
-			<Dialog
-				open={open}
-				onOpenChange={setOpenState}
-				modal={mode !== "mass-action"}
-			>
-				<DialogContent className="flex h-[95vh] min-w-[95vw] flex-col p-0">
-					<DialogHeader className="px-6 pt-6 pb-4">
-						<DialogTitle>Advanced Filters</DialogTitle>
-						<DialogDescription>
-							Apply advanced filters to refine your search
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="flex flex-1 overflow-hidden">
-						{/* Search History Sidebar */}
-						{mode === "search" && entityType && (
-							<div className="w-80 shrink-0">
-								<SearchHistoryPanel
-									entityType={entityType}
-									onLoadFilters={(filterValues) => {
-										// Load the saved filter values into the form
-										if (
-											filterValues &&
-											Array.isArray(filterValues.groups) &&
-											filterValues.groupLogic
-										) {
-											// Save to localStorage first so filters persist
-											saveFiltersToStorage(entityType, filterValues, session);
-											// Reset form with loaded values
-											form.reset(filterValues);
-											replace(filterValues.groups);
-											// Update active filters count
-											setTimeout(() => {
-												setActiveFiltersCount(calculateActiveFilters());
-											}, 50);
-										}
-									}}
-									onApplySearch={(filters, search) => {
-										// When applying a saved search, update search term first if provided
-										// This updates the state
-										if (search !== undefined && onSearchChange) {
-											onSearchChange(search, filters);
-										}
-										// Then apply filters to parent - pass search along so fetchData can use it
-										// This triggers the fetch with both filters and search
-										if (onSubmitComplete) {
-											onSubmitComplete(filters, search);
-										}
-										// Keep dialog open so user can see the loaded filters
-									}}
-								/>
-							</div>
-						)}
-
-						{/* Filters Content */}
-						<div className="flex-1 overflow-y-auto px-6 pb-6">
-							<Form {...form}>
-								<form
-									onSubmit={form.handleSubmit(onSubmit)}
-									className="space-y-4"
-								>
-									{/* Group Logic Selector */}
-									{groups.length > 1 && (
-										<div className="flex items-center gap-2 rounded-lg border p-3">
-											<span className="font-medium text-sm">
-												Combine groups with:
-											</span>
-											<Select
-												value={groupLogic}
-												onValueChange={(value: "AND" | "OR") =>
-													form.setValue("groupLogic", value)
-												}
-											>
-												<SelectTrigger className="h-8 w-24">
-													<SelectValue />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="AND">AND</SelectItem>
-													<SelectItem value="OR">OR</SelectItem>
-												</SelectContent>
-											</Select>
-										</div>
-									)}
-
-									{/* Filter Groups */}
-									<div className="space-y-1">
-										{groups.map((group, index) => (
-											<div
-												key={
-													typeof group.key === "string" ? group.key : group.id
-												}
-												className="relative"
-											>
-												<FilterGroupComponent
-													form={form}
-													groupIndex={index}
-													control={form.control}
-													onUpdateGroup={(updates) =>
-														handleUpdateGroup(index, updates)
-													}
-													onRemoveGroup={() => handleRemoveGroup(index)}
-													config={{
-														FIELD_TYPES,
-														FILTER_CATEGORIES,
-														RELATION_META,
-													}}
-												/>
-												{/* Logic connector between groups */}
-												{index < groups.length - 1 && (
-													<div className="flex justify-center p-2">
-														<Badge variant="outline" className="bg-background">
-															{groupLogic}
-														</Badge>
-													</div>
-												)}
-											</div>
-										))}
-									</div>
-
-									{/* Add Group Button */}
-									<Button
-										type="button"
-										variant="outline"
-										onClick={handleAddGroup}
-										className="w-full border-dashed"
-									>
-										<Plus className="mr-2 h-4 w-4" />
-										Add Filter Group
-									</Button>
-								</form>
-							</Form>
-						</div>
-					</div>
-
-					{/* Footer Actions */}
-					<FilterDialogFooter
-						onCancel={() => {
-							if (mode === "mass-action" && onClose) {
-								onClose(false);
-							} else {
-								setOpenState(false);
-							}
-						}}
-						onReset={handleReset}
-						onApply={form.handleSubmit(onSubmit)}
-						isSubmitting={isSubmitting}
-						isResetting={isResetting}
-					/>
-				</DialogContent>
-			</Dialog>
+			{renderContent()}
 		</div>
 	);
 });

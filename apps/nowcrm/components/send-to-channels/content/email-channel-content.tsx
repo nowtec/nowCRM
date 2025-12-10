@@ -87,6 +87,7 @@ export function EmailChannelContent({
 				});
 
 				form.setValue("throttle", safeThrottle);
+				form.setValue("throttleUnit", "min");
 				form.setValue("useDefaultThrottle", true);
 			} else {
 				setDefaultThrottle({
@@ -120,12 +121,8 @@ export function EmailChannelContent({
 			useDefaultThrottle: z.boolean().default(false).optional(),
 			throttle: z
 				.number({ required_error: "Throttle is required" })
-				.min(30, "Minimal 30")
-				.optional(),
-			throttleUnit: z
-				.enum(["sec", "min", "hour", "day"])
-				.default("min")
-				.optional(),
+				.min(1, "Minimal 1"),
+			throttleUnit: z.enum(["sec", "min", "hour", "day"]).optional(),
 			identity: z
 				.object({
 					value: z.union([z.number(), z.string()]),
@@ -205,7 +202,7 @@ export function EmailChannelContent({
 			organization: undefined,
 			useDefaultIdentity: false,
 			useDefaultThrottle: false,
-			throttleUnit: "min",
+			throttleUnit: undefined,
 			identity: undefined,
 		},
 	});

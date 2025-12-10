@@ -23,10 +23,18 @@ export const parseCSV = (
 	} = options;
 
 	return new Promise((resolve, reject) => {
-		const result = Papa.parse(csvString, {
+		let result = Papa.parse(csvString, {
 			header: true,
 			skipEmptyLines: true,
 		});
+
+		if (result.errors.some((e) => e.code === "UndetectableDelimiter")) {
+			result = Papa.parse(csvString, {
+				header: true,
+				skipEmptyLines: true,
+				delimiter: ",",
+			});
+		}
 
 		if (result.errors.length > 0) {
 			console.error("CSV Parse Errors:", result.errors);

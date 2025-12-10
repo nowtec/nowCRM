@@ -86,6 +86,7 @@ export function LinkedinInvitesChannelContent({
 				});
 
 				form.setValue("throttle", safeThrottle);
+				form.setValue("throttleUnit", "min");
 				form.setValue("useDefaultThrottle", true);
 			} else {
 				setDefaultThrottle({
@@ -119,12 +120,8 @@ export function LinkedinInvitesChannelContent({
 			useDefaultThrottle: z.boolean().default(false).optional(),
 			throttle: z
 				.number({ required_error: "Throttle is required" })
-				.min(3, "Minimal 3")
-				.optional(),
-			throttleUnit: z
-				.enum(["sec", "min", "hour", "day"])
-				.default("min")
-				.optional(),
+				.min(1, "Minimal 1"),
+			throttleUnit: z.enum(["sec", "min", "hour", "day"]).optional(),
 			identity: z
 				.object({
 					value: z.string(),
@@ -191,7 +188,7 @@ export function LinkedinInvitesChannelContent({
 			organization: undefined,
 			useDefaultIdentity: false,
 			useDefaultThrottle: true,
-			throttleUnit: "min",
+			throttleUnit: undefined,
 			identity: undefined,
 		},
 	});

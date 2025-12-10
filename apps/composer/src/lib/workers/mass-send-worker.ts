@@ -30,8 +30,8 @@ new Worker(
 			try {
 				const contactsRes =
 					type === "list"
-						? await fetchContactsFromList(to as number)
-						: await fetchContactsFromOrganization(to as number);
+						? await fetchContactsFromList(to as string)
+						: await fetchContactsFromOrganization(to as string);
 
 				if (!contactsRes.success || !contactsRes.responseObject) {
 					logger.error(`Failed to fetch contacts for ${type} ${to}`);
@@ -45,17 +45,29 @@ new Worker(
 					return;
 				}
 
-				for (const contact of contacts) {
-					const contactData = { ...data, to: contact.id, type: "contact" };
+				for (const [index, contact] of contacts.entries()) {
+					const contactData = {
+						...data,
+						to: contact.documentId,
+						type: "contact",
+					};
+
 					for (const channel of channels) {
-						await sendQueue.add("send", {
-							channel,
-							data: contactData,
-							composition,
-							parentJobId: job.id,
-						});
+						await sendQueue.add(
+							"send",
+							{
+								channel,
+								data: contactData,
+								composition,
+								parentJobId: job.id,
+							},
+							{
+								delay: (data.interval ?? 0) * index,
+							},
+						);
+
 						logger.info(
-							`Job enqueued for ${type}=${to}: channel="${channel}", contactId=${contact.id}`,
+							`Job enqueued for ${type}=${to}: channel="${channel}", contactId=${contact.documentId}, delay=${(data.interval ?? 0) * index}`,
 						);
 					}
 				}
@@ -90,18 +102,25 @@ new Worker(
 			logger.warn("No contacts received into massSendWorker");
 			return;
 		}
-
 		for (const [index, contact] of to.entries()) {
 			const contactData = { ...data, to: [contact] };
+
 			for (const channel of channels) {
-				await sendQueue.add("send", {
-					channel,
-					data: contactData,
-					composition,
-					parentJobId: job.id,
-				});
+				await sendQueue.add(
+					"send",
+					{
+						channel,
+						data: contactData,
+						composition,
+						parentJobId: job.id,
+					},
+					{
+						delay: (data.interval ?? 0) * index,
+					},
+				);
+
 				logger.info(
-					`Job sent to sendQueue: contact #${index + 1}, channel="${channel}"`,
+					`Job sent to sendQueue: contact #${index + 1}, channel="${channel}", delay=${(data.interval ?? 0) * index}`,
 				);
 			}
 		}

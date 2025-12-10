@@ -14,27 +14,41 @@ interface ChannelThrottleFieldProps {
 }
 
 function convertToPerMin(raw: number, unit: ThrottleUnit): number {
-	let perMin: number;
 	switch (unit) {
 		case "sec":
-			perMin = raw * 60;
-			break;
+			return raw * 60;
+
+		case "min":
+			return raw;
+
 		case "hour":
-			perMin = raw / 60;
-			break;
+			return raw / 60;
+
 		case "day":
-			perMin = raw / 1440;
-			break;
-		default: // "min"
-			perMin = raw;
-			break;
+			return raw / 1440;
+
+		default:
+			return raw;
 	}
-	return Math.max(Math.ceil(perMin), 1);
 }
 
 function calculateIntervalMs(raw: number, unit: ThrottleUnit): number {
-	const perMin = convertToPerMin(raw, unit);
-	return Math.floor(60000 / perMin);
+	switch (unit) {
+		case "sec":
+			return raw > 0 ? 1000 / raw : 1000;
+
+		case "min":
+			return raw > 0 ? 60000 / raw : 60000;
+
+		case "hour":
+			return raw > 0 ? 3600000 / raw : 3600000;
+
+		case "day":
+			return raw > 0 ? 86400000 / raw : 86400000;
+
+		default:
+			return 60000;
+	}
 }
 
 export const ChannelThrottleField: React.FC<ChannelThrottleFieldProps> = ({

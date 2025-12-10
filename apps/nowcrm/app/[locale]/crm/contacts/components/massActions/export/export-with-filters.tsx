@@ -237,6 +237,7 @@ export default function ExportWithFiltersDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

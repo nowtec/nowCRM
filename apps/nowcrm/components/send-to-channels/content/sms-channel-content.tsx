@@ -92,6 +92,7 @@ export function SMSChannelContent({
 				});
 
 				form.setValue("throttle", safeThrottle);
+				form.setValue("throttleUnit", "min");
 				form.setValue("useDefaultThrottle", true);
 			} else {
 				setDefaultThrottle({
@@ -117,8 +118,8 @@ export function SMSChannelContent({
 			useDefaultThrottle: z.boolean().default(false),
 			throttle: z
 				.number({ required_error: "Throttle is required" })
-				.min(20, "Minimal 20"),
-			throttleUnit: z.enum(["sec", "min", "hour", "day"]).default("min"),
+				.min(1, "Minimal 1"),
+			throttleUnit: z.enum(["sec", "min", "hour", "day"]).optional(),
 		})
 		.superRefine((data, ctx) => {
 			const def = defaultThrottle;
@@ -177,7 +178,7 @@ export function SMSChannelContent({
 			organization: undefined,
 			useDefaultThrottle: false,
 			throttle: defaultThrottle?.throttle ?? undefined,
-			throttleUnit: "min",
+			throttleUnit: undefined,
 		},
 	});
 
@@ -309,6 +310,11 @@ export function SMSChannelContent({
 		const rawThrottle = values.useDefaultThrottle
 			? defaultThrottle!.throttle
 			: values.throttle!;
+
+		if (!values.throttleUnit) {
+			toast.error("Throttle unit is required");
+			return;
+		}
 		const throttlePerMin = throttleUtils.convertToPerMin(
 			rawThrottle,
 			values.throttleUnit,
