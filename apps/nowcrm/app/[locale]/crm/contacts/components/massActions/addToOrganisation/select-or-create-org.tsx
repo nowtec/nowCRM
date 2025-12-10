@@ -53,7 +53,7 @@ export default function SelectOrCreateOrganizationTabs({
 			publishedAt: new Date(),
 		});
 		if (res.data?.id) {
-			setSelectedOption({ value: res.data.id, label: res.data.name });
+			setSelectedOption({ value: res.data.documentId, label: res.data.name });
 			setOrgCreated(true);
 			setTimeout(() => setActiveTab("select"), 500);
 		}

@@ -47,7 +47,6 @@ export const anonymizeEntityItems = async (
 
 			if (data?.success) {
 				anonymizedCount++;
-				logger.info(`[anonymizeEntityItems] id=${item.documentId} → SUCCESS`);
 			} else {
 				const msg = data?.message ?? "Unknown failure";
 				failedCount++;
