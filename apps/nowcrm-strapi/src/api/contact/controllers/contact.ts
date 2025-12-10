@@ -309,36 +309,94 @@ export default factories.createCoreController('api::contact.contact', ({ strapi 
     const uid = entity === 'organization'
       ? 'api::organization.organization'
       : 'api::contact.contact';
-
+  
     try {
-      if (Array.isArray(data)) {
-        const results = await Promise.allSettled(
-          data.map(async ({ documentId, ...fields }) => {
-            if (!documentId) throw new Error('Missing documentId');
-            return strapi.documents(uid).update({ documentId, data: fields });
-          })
-        );
-
-        const ok = results
-        .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled')
-        .map(r => r.value);
-
-        const bad = results.filter(r => r.status === 'rejected');
-
-        return ctx.send({
-          success: bad.length === 0,
-          count: ok.length,
-          failed: bad.length,
-          ids: ok.map(r => r.documentId),
-        });
+      if (!Array.isArray(data)) {
+        return ctx.badRequest('Invalid data format for bulk update');
       }
-
-      return ctx.badRequest('Invalid data format for bulk update');
+  
+      const CHUNK = 100;
+  
+      function chunk(arr, size) {
+        const out = [];
+        for (let i = 0; i < arr.length; i += size) {
+          out.push(arr.slice(i, i + size));
+        }
+        return out;
+      }
+  
+      const batches = chunk(data, CHUNK);
+  
+      const ok = [];
+      const bad = [];
+  
+      console.log(`[bulkUpdate] start: ${data.length} items, ${batches.length} chunks`);
+  
+      let chunkIndex = 0;
+  
+      for (const batch of batches) {
+        chunkIndex++;
+        const start = Date.now();
+  
+        console.log(`[bulkUpdate] chunk ${chunkIndex}/${batches.length} → size=${batch.length}`);
+  
+        const results = [];
+  
+        // sequential updates inside one chunk
+        for (const { documentId, ...fields } of batch) {
+          try {
+            if (!documentId) {
+              throw new Error("Missing documentId");
+            }
+  
+            const res = await strapi.documents(uid).update({
+              documentId,
+              data: fields,
+            });
+  
+            results.push({ status: "fulfilled", value: res });
+  
+          } catch (err) {
+            results.push({ status: "rejected", reason: err });
+          }
+        }
+  
+        const duration = Date.now() - start;
+  
+        // collect results
+        let okCount = 0;
+        let badCount = 0;
+  
+        for (const r of results) {
+          if (r.status === "fulfilled") {
+            ok.push(r.value);
+            okCount++;
+          } else {
+            bad.push(r.reason);
+            badCount++;
+          }
+        }
+  
+        console.log(
+          `[bulkUpdate] chunk ${chunkIndex} done: ok=${okCount}, failed=${badCount}, time=${duration}ms`
+        );
+      }
+  
+      console.log(`[bulkUpdate] completed: total ok=${ok.length}, failed=${bad.length}`);
+  
+      return ctx.send({
+        success: bad.length === 0,
+        count: ok.length,
+        failed: bad.length,
+        ids: ok.map((r) => r.documentId),
+      });
+  
     } catch (err) {
       console.error(`[bulkUpdate] failed: ${err.message}`);
       return ctx.send({ success: false, message: err.message }, 500);
     }
   },
+    
 
   async bulkDelete(ctx) {
     const { where } = ctx.request.body;

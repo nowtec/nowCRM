@@ -231,6 +231,7 @@ export default function DeleteWithFiltersDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

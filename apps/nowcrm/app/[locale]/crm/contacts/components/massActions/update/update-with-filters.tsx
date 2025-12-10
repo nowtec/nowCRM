@@ -238,6 +238,7 @@ export default function UpdateContactFieldWithFiltersStepsDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

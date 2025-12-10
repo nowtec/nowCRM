@@ -234,6 +234,7 @@ export default function UpdateSubscriptionWithFiltersStepsDialog({
 					mode="mass-action"
 					onClose={closeDialog}
 					onSubmitComplete={handleFilterSubmit}
+					inline={true}
 				/>
 			)}
 

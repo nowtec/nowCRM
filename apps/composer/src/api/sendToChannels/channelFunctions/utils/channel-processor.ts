@@ -194,7 +194,7 @@ async function processList(
 	additionalArgs: any[] = [],
 ): Promise<ServiceResponse<boolean | null>> {
 	try {
-		if (typeof to === "number") {
+		if (typeof to === "string") {
 			// Single list
 			const contacts = await fetchContactsFromList(to);
 			if (!contacts.success) {
@@ -211,7 +211,7 @@ async function processList(
 			// Multiple lists
 			let allContacts: Contact[] = [];
 
-			for (const listId of to as number[]) {
+			for (const listId of to as string[]) {
 				const contacts = await fetchContactsFromList(listId);
 				if (contacts.success && contacts.responseObject) {
 					allContacts = [...allContacts, ...contacts.responseObject];
@@ -267,7 +267,7 @@ async function processOrganization(
 	additionalArgs: any[] = [],
 ): Promise<ServiceResponse<boolean | null>> {
 	try {
-		if (typeof to === "number") {
+		if (typeof to === "string") {
 			const contacts = await fetchContactsFromOrganization(to);
 			if (!contacts.success) {
 				return contacts as any; //TODO: remove any
@@ -283,7 +283,7 @@ async function processOrganization(
 			// Multiple organizations
 			let allContacts: Contact[] = [];
 
-			for (const orgId of to as number[]) {
+			for (const orgId of to as string[]) {
 				const contacts = await fetchContactsFromOrganization(orgId);
 				if (contacts.success && contacts.responseObject) {
 					allContacts = [
@@ -466,14 +466,14 @@ async function sendMessagesToContacts(
  * @returns ServiceResponse with contacts or failure
  */
 export async function fetchContactsFromList(
-	listId: number,
+	listId: DocumentId,
 ): Promise<ServiceResponse<Contact[] | null>> {
 	try {
 		let allContacts: Contact[] = [];
 		const list_contacts = await contactsService.find(
 			env.COMPOSER_STRAPI_API_TOKEN,
 			{
-				filters: { lists: { id: { $in: listId } } },
+				filters: { lists: { documentId: { $eq: listId } } },
 				populate: {
 					subscriptions: {
 						populate: {
@@ -499,7 +499,7 @@ export async function fetchContactsFromList(
 		while (currentPage < totalPages) {
 			currentPage++;
 			const result = await contactsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
-				filters: { lists: { id: { $in: listId } } },
+				filters: { lists: { documentId: { $eq: listId } } },
 				populate: {
 					subscriptions: {
 						populate: {
@@ -537,14 +537,14 @@ export async function fetchContactsFromList(
  * @returns ServiceResponse with contacts or failure
  */
 export async function fetchContactsFromOrganization(
-	orgId: number,
+	orgId: DocumentId,
 ): Promise<ServiceResponse<Contact[] | null>> {
 	try {
 		let allContacts: Contact[] = [];
 		const org_contacts = await contactsService.find(
 			env.COMPOSER_STRAPI_API_TOKEN,
 			{
-				filters: { organization: { id: { $eq: orgId } } },
+				filters: { organization: { documentId: { $eq: orgId } } },
 				populate: {
 					subscriptions: {
 						populate: {
@@ -570,7 +570,7 @@ export async function fetchContactsFromOrganization(
 		while (currentPage < totalPages) {
 			currentPage++;
 			const result = await contactsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
-				filters: { organization: { id: { $eq: orgId } } },
+				filters: { organization: { documentId: { $eq: orgId } } },
 				populate: {
 					subscriptions: {
 						populate: {
