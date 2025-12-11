@@ -330,7 +330,7 @@ jobs:
         continue-on-error: true
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./apps/nowcrm-strapi
           file: ./apps/nowcrm-strapi/Dockerfile.prod
           push: true
           platforms: linux/amd64,linux/arm64
