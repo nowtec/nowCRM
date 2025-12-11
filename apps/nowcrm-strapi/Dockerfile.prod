@@ -2,28 +2,40 @@
 FROM node:22-alpine AS build
 
 # Install build dependencies
-RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev vips-dev git curl > /dev/null 2>&1
-
-# Install pnpm
-RUN npm install -g pnpm@latest
+RUN apk update && apk add --no-cache \
+    build-base \
+    gcc \
+    autoconf \
+    automake \
+    zlib-dev \
+    libpng-dev \
+    vips-dev \
+    git > /dev/null 2>&1
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-WORKDIR /app
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy monorepo root files for dependency resolution
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-COPY apps/nowcrm-strapi/package.json ./apps/nowcrm-strapi/
+WORKDIR /opt/
 
-# Install all dependencies (including dev for build)
-RUN pnpm install
+# Copy only manifest files (pnpm uses pnpm-lock.yaml)
+COPY package.json pnpm-lock.yaml ./
 
-# Copy application source
-COPY apps/nowcrm-strapi ./apps/nowcrm-strapi
+# Important: pnpm creates a global store, ensure it is inside the container
+ENV PNPM_HOME="/opt/.pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
-# Build application
-RUN pnpm --filter my-strapi-project run build
+# Install dependencies
+# use --prod (or --filter...) as replacement for npm install --only=production
+RUN pnpm install --prod --frozen-lockfile
+
+WORKDIR /opt/app
+COPY . .
+
+# Build project
+RUN pnpm build
 
 
 # ---------- Final production image ----------
@@ -35,27 +47,21 @@ RUN apk add --no-cache vips-dev
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-# Install pnpm
-RUN npm install -g pnpm@latest
+WORKDIR /opt/
 
-WORKDIR /app
+# Copy node_modules from build
+COPY --from=build /opt/node_modules ./node_modules
+COPY --from=build /opt/.pnpm /.pnpm
 
-# Copy node_modules from build stage
-COPY --from=build /app/node_modules ./node_modules
+WORKDIR /opt/app
 
-# Copy built application
-COPY --from=build /app/apps/nowcrm-strapi ./apps/nowcrm-strapi
+# Copy application build output
+COPY --from=build /opt/app ./
 
-# Copy root files needed at runtime
-COPY pnpm-lock.yaml package.json pnpm-workspace.yaml ./
-COPY apps/nowcrm-strapi/package.json ./apps/nowcrm-strapi/
-
-WORKDIR /app/apps/nowcrm-strapi
-
-ENV PATH=/app/node_modules/.bin:$PATH
+ENV PATH=/opt/node_modules/.bin:$PATH
 
 # Permissions and startup
-RUN chown -R node:node /app
+RUN chown -R node:node /opt/app
 USER node
 EXPOSE 1337
 CMD ["pnpm", "start"]
