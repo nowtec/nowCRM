@@ -357,7 +357,7 @@ jobs:
           Repository: ${{ github.repository }}
           Image: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi
           Tags: latest, ${{ needs.create_release.outputs.tag_name }}
-          Context: . (root)
+          Context: apps/nowcrm-strapi
           Dockerfile: ./apps/nowcrm-strapi/Dockerfile.prod
 
           Build Outcome: ${{ steps.docker-build-strapi.outcome }}
