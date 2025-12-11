@@ -330,7 +330,7 @@ jobs:
         continue-on-error: true
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./apps/nowcrm-strapi
           file: ./apps/nowcrm-strapi/Dockerfile.prod
           push: true
           platforms: linux/amd64,linux/arm64
@@ -357,7 +357,7 @@ jobs:
           Repository: ${{ github.repository }}
           Image: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi
           Tags: latest, ${{ needs.create_release.outputs.tag_name }}
-          Context: apps/nowcrm-strapi
+          Context: . (root)
           Dockerfile: ./apps/nowcrm-strapi/Dockerfile.prod
 
           Build Outcome: ${{ steps.docker-build-strapi.outcome }}
