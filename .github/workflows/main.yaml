@@ -331,7 +331,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./apps/nowcrm-strapi
-          file: ./apps/nowcrm-strapi/Dockerfile.prod
+          file: ./apps/nowcrm-strapi/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
@@ -358,7 +358,7 @@ jobs:
           Image: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi
           Tags: latest, ${{ needs.create_release.outputs.tag_name }}
           Context: . (root)
-          Dockerfile: ./apps/nowcrm-strapi/Dockerfile.prod
+          Dockerfile: ./apps/nowcrm-strapi/Dockerfile
 
           Build Outcome: ${{ steps.docker-build-strapi.outcome }}
 
