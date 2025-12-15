@@ -35,6 +35,12 @@ export interface FilterGroupConfig {
 			deduplicateByLabel?: boolean;
 		}
 	>;
+	FIELD_CONFIGS?: Record<
+		string,
+		{
+			hasOperator?: boolean;
+		}
+	>;
 }
 
 interface FilterGroupProps<
@@ -100,8 +106,10 @@ const FilterGroupComponent = <
 
 		newFilters[fieldKey] = "";
 
-		// Only for non-relation fields
-		if (config.FIELD_TYPES[selectedField] !== "relation") {
+		// Only for non-relation fields that have operators enabled
+		const fieldConfig = config.FIELD_CONFIGS?.[selectedField];
+		const hasOperator = fieldConfig?.hasOperator !== false; // Default to true if not specified
+		if (config.FIELD_TYPES[selectedField] !== "relation" && hasOperator) {
 			newFilters[`${fieldKey}_operator`] = getOperatorsForField(
 				selectedField,
 				config.FIELD_TYPES,
@@ -216,6 +224,7 @@ const FilterGroupComponent = <
 						config={{
 							FIELD_TYPES: config.FIELD_TYPES,
 							RELATION_META: config.RELATION_META,
+							FIELD_CONFIGS: config.FIELD_CONFIGS,
 						}}
 					/>
 				))}

@@ -34,6 +34,7 @@ import {
 	loadFiltersFromStorage,
 	saveFiltersToStorage,
 } from "@/lib/filters/filter-storage";
+import { FIELD_CONFIGS } from "./filter-config";
 import { FIELD_TYPES, FILTER_CATEGORIES, RELATION_META } from "./filter-types";
 
 // Enhanced filter schema with grouping and logic
@@ -416,6 +417,7 @@ const AdvancedFilters = forwardRef<
 													FIELD_TYPES,
 													FILTER_CATEGORIES,
 													RELATION_META,
+													FIELD_CONFIGS,
 												}}
 											/>
 											{/* Logic connector between groups */}

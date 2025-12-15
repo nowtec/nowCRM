@@ -50,8 +50,7 @@ export function DataTablePagination<TData>({
 					<Select
 						value={`${pageSize}`}
 						onValueChange={(value) => {
-							table.setPageSize(Number(value));
-							table.setPageIndex(0);
+							// Don't call table.setPageSize/setPageIndex - parent controls pagination via props
 							handleSearch(
 								searchParams.get("search")?.toString() || "",
 								1,
@@ -81,7 +80,7 @@ export function DataTablePagination<TData>({
 						variant="outline"
 						className="hidden h-8 w-8 bg-card p-0 text-muted-foreground hover:border-accent-foreground/25 lg:flex"
 						onClick={() => {
-							table.setPageIndex(0);
+							// Don't call table.setPageIndex - parent controls pagination via props
 							handleSearch(
 								searchParams.get("search")?.toString() || "",
 								1,
@@ -98,7 +97,7 @@ export function DataTablePagination<TData>({
 						variant="outline"
 						className="h-8 w-8 bg-card p-0 text-muted-foreground hover:border-accent-foreground/25"
 						onClick={() => {
-							table.previousPage();
+							// Don't call table.previousPage - parent controls pagination via props
 							handleSearch(
 								searchParams.get("search")?.toString() || "",
 								pagination.page - 1,
@@ -117,7 +116,7 @@ export function DataTablePagination<TData>({
 						variant="outline"
 						className="h-8 w-8 bg-card p-0 text-muted-foreground hover:border-accent-foreground/25"
 						onClick={() => {
-							table.nextPage();
+							// Don't call table.nextPage - parent controls pagination via props
 							handleSearch(
 								searchParams.get("search")?.toString() || "",
 								pagination.page + 1,
@@ -137,7 +136,7 @@ export function DataTablePagination<TData>({
 						variant="outline"
 						className="hidden h-8 w-8 bg-card p-0 text-muted-foreground hover:border-accent-foreground/25 lg:flex"
 						onClick={() => {
-							table.setPageIndex(pagination.pageCount - 1);
+							// Don't call table.setPageIndex - parent controls pagination via props
 							handleSearch(
 								searchParams.get("search")?.toString() || "",
 								pagination.pageCount,

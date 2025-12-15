@@ -72,6 +72,7 @@ interface FormBuilderProps {
 const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [saving, setSaving] = useState<boolean>(false);
+	const [savingActive, setSavingActive] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [formData, setFormData] = useState<FormEntity | null>(null);
 	const [activeId, setActiveId] = useState<string | null>(null);
@@ -338,6 +339,55 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
 		[selectedField],
 	);
 
+	// Handler for immediate active state toggle
+	const handleActiveToggle = async (checked: boolean) => {
+		if (!formData) return;
+
+		setSavingActive(true);
+		// Optimistically update UI
+		setFormData((prevData) =>
+			prevData ? { ...prevData, active: checked } : null,
+		);
+
+		try {
+			// Preserve existing form items to avoid deletion
+			const currentItems = formData.form_items.map((item) => ({
+				...(item.documentId ? { documentId: item.documentId } : {}),
+				name: item.name,
+				type: item.type,
+				label: item.label,
+				options: item.options,
+				rank: item.rank,
+				required: item.required ?? false,
+				hidden: item.hidden ?? false,
+			}));
+
+			const response = await updateForm(
+				formData.documentId,
+				{ active: checked },
+				currentItems,
+			);
+			if (!response.success) {
+				// Revert on error
+				setFormData((prevData) =>
+					prevData ? { ...prevData, active: !checked } : null,
+				);
+				toast.error(response.errorMessage || "Failed to update active state");
+			} else {
+				toast.success(`Form ${checked ? "activated" : "deactivated"}`);
+			}
+		} catch (error: any) {
+			// Revert on error
+			setFormData((prevData) =>
+				prevData ? { ...prevData, active: !checked } : null,
+			);
+			console.error("Error updating active state:", error);
+			toast.error("Failed to update active state");
+		} finally {
+			setSavingActive(false);
+		}
+	};
+
 	// inside contactsapp/components/forms/FormBuilder.tsx, in `handleSaveForm`:
 
 	const handleSaveForm = async () => {
@@ -551,13 +601,12 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
 							<Switch
 								id="form-active"
 								checked={formData.active}
-								onCheckedChange={(checked) =>
-									handleFormChange("active", checked)
-								}
+								onCheckedChange={handleActiveToggle}
+								disabled={savingActive || loading}
 								aria-label="Form Active Status"
 							/>
 							<Label htmlFor="form-active" className="hidden text-sm md:inline">
-								Active
+								{savingActive ? "Saving..." : "Active"}
 							</Label>
 						</div>
 

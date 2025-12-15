@@ -213,7 +213,7 @@ export default function ChannelAdditions({
 						onClick={onBack}
 						disabled={isSubmitting}
 					>
-						{t.common.actions.back}
+						{t.Composer.channelAdditions.backButton}
 					</Button>
 
 					<Button onClick={handleSubmit} disabled={isSubmitting}>

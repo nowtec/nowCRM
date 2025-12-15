@@ -100,7 +100,7 @@ export default function TextEditor({
 
 			<div className="flex justify-between">
 				<Button variant="outline" onClick={onBack}>
-					{t.common.actions.back}
+					{t.Composer.textEditor.backButton}
 				</Button>
 
 				<div className="flex gap-2">

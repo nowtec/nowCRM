@@ -158,6 +158,11 @@
       "survey_items_question": "Survey Responses - Question",
       "survey_items_answer": "Survey Responses - Answer",
       "event_composition": "Event - Composition",
+      "event_composition_sent_status": {
+        "label": "Event-Komposition - Versandstatus",
+        "sent": "Gesendet",
+        "not_sent": "Nicht gesendet"
+      },
       "event_channel": "Event - Channel",
       "journey_steps": "Journey Steps"
     },
@@ -1062,7 +1067,8 @@
       "placeholder": "Geben Sie Ihre Beschreibung ein...",
       "unsubscribeLabel": "Abmeldelink einfügen",
       "unsubscribeTooltip": "Wenn aktiviert, enthalten E-Mails unten einen Abmeldelink",
-      "regenerate": "Neu generieren",
+      "backButton": "Eingabeaufforderung neu schreiben",
+      "regenerate": "Mit derselben Eingabeaufforderung neu generieren",
       "regenerating": "Wird neu generiert...",
       "nextButton": "Weiter: Kanal-Anpassungen"
     },
@@ -1074,6 +1080,7 @@
       "additionalPrompt": "Zusätzlicher Prompt",
       "tooltip": "Wenn Sie das Feld leer lassen, wird dasselbe Ergebnis für diesen Kanal verwendet.",
       "textareaPlaceholder": "z.B. Hashtags hinzufügen, für Mobilgeräte formatieren usw.",
+      "backButton": "Text bearbeiten",
       "submitting": "Übermitteln...",
       "nextButton": "Weiter: Komposition abschließen"
     },

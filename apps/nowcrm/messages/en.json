@@ -158,6 +158,11 @@
       "survey_items_question": "Survey Responses - Question",
       "survey_items_answer": "Survey Responses - Answer",
       "event_composition": "Event - Composition",
+      "event_composition_sent_status": {
+        "label": "Event Composition - Sent Status",
+        "sent": "Sent",
+        "not_sent": "Not Sent"
+      },
       "event_channel": "Event - Channel",
       "journey_steps": "Journey Steps"
     },
@@ -1065,7 +1070,8 @@
       "placeholder": "Enter your description...",
       "unsubscribeLabel": "Include unsubscribe link",
       "unsubscribeTooltip": "When enabled, emails will include an unsubscribe link at the bottom",
-      "regenerate": "Regenerate",
+      "backButton": "Rewrite the prompt",
+      "regenerate": "Regenerate with same prompt",
       "regenerating": "Regenerating...",
       "nextButton": "Next: Channel Customizations"
     },
@@ -1077,6 +1083,7 @@
       "additionalPrompt": "Additional Prompt",
       "tooltip": "If you leave the prompt addition empty, the same result will be used for this channel.",
       "textareaPlaceholder": "e.g., Add hashtags, Format for mobile, etc.",
+      "backButton": "Edit text",
       "submitting": "Submitting...",
       "nextButton": "Next: Finalize Composition"
     },

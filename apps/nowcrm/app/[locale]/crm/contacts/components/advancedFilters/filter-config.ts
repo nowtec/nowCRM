@@ -62,6 +62,7 @@ export const contactsFilterConfig: FilterConfig = {
 		event_action: "relation",
 		event_status: "text",
 		event_composition: "relation",
+		event_composition_sent_status: "enum",
 		event_channel: "relation",
 
 		// Donations
@@ -148,7 +149,7 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "contact_types",
 			type: "relation",
 			label: "Contact Types",
-			serviceName: "contactTypeService",
+			serviceName: "contactTypesService",
 		},
 		contact_interests: {
 			name: "contact_interests",
@@ -160,13 +161,13 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "subscriptions",
 			type: "relation",
 			label: "Subscriptions",
-			serviceName: "channelService",
+			serviceName: "channelsService",
 		},
 		ranks: {
 			name: "ranks",
 			type: "relation",
 			label: "Ranks",
-			serviceName: "rankService",
+			serviceName: "contactRanksService",
 		},
 		salutation: {
 			name: "salutation",
@@ -184,25 +185,25 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "department",
 			type: "relation",
 			label: "Department",
-			serviceName: "departmentService",
+			serviceName: "departmentsService",
 		},
 		job_title: {
 			name: "job_title",
 			type: "relation",
 			label: "Job Title",
-			serviceName: "jobTitleService",
+			serviceName: "contactJobTitlesService",
 		},
 		media_types: {
 			name: "media_types",
 			type: "relation",
 			label: "Media Types",
-			serviceName: "mediaTypeService",
+			serviceName: "mediaTypesService",
 		},
 		organization: {
 			name: "organization",
 			type: "relation",
 			label: "Organization",
-			serviceName: "organizationService",
+			serviceName: "organizationsService",
 		},
 		organization_name: {
 			name: "organization_name",
@@ -223,7 +224,7 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "industry",
 			type: "relation",
 			label: "Industry",
-			serviceName: "industryService",
+			serviceName: "industriesService",
 		},
 		job_description: {
 			name: "job_description",
@@ -295,14 +296,21 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "event_composition",
 			type: "relation",
 			label: "Event Composition",
-			serviceName: "compositionService",
-			filterKey: "category",
+			serviceName: "compositionsService",
+			filterKey: "name",
+		},
+		event_composition_sent_status: {
+			name: "event_composition_sent_status",
+			type: "enum",
+			label: "Event Composition Sent Status",
+			enumValues: ["sent", "not_sent"],
+			hasOperator: false,
 		},
 		event_channel: {
 			name: "event_channel",
 			type: "relation",
 			label: "Event Channel",
-			serviceName: "channelService",
+			serviceName: "channelsService",
 			filterKey: "name",
 		},
 		donation_subscriptions_from: {
@@ -384,7 +392,7 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "tags",
 			type: "relation",
 			label: "Tags",
-			serviceName: "tagService",
+			serviceName: "tagsService",
 		},
 		description: {
 			name: "description",
@@ -395,13 +403,13 @@ export const contactsFilterConfig: FilterConfig = {
 			name: "sources",
 			type: "relation",
 			label: "Sources",
-			serviceName: "sourceService",
+			serviceName: "sourcesService",
 		},
 		lists: {
 			name: "lists",
 			type: "relation",
 			label: "Lists",
-			serviceName: "listService",
+			serviceName: "listsService",
 		},
 	},
 
@@ -471,6 +479,7 @@ export const contactsFilterConfig: FilterConfig = {
 				"event_action",
 				"event_status",
 				"event_composition",
+				"event_composition_sent_status",
 				"event_channel",
 			],
 		},
@@ -587,7 +596,7 @@ export const contactsFilterConfig: FilterConfig = {
 		event_composition: {
 			serviceName: "compositionService",
 			labelKey: "AdvancedFilters.fields.event_composition",
-			filterKey: "category",
+			filterKey: "name",
 		},
 		event_channel: {
 			serviceName: "channelService",
@@ -612,3 +621,18 @@ export const contactsFilterConfig: FilterConfig = {
 		},
 	},
 };
+
+// Export FIELD_CONFIGS for use in filter components
+export const FIELD_CONFIGS: Record<
+	string,
+	{
+		hasOperator?: boolean;
+	}
+> = Object.fromEntries(
+	Object.entries(contactsFilterConfig.fieldConfigs).map(([key, config]) => [
+		key,
+		{
+			hasOperator: (config as { hasOperator?: boolean }).hasOperator,
+		},
+	]),
+);

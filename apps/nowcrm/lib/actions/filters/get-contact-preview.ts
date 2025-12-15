@@ -20,7 +20,6 @@ export async function getContactsPreview(filters: Filters<Contact>) {
 			pagination: { page: 1, pageSize: 5 },
 			filters,
 		});
-
 		return result;
 	} catch (error) {
 		return handleError(error);

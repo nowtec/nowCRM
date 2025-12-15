@@ -1,6 +1,11 @@
 import qs from "qs";
 import languages from "@/lib/static/iso639-languages.json";
 import { normalizeLanguageValue } from "@/lib/utils/language-utils";
+import {
+	buildEventCompositionSentStatusAloneCondition,
+	buildEventCompositionSentStatusCondition,
+	hasEventCompositionSentStatusCombination,
+} from "./special-cases/event-composition-sent-status";
 
 const FIELD_OVERRIDES: Record<string, string[]> = {
 	subscriptions: ["channel", "name"],
@@ -220,10 +225,23 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 		fieldGroups[baseField].push({ key: k, value: v, operator: op });
 	}
 
+	// Special handling: Check if both event_composition and event_composition_sent_status are present
+	const { hasEventComposition, hasEventCompositionSentStatus } =
+		hasEventCompositionSentStatusCombination(fieldGroups);
+
 	// Build conditions for each field group
 	const conditions: any[] = [];
 
 	for (const [baseField, instances] of Object.entries(fieldGroups)) {
+		// Skip event_composition_sent_status if we're handling it together with event_composition
+		if (
+			baseField === "event_composition_sent_status" &&
+			hasEventComposition &&
+			hasEventCompositionSentStatus
+		) {
+			continue;
+		}
+
 		const fieldConditions: any[] = [];
 
 		for (const instance of instances) {
@@ -237,12 +255,29 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 
 			if (!treatAsPresent) continue;
 
-			const fieldCond = buildFieldCondition(
-				baseField,
-				instance.value,
-				instance.operator,
-			);
-			if (Object.keys(fieldCond).length) fieldConditions.push(fieldCond);
+			// Special handling for event_composition when combined with sent_status
+			if (
+				baseField === "event_composition" &&
+				hasEventComposition &&
+				hasEventCompositionSentStatus
+			) {
+				const sentStatusValue =
+					fieldGroups.event_composition_sent_status?.[0]?.value;
+				const condition = buildEventCompositionSentStatusCondition(
+					instance.value,
+					sentStatusValue,
+				);
+				if (condition) {
+					fieldConditions.push(condition);
+				}
+			} else {
+				const fieldCond = buildFieldCondition(
+					baseField,
+					instance.value,
+					instance.operator,
+				);
+				if (Object.keys(fieldCond).length) fieldConditions.push(fieldCond);
+			}
 		}
 
 		// If multiple conditions for the same field, use explicit $and/$or
@@ -255,6 +290,29 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 			conditions.push(combined);
 		} else if (fieldConditions.length === 1) {
 			conditions.push(fieldConditions[0]);
+		}
+	}
+
+	// Handle event_composition_sent_status when event_composition is not present
+	// In this case, filter by email_sent action only (without composition filter)
+	if (
+		hasEventCompositionSentStatus &&
+		!hasEventComposition &&
+		fieldGroups.event_composition_sent_status
+	) {
+		for (const instance of fieldGroups.event_composition_sent_status) {
+			if (
+				instance.value !== "" &&
+				instance.value != null &&
+				(instance.value === "sent" || instance.value === "not_sent")
+			) {
+				const condition = buildEventCompositionSentStatusAloneCondition(
+					instance.value,
+				);
+				if (condition) {
+					conditions.push(condition);
+				}
+			}
 		}
 	}
 

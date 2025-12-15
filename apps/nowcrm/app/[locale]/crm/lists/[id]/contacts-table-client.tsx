@@ -65,6 +65,8 @@ export default function ContactsTableClient({
 }: Props) {
 	const [data, setData] = React.useState(initialData);
 	const [pagination, setPagination] = React.useState(initialPagination);
+	// Ref to store latest pagination values to avoid stale closures
+	const paginationRef = React.useRef(pagination);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [searchTerm, setSearchTerm] = React.useState("");
 	const [filters, setFilters] = React.useState<any>(() =>
@@ -135,8 +137,8 @@ export default function ContactsTableClient({
 				.filter(Boolean);
 			const res = await fetchDataForVisibleColumns({
 				visibleIds: visibleColumns,
-				page: params.page ?? pagination.page,
-				pageSize: params.pageSize ?? pagination.pageSize,
+				page: params.page ?? paginationRef.current.page,
+				pageSize: params.pageSize ?? paginationRef.current.pageSize,
 				sortBy: params.sortBy ?? sortBy,
 				sortOrder: params.sortOrder ?? sortOrder,
 				filters: params.filters ?? effectiveFilters,
@@ -145,12 +147,20 @@ export default function ContactsTableClient({
 			if (res?.success) {
 				setData(res.data ?? []);
 				if (res.meta?.pagination) {
-					setPagination(res.meta.pagination);
+					const newPagination = res.meta.pagination;
+					setPagination(newPagination);
+					// Update ref with latest pagination
+					paginationRef.current = newPagination;
 				}
 			}
 			setIsLoading(false);
 		},
-		[pagination.page, pagination.pageSize, sortBy, sortOrder, effectiveFilters],
+		[
+			// Don't include pagination.page/pageSize - we use ref to avoid stale closures
+			sortBy,
+			sortOrder,
+			effectiveFilters,
+		],
 	);
 
 	const debouncedFetch = React.useMemo(() => {
@@ -189,12 +199,25 @@ export default function ContactsTableClient({
 		[fetchData, pagination.pageSize, effectiveFilters, sortBy, sortOrder],
 	);
 
+	// Keep paginationRef in sync with pagination state
+	React.useEffect(() => {
+		paginationRef.current = pagination;
+	}, [pagination]);
+
 	const handlePaginationChange = React.useCallback(
 		(page: number, pageSize: number) => {
 			updateUrl({ page, pageSize });
+			// Clear data immediately to prevent showing old page data
+			setData([]);
+			setIsLoading(true);
+			// Update ref immediately to avoid stale closure
+			paginationRef.current = { ...pagination, page, pageSize };
+			// Update local state optimistically
+			setPagination((prev) => ({ ...prev, page, pageSize }));
+			// Fetch data with new pagination
 			fetchData({ page, pageSize });
 		},
-		[updateUrl, fetchData],
+		[updateUrl, fetchData, pagination],
 	);
 
 	const handleSortingChange = React.useCallback(

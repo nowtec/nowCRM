@@ -57,7 +57,9 @@ export async function handleResponse<T>(
 		if (json.error) {
 			errorMessage = `${json.error.status} - ${json.error.message}`;
 		}
-
+		if (status === 500 || status === 400) {
+			console.log(json);
+		}
 		return {
 			data,
 			status,
