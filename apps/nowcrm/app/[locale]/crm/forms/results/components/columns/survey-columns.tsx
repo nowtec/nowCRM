@@ -160,7 +160,6 @@ export const columns: ColumnDef<Survey>[] = [
 		id: "actions",
 		header: "Actions",
 		cell: ({ row }) => {
-			const _survey = row.original;
 			return (
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
