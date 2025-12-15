@@ -372,9 +372,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
 				setFormData((prevData) =>
 					prevData ? { ...prevData, active: !checked } : null,
 				);
-				toast.error(
-					response.errorMessage || "Failed to update active state",
-				);
+				toast.error(response.errorMessage || "Failed to update active state");
 			} else {
 				toast.success(`Form ${checked ? "activated" : "deactivated"}`);
 			}

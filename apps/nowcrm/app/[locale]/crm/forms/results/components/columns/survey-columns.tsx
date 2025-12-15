@@ -27,8 +27,8 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { RouteConfig } from "@/lib/config/routes-config";
 import { getSurveyItemsBySurveyId } from "@/lib/actions/surveyItems/get-survey-items";
+import { RouteConfig } from "@/lib/config/routes-config";
 import { formatDateTimeStrapi } from "@/lib/strapi-date";
 import { deleteSurveyAction } from "./delete-survey";
 
@@ -84,7 +84,9 @@ export const columns: ColumnDef<Survey>[] = [
 	},
 	{
 		accessorKey: "name",
-		header: ({ column }) => <SortableHeader column={column} label="Completion" />,
+		header: ({ column }) => (
+			<SortableHeader column={column} label="Completion" />
+		),
 		cell: ({ row }) => {
 			const survey = row.original;
 			return (
@@ -158,7 +160,7 @@ export const columns: ColumnDef<Survey>[] = [
 		id: "actions",
 		header: "Actions",
 		cell: ({ row }) => {
-			const survey = row.original;
+			const _survey = row.original;
 			return (
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
@@ -266,4 +268,3 @@ export const renderSubComponent = ({ row }: { row: Row<Survey> }) => {
 	const survey = row.original;
 	return <SurveyItemsTable surveyId={survey.documentId} />;
 };
-

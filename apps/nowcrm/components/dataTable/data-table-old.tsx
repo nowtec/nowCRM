@@ -136,12 +136,12 @@ export default function DataTable<TData, TValue>({
 				? `${pathname}?${params.toString()}`
 				: pathname;
 			router.replace(newUrl, { scroll: false });
-			
+
 			// Determine if this is a search change or just a pagination change
 			const currentSearchTerm = initialSearch || "";
 			const isSearchChange = term !== currentSearchTerm;
 			const isPaginationChange = page !== undefined || pageSize !== undefined;
-			
+
 			// CRITICAL: Only call ONE callback to avoid duplicate fetches
 			// If it's a pagination change (with or without search), use onPaginationChange
 			// If it's ONLY a search change (no pagination params), use onSearchChange
@@ -155,7 +155,15 @@ export default function DataTable<TData, TValue>({
 				onSearchChange(term || "");
 			}
 		},
-		[searchParams, pathname, router, onPaginationChange, onSearchChange, initialSearch, pagination.pageSize],
+		[
+			searchParams,
+			pathname,
+			router,
+			onPaginationChange,
+			onSearchChange,
+			initialSearch,
+			pagination.pageSize,
+		],
 	);
 
 	const debouncedHandleSearch = React.useMemo(
@@ -548,7 +556,7 @@ export default function DataTable<TData, TValue>({
 							// Show loading skeletons when loading
 							Array.from({ length: pagination.pageSize }).map((_, index) => (
 								<TableRow key={`loading-${index}`}>
-									{filteredColumns.map((column, colIndex) => (
+									{filteredColumns.map((_column, colIndex) => (
 										<TableCell key={colIndex}>
 											<Skeleton className="h-4 w-full" />
 										</TableCell>

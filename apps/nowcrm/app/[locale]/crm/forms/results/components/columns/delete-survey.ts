@@ -28,4 +28,3 @@ export async function deleteSurveyAction(
 		return handleError(error);
 	}
 }
-

@@ -1,4 +1,4 @@
-import { ServiceName } from "@nowcrm/services";
+import type { ServiceName } from "@nowcrm/services";
 import { z } from "zod";
 
 export type FieldType = "text" | "number" | "date" | "relation" | "enum";

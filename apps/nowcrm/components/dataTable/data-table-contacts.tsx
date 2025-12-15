@@ -404,7 +404,7 @@ export default function DataTable<TData, TValue>({
 							// Show loading skeletons when loading and no data
 							Array.from({ length: pagination.pageSize }).map((_, index) => (
 								<TableRow key={`loading-${index}`}>
-									{filteredColumns.map((column, colIndex) => (
+									{filteredColumns.map((_column, colIndex) => (
 										<TableCell key={colIndex}>
 											<Skeleton className="h-4 w-full" />
 										</TableCell>

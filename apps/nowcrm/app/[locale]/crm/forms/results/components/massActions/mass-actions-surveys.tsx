@@ -24,4 +24,3 @@ const actionsConfig: ActionsConfig = {
 const SurveysMassActions = massActionsGenerator(actionsConfig);
 
 export default SurveysMassActions;
-

@@ -34,4 +34,3 @@ export async function massDeleteSurveys(
 		return handleError(error);
 	}
 }
-

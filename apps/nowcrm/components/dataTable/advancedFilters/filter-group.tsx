@@ -109,10 +109,7 @@ const FilterGroupComponent = <
 		// Only for non-relation fields that have operators enabled
 		const fieldConfig = config.FIELD_CONFIGS?.[selectedField];
 		const hasOperator = fieldConfig?.hasOperator !== false; // Default to true if not specified
-		if (
-			config.FIELD_TYPES[selectedField] !== "relation" &&
-			hasOperator
-		) {
+		if (config.FIELD_TYPES[selectedField] !== "relation" && hasOperator) {
 			newFilters[`${fieldKey}_operator`] = getOperatorsForField(
 				selectedField,
 				config.FIELD_TYPES,

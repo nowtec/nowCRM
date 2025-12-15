@@ -138,14 +138,14 @@ export default function ContactsTableClient({
 		// 1. No stored pagination OR stored pagination matches initial (user is on page 1)
 		// 2. No filters/search applied
 		// 3. This is truly the first load (no stored pagination that differs)
-		// 
+		//
 		// If stored pagination differs from initial, NEVER use initialData (which is always page 1)
 		// This prevents showing page 1 data when user has navigated to a different page
 		if (!shouldUseInitialData) {
 			// We have filters, search, or different pagination - start with empty data
 			return [];
 		}
-		
+
 		// Safe to use initialData - this is the first load with no filters/pagination/search
 		return [...initialData];
 	});
@@ -342,10 +342,14 @@ export default function ContactsTableClient({
 		}) => {
 			// Always allow pagination changes to go through (they should cancel previous fetches)
 			// For other changes, prevent multiple simultaneous calls
-			if (isFetchingRef.current && params.page === undefined && params.pageSize === undefined) {
+			if (
+				isFetchingRef.current &&
+				params.page === undefined &&
+				params.pageSize === undefined
+			) {
 				return;
 			}
-			
+
 			isFetchingRef.current = true;
 			setIsLoading(true);
 
@@ -412,14 +416,17 @@ export default function ContactsTableClient({
 										pageSize: params.pageSize ?? newPagination.pageSize,
 									}
 								: newPagination;
-						
+
 						setPagination(finalPagination);
 						// Update ref with latest pagination
 						paginationRef.current = finalPagination;
 						// Save pagination to localStorage
 						savePaginationToStorage(
 							"contacts",
-							{ page: finalPagination.page, pageSize: finalPagination.pageSize },
+							{
+								page: finalPagination.page,
+								pageSize: finalPagination.pageSize,
+							},
 							session,
 						);
 					}

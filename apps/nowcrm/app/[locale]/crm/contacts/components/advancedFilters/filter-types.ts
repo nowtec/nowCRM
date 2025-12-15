@@ -1,4 +1,4 @@
-import { ServiceName } from "@nowcrm/services";
+import type { ServiceName } from "@nowcrm/services";
 
 // Export FIELD_TYPES, FILTER_CATEGORIES, and RELATION_META for use with FilterGroupComponent
 export const FIELD_TYPES: Record<

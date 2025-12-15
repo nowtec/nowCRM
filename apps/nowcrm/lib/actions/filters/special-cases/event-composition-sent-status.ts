@@ -25,18 +25,15 @@ export function hasEventCompositionSentStatusCombination(
 	hasEventComposition: boolean;
 	hasEventCompositionSentStatus: boolean;
 } {
-	const hasEventComposition =
-		fieldGroups.event_composition &&
-		fieldGroups.event_composition.some(
-			(inst) =>
-				inst.value !== "" &&
-				inst.value != null &&
-				!(Array.isArray(inst.value) && inst.value.length === 0),
-		);
+	const hasEventComposition = fieldGroups.event_composition?.some(
+		(inst) =>
+			inst.value !== "" &&
+			inst.value != null &&
+			!(Array.isArray(inst.value) && inst.value.length === 0),
+	);
 
 	const hasEventCompositionSentStatus =
-		fieldGroups.event_composition_sent_status &&
-		fieldGroups.event_composition_sent_status.some(
+		fieldGroups.event_composition_sent_status?.some(
 			(inst) =>
 				inst.value !== "" &&
 				inst.value != null &&
@@ -83,13 +80,12 @@ export function buildEventCompositionSentStatusCondition(
 		// Contacts that DON'T HAVE events with the selected composition AND action = "email_sent"
 		// This means they didn't receive the email for this composition
 		return {
-            $or: [
-                { events: { documentId: { $null: true } } },
-                { events: { composition: { documentId: { $not: compositionId } } } }
-              ]
-
-            }
-		}
+			$or: [
+				{ events: { documentId: { $null: true } } },
+				{ events: { composition: { documentId: { $not: compositionId } } } },
+			],
+		};
+	}
 }
 
 /**
@@ -121,4 +117,3 @@ export function buildEventCompositionSentStatusAloneCondition(
 		};
 	}
 }
-
