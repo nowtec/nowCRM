@@ -67,7 +67,6 @@ export default {
         upPassword
       )
       
-      console.log("CRM_ADMIN_PASSWORD:", upPassword)
 
       if (process.env.NT_ACTIVE_SERVICES?.includes('journeys')) {
         setUpJourneysWebhook(strapi);
