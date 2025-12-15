@@ -63,8 +63,8 @@ export async function populateStartupEntry<T extends UID.ContentType>(
   data: Record<string, any>[]
 ): Promise<string[]> {
   try {
-    const items = await strapi.documents(api).findMany();
-    if (items.length > 0) return items.map((i: any) => i.documentId);
+    const count = await strapi.documents(api).count({});
+      if (count !== 0) return [];
 
     const ids = await Promise.all(
       data.map(async (item) => {
