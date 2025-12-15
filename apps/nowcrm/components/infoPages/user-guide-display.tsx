@@ -29,7 +29,7 @@ export function UserGuideDisplay() {
 			<CardFooter>
 				<Button asChild className="w-full gap-2">
 					<a
-						href="https://nowwiki.nowtec.solutions/"
+						href="https://wiki.nowtec.solutions/"
 						target="_blank"
 						rel="noopener noreferrer"
 					>
