@@ -258,11 +258,6 @@ function JourneyBuilderContent({
 	// Helper function to create a new node from plus icon
 	const createNodeFromPlus = useCallback(
 		async (sourceNodeId: string) => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
-
 			const sourceNode = nodes.find((node) => node.id === sourceNodeId);
 			if (!sourceNode || !reactFlowInstance) return;
 
@@ -340,7 +335,6 @@ function JourneyBuilderContent({
 			nodes,
 			edges,
 			reactFlowInstance,
-			isSaving,
 			onNodeCreate,
 			setNodes,
 			setPendingConnection,
@@ -479,11 +473,6 @@ function JourneyBuilderContent({
 
 	const onConnect = useCallback(
 		async (params: Connection) => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
-
 			// Find source and target nodes
 			const rawSourceNode = nodes.find((node) => node.id === params.source);
 			const rawTargetNode = nodes.find((node) => node.id === params.target);
@@ -586,7 +575,6 @@ function JourneyBuilderContent({
 			nodes,
 			edges,
 			onEdgeCreate,
-			isSaving,
 		],
 	);
 
@@ -600,11 +588,6 @@ function JourneyBuilderContent({
 	// Fix: Update the onConnectEnd handler to match ReactFlow's expected type
 	const onConnectEnd: OnConnectEnd = useCallback(
 		async (event) => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
-
 			if (!dragHandleNodeId || !reactFlowInstance) return;
 
 			// Check if we're dropping on the canvas (not on an existing node)
@@ -714,7 +697,6 @@ function JourneyBuilderContent({
 			nodes,
 			edges,
 			onNodeCreate,
-			isSaving,
 			setPendingConnection,
 			setPendingNodeId,
 			setShowStepSelectorPanel,
@@ -731,11 +713,6 @@ function JourneyBuilderContent({
 	const onDrop = useCallback(
 		async (event: React.DragEvent<HTMLDivElement>) => {
 			event.preventDefault();
-
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
 
 			if (!reactFlowWrapper.current || !reactFlowInstance) return;
 
@@ -819,7 +796,7 @@ function JourneyBuilderContent({
 				return updatedNodes;
 			});
 		},
-		[reactFlowInstance, setNodes, fitAllNodes, onNodeCreate, isSaving],
+		[reactFlowInstance, setNodes, fitAllNodes, onNodeCreate],
 	);
 
 	const onNodeClick = useCallback(
@@ -928,11 +905,6 @@ function JourneyBuilderContent({
 
 	const updateNodeConfig = useCallback(
 		async (nodeId: string, config: any) => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
-
 			console.log("Node config updated:", { nodeId, config });
 			setNodes((nds) => {
 				return nds.map((node) => {
@@ -959,16 +931,11 @@ function JourneyBuilderContent({
 				});
 			});
 		},
-		[setNodes, onNodeUpdate, isSaving],
+		[setNodes, onNodeUpdate],
 	);
 
 	const updateNodeLabel = useCallback(
 		async (nodeId: string, label: string) => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
-
 			console.log("Node label updated:", { nodeId, label });
 			setNodes((nds) => {
 				return nds.map((node) => {
@@ -995,16 +962,11 @@ function JourneyBuilderContent({
 				});
 			});
 		},
-		[setNodes, onNodeUpdate, isSaving],
+		[setNodes, onNodeUpdate],
 	);
 
 	const updateNodeType = useCallback(
 		async (nodeId: string, newType: string): Promise<Node | null> => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return null;
-			}
-
 			let resolvedNode: Node | null = null;
 
 			await new Promise<void>((resolve) => {
@@ -1072,16 +1034,11 @@ function JourneyBuilderContent({
 
 			return resolvedNode;
 		},
-		[setNodes, isSaving, onNodeUpdate],
+		[setNodes, onNodeUpdate],
 	);
 
 	const updateEdgeConditions = useCallback(
 		async (edgeId: string, data: any) => {
-			if (isSaving) {
-				toast.error("Please wait for the current operation to complete");
-				return;
-			}
-
 			console.log("Edge conditions updated:", { edgeId, data });
 
 			// Find the current edge to ensure we have the connectionId
@@ -1184,16 +1141,11 @@ function JourneyBuilderContent({
 				});
 			});
 		},
-		[setEdges, onEdgeConditionsUpdate, isSaving, edges],
+		[setEdges, onEdgeConditionsUpdate, edges],
 	);
 
 	const deleteNode = useCallback(async () => {
 		if (!selectedNode) return;
-
-		if (isSaving) {
-			toast.error("Please wait for the current operation to complete");
-			return;
-		}
 
 		console.log("Node deleted:", selectedNode);
 
@@ -1228,15 +1180,10 @@ function JourneyBuilderContent({
 		setTimeout(() => {
 			fitAllNodes();
 		}, 50);
-	}, [selectedNode, setNodes, setEdges, fitAllNodes, isSaving, onNodeDelete]);
+	}, [selectedNode, setNodes, setEdges, fitAllNodes, onNodeDelete]);
 
 	const deleteEdge = useCallback(async () => {
 		if (!selectedEdge) return;
-
-		if (isSaving) {
-			toast.error("Please wait for the current operation to complete");
-			return;
-		}
 
 		console.log("Edge deleted:", selectedEdge);
 
@@ -1256,7 +1203,7 @@ function JourneyBuilderContent({
 
 		// Clear the selected edge
 		setSelectedEdge(null);
-	}, [selectedEdge, setEdges, isSaving, onEdgeDelete]);
+	}, [selectedEdge, setEdges, onEdgeDelete]);
 
 	// Determine if a configuration panel is open
 	const isPanelOpen = selectedNode || selectedEdge || showStepSelectorPanel;
@@ -1354,11 +1301,6 @@ function JourneyBuilderContent({
 			updateNodeLabel: (label: string) =>
 				updateNodeLabel(selectedNode.id, label),
 			updateNodeData: (data: Partial<any>) => {
-				if (isSaving) {
-					toast.error("Please wait for the current operation to complete");
-					return;
-				}
-
 				console.log("Node data updated:", {
 					nodeId: selectedNode.id,
 					data,
@@ -1390,11 +1332,6 @@ function JourneyBuilderContent({
 			edges,
 			nodes,
 			updateEdge: (edgeId: string, data: any) => {
-				if (isSaving) {
-					toast.error("Please wait for the current operation to complete");
-					return;
-				}
-
 				console.log("Edge data updated from Panel:", { edgeId, data });
 				setEdges((eds) => {
 					return eds.map((edge) => {
@@ -1738,7 +1675,6 @@ function JourneyBuilderContent({
 									size="icon"
 									onClick={deleteNode}
 									title="Delete step"
-									disabled={isSaving}
 								>
 									<Trash2 className="h-4 w-4" />
 								</Button>
@@ -1768,7 +1704,6 @@ function JourneyBuilderContent({
 								size="icon"
 								onClick={deleteEdge}
 								title="Delete connection"
-								disabled={isSaving}
 							>
 								<Trash2 className="h-4 w-4" />
 							</Button>
