@@ -1062,7 +1062,8 @@
       "placeholder": "Inserisci la tua descrizione...",
       "unsubscribeLabel": "Includi link di annullamento iscrizione",
       "unsubscribeTooltip": "Se abilitato, le email includeranno un link per annullare l'iscrizione in fondo",
-      "regenerate": "Rigenera",
+      "backButton": "Riscrivi il prompt",
+      "regenerate": "Rigenera con lo stesso prompt",
       "regenerating": "Rigenerazione...",
       "nextButton": "Avanti: Personalizzazione dei canali"
     },
@@ -1074,6 +1075,7 @@
       "additionalPrompt": "Prompt aggiuntivo",
       "tooltip": "Se lasci il prompt aggiuntivo vuoto, verrà utilizzato lo stesso risultato per questo canale.",
       "textareaPlaceholder": "es. Aggiungi hashtag, formatta per mobile, ecc.",
+      "backButton": "Modifica testo",
       "submitting": "Invio...",
       "nextButton": "Avanti: Elaborazione della composizione"
     },

@@ -1062,7 +1062,8 @@
       "placeholder": "Entrez votre description...",
       "unsubscribeLabel": "Inclure un lien de désinscription",
       "unsubscribeTooltip": "Si activé, les e-mails incluront un lien de désinscription en bas",
-      "regenerate": "Régénérer",
+      "backButton": "Réécrire l'invite",
+      "regenerate": "Régénérer avec la même invite",
       "regenerating": "Régénération...",
       "nextButton": "Suivant : Personnalisation des canaux"
     },
@@ -1074,6 +1075,7 @@
       "additionalPrompt": "Invite supplémentaire",
       "tooltip": "Si vous laissez l'invite supplémentaire vide, le même résultat sera utilisé pour ce canal.",
       "textareaPlaceholder": "par exemple, ajouter des hashtags, format pour mobile, etc.",
+      "backButton": "Modifier le texte",
       "submitting": "Soumission...",
       "nextButton": "Suivant: Finaliser la composition"
     },

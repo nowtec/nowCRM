@@ -1065,7 +1065,8 @@
       "placeholder": "Enter your description...",
       "unsubscribeLabel": "Include unsubscribe link",
       "unsubscribeTooltip": "When enabled, emails will include an unsubscribe link at the bottom",
-      "regenerate": "Regenerate",
+      "backButton": "Rewrite the prompt",
+      "regenerate": "Regenerate with same prompt",
       "regenerating": "Regenerating...",
       "nextButton": "Next: Channel Customizations"
     },
@@ -1077,6 +1078,7 @@
       "additionalPrompt": "Additional Prompt",
       "tooltip": "If you leave the prompt addition empty, the same result will be used for this channel.",
       "textareaPlaceholder": "e.g., Add hashtags, Format for mobile, etc.",
+      "backButton": "Edit text",
       "submitting": "Submitting...",
       "nextButton": "Next: Finalize Composition"
     },
