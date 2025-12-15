@@ -21,7 +21,7 @@ export async function getContactByEmail(
 
 	const response = await contactsService.find(session.jwt, {
 		populate: {
-			subscriptions: { populate: ["id", "channel", "subscribedAt"] },
+			subscriptions: { populate: ["channel"] },
 			contact_interests: "*",
 		},
 		filters: {

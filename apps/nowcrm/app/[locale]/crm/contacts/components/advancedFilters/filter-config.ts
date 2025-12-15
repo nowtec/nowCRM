@@ -62,6 +62,7 @@ export const contactsFilterConfig: FilterConfig = {
 		event_action: "relation",
 		event_status: "text",
 		event_composition: "relation",
+		event_composition_sent_status: "enum",
 		event_channel: "relation",
 
 		// Donations
@@ -298,6 +299,13 @@ export const contactsFilterConfig: FilterConfig = {
 			serviceName: "compositionsService",
 			filterKey: "name",
 		},
+		event_composition_sent_status: {
+			name: "event_composition_sent_status",
+			type: "enum",
+			label: "Event Composition Sent Status",
+			enumValues: ["sent", "not_sent"],
+			hasOperator: false,
+		},
 		event_channel: {
 			name: "event_channel",
 			type: "relation",
@@ -471,6 +479,7 @@ export const contactsFilterConfig: FilterConfig = {
 				"event_action",
 				"event_status",
 				"event_composition",
+				"event_composition_sent_status",
 				"event_channel",
 			],
 		},
@@ -612,3 +621,18 @@ export const contactsFilterConfig: FilterConfig = {
 		},
 	},
 };
+
+// Export FIELD_CONFIGS for use in filter components
+export const FIELD_CONFIGS: Record<
+	string,
+	{
+		hasOperator?: boolean;
+	}
+> = Object.fromEntries(
+	Object.entries(contactsFilterConfig.fieldConfigs).map(([key, config]) => [
+		key,
+		{
+			hasOperator: (config as { hasOperator?: boolean }).hasOperator,
+		},
+	]),
+);

@@ -15,7 +15,7 @@ export async function unsubscribeUser(
 
 	const response = await contactsService.find(env.CRM_STRAPI_API_TOKEN, {
 		populate: {
-			subscriptions: { populate: ["id", "channel", "subscribedAt"] },
+			subscriptions: { populate: [ "channel"] },
 			contact_interests: "*",
 		},
 		filters: {

@@ -33,6 +33,12 @@ export interface FilterFieldConfig {
 			deduplicateByLabel?: boolean;
 		}
 	>;
+	FIELD_CONFIGS?: Record<
+		string,
+		{
+			hasOperator?: boolean;
+		}
+	>;
 }
 
 interface FilterFieldProps<
@@ -70,6 +76,8 @@ const FilterField = <
 	const isNullOperator = operator === "$null" || operator === "$notNull";
 
 	const relationMeta = config.RELATION_META?.[baseFieldName];
+	const fieldConfig = config.FIELD_CONFIGS?.[baseFieldName];
+	const hasOperator = fieldConfig?.hasOperator !== false; // Default to true if not specified
 	const relationPath = `groups.${groupIndex}.filters.${fieldName}` as any;
 
 	return (
@@ -81,7 +89,7 @@ const FilterField = <
 						.replace(/\b\w/g, (l) => l.toUpperCase())}
 				</div>
 
-				{fieldType !== "relation" && (
+				{fieldType !== "relation" && hasOperator && (
 					<div className="min-w-[100px] shrink-0">
 						<Select value={operator} onValueChange={onOperatorChange}>
 							<SelectTrigger className="h-8">
@@ -118,6 +126,25 @@ const FilterField = <
 									<SelectItem value="de">Deutsch</SelectItem>
 									<SelectItem value="fr">Français</SelectItem>
 									<SelectItem value="it">Italiano</SelectItem>
+								</SelectContent>
+							</Select>
+						) : fieldType === "enum" &&
+							baseFieldName === "event_composition_sent_status" ? (
+							<Select value={value || ""} onValueChange={onValueChange}>
+								<SelectTrigger className="h-8">
+									<SelectValue placeholder="Select..." />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="sent">
+										{t(
+											"AdvancedFilters.fields.event_composition_sent_status.sent",
+										)}
+									</SelectItem>
+									<SelectItem value="not_sent">
+										{t(
+											"AdvancedFilters.fields.event_composition_sent_status.not_sent",
+										)}
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						) : fieldType === "text" && baseFieldName === "country" ? (

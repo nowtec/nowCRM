@@ -158,6 +158,11 @@
       "survey_items_question": "Survey Responses - Question",
       "survey_items_answer": "Survey Responses - Answer",
       "event_composition": "Event - Composition",
+      "event_composition_sent_status": {
+        "label": "Event Composition - Sent Status",
+        "sent": "Sent",
+        "not_sent": "Not Sent"
+      },
       "event_channel": "Event - Channel",
       "journey_steps": "Journey Steps"
     },

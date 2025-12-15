@@ -136,21 +136,26 @@ export default function DataTable<TData, TValue>({
 				? `${pathname}?${params.toString()}`
 				: pathname;
 			router.replace(newUrl, { scroll: false });
-			// Notify parent component of search changes (for localStorage persistence)
-			if (onSearchChange) {
+			
+			// Determine if this is a search change or just a pagination change
+			const currentSearchTerm = initialSearch || "";
+			const isSearchChange = term !== currentSearchTerm;
+			const isPaginationChange = page !== undefined || pageSize !== undefined;
+			
+			// CRITICAL: Only call ONE callback to avoid duplicate fetches
+			// If it's a pagination change (with or without search), use onPaginationChange
+			// If it's ONLY a search change (no pagination params), use onSearchChange
+			if (isPaginationChange && onPaginationChange) {
+				// Pagination change - let parent handle the fetch with correct page
+				const finalPage = page ?? 1;
+				const finalPageSize = pageSize ?? pagination.pageSize;
+				onPaginationChange(finalPage, finalPageSize);
+			} else if (isSearchChange && onSearchChange) {
+				// Pure search change (no pagination params) - notify parent
 				onSearchChange(term || "");
 			}
-			// Notify parent component of pagination changes (pagination is handled via localStorage)
-			if (
-				(page !== undefined || pageSize !== undefined) &&
-				onPaginationChange
-			) {
-				const finalPage = page ?? 1;
-				const finalPageSize = pageSize ?? 10;
-				onPaginationChange(finalPage, finalPageSize);
-			}
 		},
-		[searchParams, pathname, router, onPaginationChange, onSearchChange],
+		[searchParams, pathname, router, onPaginationChange, onSearchChange, initialSearch, pagination.pageSize],
 	);
 
 	const debouncedHandleSearch = React.useMemo(
@@ -228,6 +233,28 @@ export default function DataTable<TData, TValue>({
 			}
 		},
 		[sortingState, updateURL, onPaginationChange, pagination.pageSize],
+	);
+
+	// Handle pagination changes from TanStack Table - route to parent callback
+	const handlePaginationChange = React.useCallback(
+		(updater: any) => {
+			// Prevent TanStack Table from updating its own state
+			// Instead, call parent's onPaginationChange callback
+			if (onPaginationChange) {
+				const newPagination =
+					typeof updater === "function"
+						? updater({
+								pageIndex: pagination.page - 1,
+								pageSize: pagination.pageSize,
+							})
+						: updater;
+				// Convert pageIndex (0-based) to page (1-based)
+				const newPage = (newPagination.pageIndex ?? pagination.page - 1) + 1;
+				const newPageSize = newPagination.pageSize ?? pagination.pageSize;
+				onPaginationChange(newPage, newPageSize);
+			}
+		},
+		[onPaginationChange, pagination],
 	);
 
 	// Initialize visibility from localStorage or default from column meta
@@ -387,6 +414,7 @@ export default function DataTable<TData, TValue>({
 		onColumnVisibilityChange: handleColumnVisibilityChange,
 		onRowSelectionChange: setRowSelection,
 		onExpandedChange: setExpanded,
+		onPaginationChange: handlePaginationChange,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getExpandedRowModel: getExpandedRowModel(),
@@ -515,6 +543,17 @@ export default function DataTable<TData, TValue>({
 										</TableRow>
 									)}
 								</React.Fragment>
+							))
+						) : isLoading ? (
+							// Show loading skeletons when loading
+							Array.from({ length: pagination.pageSize }).map((_, index) => (
+								<TableRow key={`loading-${index}`}>
+									{filteredColumns.map((column, colIndex) => (
+										<TableCell key={colIndex}>
+											<Skeleton className="h-4 w-full" />
+										</TableCell>
+									))}
+								</TableRow>
 							))
 						) : (
 							<TableRow>

@@ -35,7 +35,7 @@ export async function findRandomContact(): Promise<Contact | null> {
 	}
 	const response = await contactsService.find(session?.jwt, {
 		populate: {
-			subscriptions: { populate: ["id", "channel", "subscribedAt"] },
+			subscriptions: { populate: ["channel"] },
 			contact_interests: "*",
 		},
 		sort: [randomSort],

@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableViewOptions } from "./data-table-view-options";
 
@@ -399,18 +400,17 @@ export default function DataTable<TData, TValue>({
 						))}
 					</TableHeader>
 					<TableBody>
-						{isLoading ? (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className="h-24 text-center"
-								>
-									<div className="flex items-center justify-center">
-										<div className="h-6 w-6 animate-spin rounded-full border-primary border-b-2"></div>
-										<span className="ml-2">Loading...</span>
-									</div>
-								</TableCell>
-							</TableRow>
+						{isLoading && !table.getRowModel().rows?.length ? (
+							// Show loading skeletons when loading and no data
+							Array.from({ length: pagination.pageSize }).map((_, index) => (
+								<TableRow key={`loading-${index}`}>
+									{filteredColumns.map((column, colIndex) => (
+										<TableCell key={colIndex}>
+											<Skeleton className="h-4 w-full" />
+										</TableCell>
+									))}
+								</TableRow>
+							))
 						) : table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map((row) => (
 								<React.Fragment key={row.id}>

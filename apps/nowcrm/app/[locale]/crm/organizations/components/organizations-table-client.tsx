@@ -107,12 +107,43 @@ export default function OrganizationsTableClient({
 		);
 	}, [initialSearchFromStorage, search]);
 
+	// CRITICAL: Determine if we should use initialData BEFORE state initialization
+	// This must be computed synchronously, not in useMemo, to prevent React from using initialData on remount
+	// NEVER use initialData if:
+	// 1. We have stored pagination that differs from initial (user navigated to different page)
+	// 2. We have local filters
+	// 3. We have stored search
+	const shouldUseInitialData = (() => {
+		// If we have filters or search, never use initialData
+		if (hasLocalFilters || hasStoredSearch) {
+			return false;
+		}
+		// If we have stored pagination, only use initialData if it matches exactly
+		if (hasStoredPagination && initialPaginationFromStorage) {
+			return (
+				initialPaginationFromStorage.page === initialPagination.page &&
+				initialPaginationFromStorage.pageSize === initialPagination.pageSize
+			);
+		}
+		// No stored pagination and no filters/search - safe to use initialData (first load)
+		return true;
+	})();
+
 	const [data, setData] = React.useState(() => {
-		// If we have localFilters, stored pagination, or stored search, start with empty data to prevent flash
-		// The useEffect will immediately fetch with correct filters/pagination/search
-		return hasLocalFilters || hasStoredPagination || hasStoredSearch
-			? []
-			: initialData;
+		// CRITICAL: Only use initialData if:
+		// 1. No stored pagination OR stored pagination matches initial (user is on page 1)
+		// 2. No filters/search applied
+		// 3. This is truly the first load (no stored pagination that differs)
+		// 
+		// If stored pagination differs from initial, NEVER use initialData (which is always page 1)
+		// This prevents showing page 1 data when user has navigated to a different page
+		if (!shouldUseInitialData) {
+			// We have filters, search, or different pagination - start with empty data
+			return [];
+		}
+		
+		// Safe to use initialData - this is the first load with no filters/pagination/search
+		return [...initialData];
 	});
 
 	// Initialize pagination from localStorage if available, otherwise use initialPagination
@@ -173,6 +204,9 @@ export default function OrganizationsTableClient({
 
 	// Ref to prevent multiple simultaneous fetch calls
 	const isFetchingRef = React.useRef(false);
+	// Ref to store latest pagination values to avoid stale closures
+	const paginationRef = React.useRef(pagination);
+	// SIMPLE APPROACH: Copy initialData to state ONCE on mount, then NEVER use initialData prop again
 
 	// Create user-specific localStorage key
 	const LS_COLUMN_VISIBILITY_KEY = React.useMemo(() => {
@@ -307,10 +341,12 @@ export default function OrganizationsTableClient({
 			filters?: any;
 			search?: string;
 		}) => {
-			// Prevent multiple simultaneous calls
-			if (isFetchingRef.current) {
+			// Always allow pagination changes to go through (they should cancel previous fetches)
+			// For other changes, prevent multiple simultaneous calls
+			if (isFetchingRef.current && params.page === undefined && params.pageSize === undefined) {
 				return;
 			}
+			
 			isFetchingRef.current = true;
 			setIsLoading(true);
 
@@ -344,8 +380,8 @@ export default function OrganizationsTableClient({
 					}
 				}
 
-				const pageToUse = params.page ?? pagination.page;
-				const pageSizeToUse = params.pageSize ?? pagination.pageSize;
+				const pageToUse = params.page ?? paginationRef.current.page;
+				const pageSizeToUse = params.pageSize ?? paginationRef.current.pageSize;
 
 				// Normalize search: use param if provided, otherwise use currentSearch, treat empty/null as no search
 				const searchToUse =
@@ -363,16 +399,29 @@ export default function OrganizationsTableClient({
 					filters: mergedFilters,
 					search: searchToUse,
 				});
-				console.log(res);
 				if (res?.success && res.data) {
+					// Set the fetched data - always use data state, never initialData prop
 					setData(res.data);
 					if (res.meta?.pagination) {
 						const newPagination = res.meta.pagination;
-						setPagination(newPagination);
+						// Verify the response matches what we requested (for pagination changes)
+						// If we explicitly requested a page, use that; otherwise use server response
+						const finalPagination =
+							params.page !== undefined || params.pageSize !== undefined
+								? {
+										...newPagination,
+										page: params.page ?? newPagination.page,
+										pageSize: params.pageSize ?? newPagination.pageSize,
+									}
+								: newPagination;
+						
+						setPagination(finalPagination);
+						// Update ref with latest pagination
+						paginationRef.current = finalPagination;
 						// Save pagination to localStorage
 						savePaginationToStorage(
 							"organizations",
-							{ page: newPagination.page, pageSize: newPagination.pageSize },
+							{ page: finalPagination.page, pageSize: finalPagination.pageSize },
 							session,
 						);
 					}
@@ -388,8 +437,7 @@ export default function OrganizationsTableClient({
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[
-			pagination.page,
-			pagination.pageSize,
+			// Don't include pagination.page/pageSize - we use ref to avoid stale closures
 			currentSortBy,
 			currentSortOrder,
 			currentSearch,
@@ -406,6 +454,11 @@ export default function OrganizationsTableClient({
 			page: 1, // Reset to first page
 		});
 	});
+
+	// Keep paginationRef in sync with pagination state
+	React.useEffect(() => {
+		paginationRef.current = pagination;
+	}, [pagination]);
 
 	// Update the ref when fetchData changes
 	React.useEffect(() => {
@@ -546,9 +599,17 @@ export default function OrganizationsTableClient({
 			onPaginationChange={(page, pageSize) => {
 				// Save pagination to localStorage immediately
 				savePaginationToStorage("organizations", { page, pageSize }, session);
-				// Update local state
-				setPagination((prev) => ({ ...prev, page, pageSize }));
-				// Fetch data with new pagination
+				// Clear data immediately - we only want to show fetched data for the new page
+				// Since we never use initialData prop after mount, clearing data shows empty/loading
+				setData([]);
+				// Set loading state immediately to show loading skeletons
+				setIsLoading(true);
+				// Update local state optimistically for immediate UI feedback
+				const newPagination = { ...pagination, page, pageSize };
+				setPagination(newPagination);
+				// Update ref immediately to avoid stale closure
+				paginationRef.current = newPagination;
+				// Fetch data with new pagination - use explicit params to ensure correct page
 				fetchData({ page, pageSize });
 			}}
 			onSearchChange={(searchTerm, filters) => {
