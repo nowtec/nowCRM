@@ -8,6 +8,7 @@ import {
 	channelsService,
 	contactsService,
 	journeyStepsService,
+	settingsService,
 	subscriptionsService,
 } from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
@@ -234,15 +235,36 @@ export async function processTriggerMessage(data: any) {
 				},
 			);
 			if (contact.data) {
-				const checkSubscription = await contactsService.checkSubscription(
+				const emailChannelId = email_channel.data[0].documentId;
+
+				// Check settings to see if subscription checking should be ignored
+				const settings = await settingsService.find(
 					env.JOURNEYS_STRAPI_API_TOKEN,
-					contact.data,
-					CommunicationChannel.EMAIL,
 				);
-				if (!checkSubscription.data) {
+				const shouldIgnoreSubscriptions =
+					settings.data?.[0]?.subscription === "ignore";
+
+				// Check if contact has any subscription (active or inactive) for email channel
+				const existingSubscription = contact.data.subscriptions?.find(
+					(sub) => sub.channel?.documentId === emailChannelId,
+				);
+
+				// If there's an inactive subscription, don't create a new one and don't send
+				if (existingSubscription && !existingSubscription.active) {
+					logger.debug(
+						`Contact ${contactId} has inactive subscription for email channel. Skipping subscription creation and job creation.`,
+					);
+					return ServiceResponse.success(
+						"Contact has inactive subscription, skipping journey trigger",
+						null,
+					);
+				}
+
+				// Only create subscription if there's no subscription at all and settings don't ignore subscriptions
+				if (!existingSubscription && !shouldIgnoreSubscriptions) {
 					await subscriptionsService.create(
 						{
-							channel: email_channel.data[0].documentId,
+							channel: emailChannelId,
 							active: true,
 							contact: contactId,
 							subscribed_at: new Date(),
