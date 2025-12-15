@@ -1,12 +1,14 @@
 import type { PaginationParams } from "@nowcrm/services";
-import { surveyItemsService } from "@nowcrm/services/server";
+import { surveysService } from "@nowcrm/services/server";
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import DataTable from "@/components/dataTable/data-table";
 import ErrorMessage from "@/components/error-message";
-import { columns } from "../components/columns/survey-item-columns";
-import CreateFormItemDialog from "../components/create-dialog";
-import MassActionsSurveyItems from "../components/massActions/mass-actions";
+import {
+	columns,
+	renderSubComponent,
+} from "../components/columns/survey-columns";
+import MassActionsSurveys from "../components/massActions/mass-actions-surveys";
 
 export default async function Page(props: {
 	params: Promise<{ id: number }>;
@@ -28,8 +30,8 @@ export default async function Page(props: {
 
 	const session = await auth();
 
-	const response = await surveyItemsService.find(session?.jwt, {
-		populate: ["survey", "file"],
+	const response = await surveysService.find(session?.jwt, {
+		populate: ["contact"],
 		sort: [`${sortBy}:${sortOrder}` as any],
 		pagination: {
 			page,
@@ -37,10 +39,10 @@ export default async function Page(props: {
 		},
 		filters: {
 			$or: [
-				{ answer: { $containsi: search } },
-				{ question: { $containsi: search } },
+				{ name: { $containsi: search } },
+				{ form_id: { $containsi: search } },
 			],
-			survey: { form_id: { $eq: formId } },
+			form_id: { $eq: formId },
 		},
 	});
 
@@ -49,20 +51,21 @@ export default async function Page(props: {
 	}
 
 	const { meta } = response;
-	const items = response.data;
+	const surveys = response.data;
 
 	return (
 		<div className="container">
 			<DataTable
-				data={items}
+				data={surveys}
 				columns={columns}
-				table_name="survey_items"
-				table_title="Survey Items"
-				mass_actions={MassActionsSurveyItems}
+				table_name="surveys"
+				table_title="Form Completions"
+				mass_actions={MassActionsSurveys}
 				pagination={meta.pagination}
-				createDialog={CreateFormItemDialog}
 				session={session as Session}
 				sorting={{ sortBy, sortOrder }}
+				renderSubComponent={renderSubComponent}
+				hiddenCreate={true}
 			/>
 		</div>
 	);
