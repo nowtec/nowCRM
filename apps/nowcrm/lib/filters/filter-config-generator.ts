@@ -1,3 +1,4 @@
+import { ServiceName } from "@nowcrm/services";
 import { z } from "zod";
 
 export type FieldType = "text" | "number" | "date" | "relation" | "enum";
@@ -6,7 +7,7 @@ export interface FilterFieldConfig {
 	name: string;
 	type: FieldType;
 	label?: string;
-	serviceName?: string; // For relation fields
+	serviceName?: ServiceName; // For relation fields
 	filterKey?: string; // For relation fields - specifies which field to filter on in the related entity
 	enumValues?: string[]; // For enum fields
 	hasOperator?: boolean; // Default true for text/number/date

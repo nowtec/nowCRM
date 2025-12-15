@@ -1,3 +1,5 @@
+import { ServiceName } from "@nowcrm/services";
+
 // Export FIELD_TYPES, FILTER_CATEGORIES, and RELATION_META for use with FilterGroupComponent
 export const FIELD_TYPES: Record<
 	string,
@@ -73,7 +75,7 @@ export const FIELD_TYPES: Record<
 export const RELATION_META: Record<
 	string,
 	{
-		serviceName: string;
+		serviceName: ServiceName;
 		labelKey: string;
 		filterKey?: string;
 		filter?: string;
@@ -81,7 +83,7 @@ export const RELATION_META: Record<
 	}
 > = {
 	contact_types: {
-		serviceName: "contactTypeService",
+		serviceName: "contactTypesService",
 		labelKey: "AdvancedFilters.fields.contact_types",
 	},
 	contact_interests: {
@@ -89,28 +91,28 @@ export const RELATION_META: Record<
 		labelKey: "AdvancedFilters.fields.contact_interests",
 	},
 	subscriptions: {
-		serviceName: "channelService",
+		serviceName: "channelsService",
 		labelKey: "AdvancedFilters.fields.subscriptions",
 		filter: "channel",
 	},
 	ranks: {
-		serviceName: "rankService",
+		serviceName: "contactRanksService",
 		labelKey: "AdvancedFilters.fields.rank",
 	},
 	department: {
-		serviceName: "departmentService",
+		serviceName: "departmentsService",
 		labelKey: "AdvancedFilters.fields.department",
 	},
 	job_title: {
-		serviceName: "jobTitleService",
+		serviceName: "contactJobTitlesService",
 		labelKey: "AdvancedFilters.fields.job_title",
 	},
 	media_types: {
-		serviceName: "mediaTypeService",
+		serviceName: "mediaTypesService",
 		labelKey: "AdvancedFilters.fields.media_type",
 	},
 	organization: {
-		serviceName: "organizationService",
+		serviceName: "organizationsService",
 		labelKey: "AdvancedFilters.fields.organization",
 	},
 	industry: {
@@ -118,11 +120,11 @@ export const RELATION_META: Record<
 		labelKey: "AdvancedFilters.fields.industry",
 	},
 	sources: {
-		serviceName: "sourceService",
+		serviceName: "sourcesService",
 		labelKey: "AdvancedFilters.fields.source",
 	},
 	lists: {
-		serviceName: "listService",
+		serviceName: "listsService",
 		labelKey: "AdvancedFilters.fields.lists",
 	},
 	journeys: {
@@ -157,12 +159,12 @@ export const RELATION_META: Record<
 		deduplicateByLabel: true,
 	},
 	event_composition: {
-		serviceName: "compositionService",
+		serviceName: "compositionsService",
 		labelKey: "AdvancedFilters.fields.event_composition",
-		filterKey: "category",
+		filterKey: "name",
 	},
 	event_channel: {
-		serviceName: "channelService",
+		serviceName: "channelsService",
 		labelKey: "AdvancedFilters.fields.event_channel",
 		filterKey: "name",
 	},
@@ -172,7 +174,7 @@ export const RELATION_META: Record<
 	},
 	tags: {
 		labelKey: "AdvancedFilters.fields.tags",
-		serviceName: "tagService",
+		serviceName: "tagsService",
 	},
 	salutation: {
 		serviceName: "contactSalutationsService",
