@@ -622,7 +622,7 @@ JOURNEYS_URL="http://localhost:3010/"
 # Authentication
 CRM_STRAPI_API_TOKEN=""
 CRM_TOTP_ENCRYPTION_KEY=""
-AUTH_SECRET="pZsHmI9P7wcs03/BEuFtMxi9HbSuyCwyknuyx7BIads="
+AUTH_SECRET=""
 AUTH_URL="http://localhost:3000/api/auth"
 AUTH_TRUST_HOST=false # for development use false in cause of http
 
