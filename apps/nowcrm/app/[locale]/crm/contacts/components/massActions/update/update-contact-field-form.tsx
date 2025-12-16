@@ -24,6 +24,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import countriesData from "@/lib/static/countries.json";
 
 export const contactCSVTemplateFields = [
 	"email",
@@ -118,7 +119,7 @@ export function UpdateContactFieldForm({
 			value: values.value,
 			label: `${values.field}: ${values.value}`,
 		});
-		onSubmitted?.(values);
+		// onSubmitted?.(values);
 	}
 
 	const handleFieldChange = (fieldValue: string) => {
@@ -142,7 +143,6 @@ export function UpdateContactFieldForm({
 	};
 
 	const currentField = form.watch("field");
-
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -218,12 +218,38 @@ export function UpdateContactFieldForm({
 								"last_access",
 								"account_created_at",
 							].includes(currentField);
+							const isCountryField = currentField === "country";
 							const isCustomField = field.value.startsWith("custom:");
 							return (
 								<FormItem>
 									<FormLabel>New Value</FormLabel>
 									<FormControl>
-										{enumOptions ? (
+										{isCountryField ? (
+											<Select
+												onValueChange={(val) => {
+													field.onChange(val);
+													handleValueChange(val);
+												}}
+												value={field.value}
+											>
+												<SelectTrigger>
+													<SelectValue placeholder="Select country" />
+												</SelectTrigger>
+												<SelectContent>
+													{countriesData.map((country) => {
+														const displayValue = `${country.name} (${country.code})`;
+														return (
+															<SelectItem
+																key={country.code}
+																value={displayValue}
+															>
+																{displayValue}
+															</SelectItem>
+														);
+													})}
+												</SelectContent>
+											</Select>
+										) : enumOptions ? (
 											<>
 												<Select
 													onValueChange={(val) => {

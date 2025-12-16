@@ -28,6 +28,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import countriesData from "@/lib/static/countries.json";
 
 export const contactCSVTemplateFields = [
 	"first_name",
@@ -227,14 +228,39 @@ export default function UpdateContactFieldDialog({
 										"last_access",
 										"account_created_at",
 									].includes(currentField);
-
+									const isCountryField = currentField === "country";
 									const isCustomField = field.value.startsWith("custom:");
 
 									return (
 										<FormItem>
 											<FormLabel>New Value</FormLabel>
 											<FormControl>
-												{enumOptions ? (
+												{isCountryField ? (
+													<Select
+														onValueChange={(val) => {
+															field.onChange(val);
+															handleValueChange(val);
+														}}
+														value={field.value}
+													>
+														<SelectTrigger>
+															<SelectValue placeholder="Select country" />
+														</SelectTrigger>
+														<SelectContent>
+															{countriesData.map((country) => {
+																const displayValue = `${country.name} (${country.code})`;
+																return (
+																	<SelectItem
+																		key={country.code}
+																		value={displayValue}
+																	>
+																		{displayValue}
+																	</SelectItem>
+																);
+															})}
+														</SelectContent>
+													</Select>
+												) : enumOptions ? (
 													<>
 														<Select
 															onValueChange={(val) => {
