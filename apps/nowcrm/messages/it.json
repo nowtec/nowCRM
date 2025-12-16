@@ -1050,14 +1050,16 @@
       "selectModelPlaceholder": "Seleziona un modello",
       "compositionTitlePlaceholder": "Inserisci il titolo della composizione",
       "tooltipImportant": "Requisiti di formato importanti:",
-      "tooltipIncludeFields": "Includi questi campi tra parentesi quadre:",
-      "tooltip": "Includi Categoria/Argomento: [Marketing], Lingua: [Inglese] e Persona: [Professionale] nel tuo prompt.",
+      "tooltipIncludeFields": "Modifica i campi evidenziati di seguito:",
+      "tooltip": "Modifica i campi evidenziati per Categoria/Argomento, Lingua, Persona e Attività utente. Il resto del testo è bloccato.",
       "generateComposition": "Genera composizione",
       "tooltipFields": {
         "category": "Categoria/Argomento: [Categoria]",
         "language": "Lingua: [Inglese | Tedesco | Italiano | Francese]",
         "persona": "Persona: [es. scrittore di email di marketing]"
       },
+      "replaceEssetLabel": "Sostituisci ß con ss",
+      "replaceEssetDescription": "Sostituisci i caratteri eszett tedeschi (ß) con doppia s (ss) nel contenuto generato",
       "tooltipNote1": "Questi campi sono richiesti per il corretto funzionamento del prompt e la gestione dei dati.",
       "tooltipNote2": "Se mancanti, verranno utilizzati i valori predefiniti del prompt selezionato."
     },

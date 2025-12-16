@@ -1050,14 +1050,16 @@
       "selectModelPlaceholder": "Modell auswählen",
       "compositionTitlePlaceholder": "Kompositionstitel eingeben",
       "tooltipImportant": "Wichtige Formatierungsanforderungen:",
-      "tooltipIncludeFields": "Diese Felder in eckigen Klammern einschließen:",
-      "tooltip": "Fügen Sie Kategorie/Thema: [Marketing], Sprache: [Englisch] und Persona: [Professionell] in Ihren Prompt ein.",
+      "tooltipIncludeFields": "Bearbeiten Sie die hervorgehobenen Felder unten:",
+      "tooltip": "Bearbeiten Sie die hervorgehobenen Felder für Kategorie/Thema, Sprache, Persona und Benutzeraufgabe. Anderer Text ist gesperrt.",
       "generateComposition": "Komposition generieren",
       "tooltipFields": {
         "category": "Kategorie/Thema: [Kategorie]",
         "language": "Sprache: [Englisch | Deutsch | Italienisch | Französisch]",
         "persona": "Persona: [z.B. Marketing-E-Mail-Autor]"
       },
+      "replaceEssetLabel": "ß durch ss ersetzen",
+      "replaceEssetDescription": "Deutsche Eszett-Zeichen (ß) durch Doppel-s (ss) im generierten Inhalt ersetzen",
       "tooltipNote1": "Diese Felder sind für die korrekte Funktion des Prompts und die Datenverarbeitung erforderlich.",
       "tooltipNote2": "Wenn sie fehlen, werden Standardwerte aus dem ausgewählten Prompt verwendet."
     },

@@ -98,7 +98,12 @@ export default function CreateCompositionCard({ channels }: Props) {
 					setGeneratedHtml(result.errorMessage as string);
 					return;
 				}
-				setGeneratedHtml(result.data.result);
+				// Replace ß with ss if replaceEsset is enabled
+				let processedResult = result.data.result;
+				if (data.replaceEsset) {
+					processedResult = processedResult.replace(/ß/g, "ss");
+				}
+				setGeneratedHtml(processedResult);
 			} catch (error) {
 				console.error("Error generating content:", error);
 				toast.error(t.errors.generateFailed);
@@ -116,7 +121,12 @@ export default function CreateCompositionCard({ channels }: Props) {
 			if (!result.data || !result.success) {
 				return;
 			}
-			setGeneratedHtml(result.data.result);
+			// Replace ß with ss if replaceEsset is enabled
+			let processedResult = result.data.result;
+			if (data.replaceEsset) {
+				processedResult = processedResult.replace(/ß/g, "ss");
+			}
+			setGeneratedHtml(processedResult);
 		} catch (error) {
 			console.error("Error regenerating content:", error);
 		}

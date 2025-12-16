@@ -1050,14 +1050,16 @@
       "selectModelPlaceholder": "Sélectionner un modèle",
       "compositionTitlePlaceholder": "Saisir le titre de la composition",
       "tooltipImportant": "Exigences de format importantes :",
-      "tooltipIncludeFields": "Inclure ces champs entre crochets :",
-      "tooltip": "Incluez Catégorie/Sujet : [Marketing], Langue : [Anglais], et Persona : [Professionnel] dans votre prompt.",
+      "tooltipIncludeFields": "Modifiez les champs surlignés ci-dessous :",
+      "tooltip": "Modifiez les champs surlignés pour Catégorie/Sujet, Langue, Persona et Tâche utilisateur. Le reste du texte est verrouillé.",
       "generateComposition": "Générer la composition",
       "tooltipFields": {
         "category": "Catégorie/Sujet : [Catégorie]",
         "language": "Langue : [Anglais | Allemand | Italien | Français]",
         "persona": "Persona : [par exemple, rédacteur d'e-mails marketing]"
       },
+      "replaceEssetLabel": "Remplacer ß par ss",
+      "replaceEssetDescription": "Remplacer les caractères eszett allemands (ß) par double s (ss) dans le contenu généré",
       "tooltipNote1": "Ces champs sont requis pour le bon fonctionnement du prompt et le traitement des données.",
       "tooltipNote2": "S'ils sont absents, les valeurs par défaut du prompt sélectionné seront utilisées."
     },

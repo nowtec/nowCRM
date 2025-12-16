@@ -1053,14 +1053,16 @@
       "selectModelPlaceholder": "Select model",
       "compositionTitlePlaceholder": "Enter Composition title",
       "tooltipImportant": "Important Format Requirements:",
-      "tooltipIncludeFields": "Include these fields in square brackets:",
-      "tooltip": "Include Category/Topic: [Marketing], Language: [English], and Persona: [Professional] in your prompt.",
+      "tooltipIncludeFields": "Edit the highlighted fields below:",
+      "tooltip": "Edit the highlighted fields for Category/Topic, Language, Persona, and User Task. Other text is locked.",
       "generateComposition": "Generate composition",
       "tooltipFields": {
         "category": "Category/Topic: [Category]",
         "language": "Language: [English | German | Italian | French]",
         "persona": "Persona: [e.g., Marketing email writer]"
       },
+      "replaceEssetLabel": "Replace ß with ss",
+      "replaceEssetDescription": "Replace German esset (ß) characters with double s (ss) in generated content",
       "tooltipNote1": "These fields are required for correct prompt functioning and data handling.",
       "tooltipNote2": "If missing, default values from selected prompt will be used."
     },
