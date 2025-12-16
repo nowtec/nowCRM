@@ -56,6 +56,7 @@ export const fetchPage = async (
 	const query = qs.stringify(
 		{
 			filters: searchMask,
+			sort: ["id:asc"],
 			pagination: { pageSize, page },
 			populate: "*",
 			publicationState: "live", //check
