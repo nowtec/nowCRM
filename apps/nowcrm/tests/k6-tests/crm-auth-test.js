@@ -18,8 +18,8 @@ export const options = {
 export default function () {
     const url = 'https://crm-test.nowtec.solutions/en/auth';
     const payload = JSON.stringify({
-        email: 'dumitru.simidin@nowtec.solutions',
-        password: '1234qwer'
+        email: '',
+        password: ''
     });
     const params = {
         headers: {
