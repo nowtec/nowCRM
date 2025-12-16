@@ -32,7 +32,7 @@ export async function getEventsByCompositionId(
 		const resolvedPageSize = typeof pageSize === "number" ? pageSize : -1;
 
 		const filters: any = {
-			composition_item: { id: { $eq: compositionItemId } },
+			composition_item: { documentId: { $eq: compositionItemId } },
 			...(channelName ? { channel: { name: { $eq: channelName } } } : {}),
 			...(search ? { action: { $containsi: search } } : {}),
 		};
