@@ -1537,11 +1537,11 @@ const FormFieldDisplay: React.FC<FormFieldDisplayProps> = ({
 	return (
 		/* ... JSX structure using getFieldIcon and getFieldTypeName ... */
 		<div className={cn("flex items-start gap-3", className)}>
-			<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground mt-0.5">
+			<div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground">
 				{getFieldIcon(field.type)}
 			</div>
 			<div className="min-w-0 flex-1">
-				<div className="font-medium text-sm break-words" title={field.label}>
+				<div className="break-words font-medium text-sm" title={field.label}>
 					{field.label || `Untitled ${getFieldTypeName(field.type)}`}
 					{field.required && <span className="ml-1 text-destructive">*</span>}
 					{field.hidden && (
@@ -1627,18 +1627,18 @@ const SortableFormField: React.FC<SortableFormFieldProps> = ({
 				{...attributes}
 				{...listeners}
 				className={cn(
-					"cursor-grab touch-none p-1 text-muted-foreground flex-shrink-0 mt-0.5",
+					"mt-0.5 flex-shrink-0 cursor-grab touch-none p-1 text-muted-foreground",
 					"rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
 				)}
 			>
 				<GripVertical className="h-5 w-5" />
 			</div>
-			<FormFieldDisplay field={field} className="flex-1 min-w-0" />
+			<FormFieldDisplay field={field} className="min-w-0 flex-1" />
 			<Button
 				variant="ghost"
 				size="icon"
 				className={cn(
-					"absolute top-2.5 right-1.5 h-7 w-7 text-muted-foreground opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 flex-shrink-0",
+					"absolute top-2.5 right-1.5 h-7 w-7 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100",
 					"hover:bg-destructive/10 hover:text-destructive focus-visible:text-destructive focus-visible:opacity-100",
 				)}
 				onClick={handleDeleteClick}
