@@ -247,7 +247,7 @@ export class ComposerServiceApi {
 		);
 		if (!mainChannelItem.data || !mainChannelItem.success) {
 			return ServiceResponse.failure(
-				"main Channel Item wasn't created, probably Strapi is down",
+				`main Channel Item wasn't created, probably Strapi is down - ${mainChannelItem.errorMessage} : ${mainChannelItem.status}`,
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
