@@ -27,22 +27,23 @@ export function PartiallyEditableTextarea({
 }: PartiallyEditableTextareaProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [editableRegions, setEditableRegions] = useState<EditableRegion[]>([]);
-	const [editableValues, setEditableValues] = useState<
-		Record<number, string>
-	>({});
+	const [editableValues, setEditableValues] = useState<Record<number, string>>(
+		{},
+	);
 
 	useEffect(() => {
 		const regions: EditableRegion[] = [];
 
 		const bracketRegex = /\[([^\]]*)\]/g;
-		let match;
-		while ((match = bracketRegex.exec(value)) !== null) {
+		let match: RegExpExecArray | null = bracketRegex.exec(value);
+		while (match !== null) {
 			regions.push({
 				start: match.index + 1, // After opening bracket
 				end: match.index + match[0].length - 1, // Before closing bracket
 				type: "bracket",
 				content: match[1] || "", // Empty string if bracket is empty
 			});
+			match = bracketRegex.exec(value);
 		}
 
 		const userTaskMatch = value.match(/User Task:\s*([\s\S]*)/);
@@ -103,7 +104,7 @@ export function PartiallyEditableTextarea({
 	const renderContent = () => {
 		if (editableRegions.length === 0) {
 			return (
-				<div className="text-muted-foreground whitespace-pre-wrap">
+				<div className="whitespace-pre-wrap text-muted-foreground">
 					{value || placeholder}
 				</div>
 			);
@@ -117,7 +118,10 @@ export function PartiallyEditableTextarea({
 				const beforeText = value.substring(lastIndex, region.start - 1);
 				if (beforeText) {
 					parts.push(
-						<span key={`locked-${idx}-before`} className="select-none text-muted-foreground whitespace-pre-wrap">
+						<span
+							key={`locked-${idx}-before`}
+							className="select-none whitespace-pre-wrap text-muted-foreground"
+						>
 							{beforeText}
 						</span>,
 					);
@@ -125,13 +129,14 @@ export function PartiallyEditableTextarea({
 				const currentValue = editableValues[idx] ?? region.content ?? "";
 				const safeValue = currentValue || "";
 				const contentLength = safeValue.length;
-				const charWidth = 8.5; 
-				const padding = 18; 
-				const baseWidth = contentLength > 0 
-					? Math.ceil(contentLength * charWidth + padding)
-					: 50;
+				const charWidth = 8.5;
+				const padding = 18;
+				const baseWidth =
+					contentLength > 0
+						? Math.ceil(contentLength * charWidth + padding)
+						: 50;
 				const inputWidth = Math.max(50, baseWidth);
-				
+
 				parts.push(
 					<span
 						key={`editable-wrapper-${idx}-${region.start}`}
@@ -147,18 +152,22 @@ export function PartiallyEditableTextarea({
 								const newLength = newValue.length;
 								const charWidth = 8.5;
 								const padding = 24;
-								const newWidth = Math.max(50, newLength > 0 
-									? Math.ceil(newLength * charWidth + padding)
-									: 50);
+								const newWidth = Math.max(
+									50,
+									newLength > 0
+										? Math.ceil(newLength * charWidth + padding)
+										: 50,
+								);
 								e.target.style.width = `${newWidth}px`;
 							}}
 							onFocus={(e) => {
 								const val = e.target.value || "";
 								const charWidth = 8.5;
 								const padding = 18;
-								const focusedWidth = val.length > 0
-									? Math.max(50, Math.ceil(val.length * charWidth + padding))
-									: 50;
+								const focusedWidth =
+									val.length > 0
+										? Math.max(50, Math.ceil(val.length * charWidth + padding))
+										: 50;
 								e.target.style.width = `${focusedWidth}px`;
 								e.target.style.minWidth = "50px";
 							}}
@@ -174,8 +183,8 @@ export function PartiallyEditableTextarea({
 								}
 							}}
 							placeholder=" "
-							className="box-border inline-block min-w-[50px] align-baseline bg-accent/30 px-2 py-0.5 font-mono text-sm outline-none focus:bg-accent/60 focus:ring-2 focus:ring-ring focus:ring-offset-1 border border-dashed border-primary/30 focus:border-primary/60 rounded-sm cursor-text"
-							style={{ 
+							className="box-border inline-block min-w-[50px] cursor-text rounded-sm border border-primary/30 border-dashed bg-accent/30 px-2 py-0.5 align-baseline font-mono text-sm outline-none focus:border-primary/60 focus:bg-accent/60 focus:ring-2 focus:ring-ring focus:ring-offset-1"
+							style={{
 								width: `${inputWidth}px`,
 							}}
 						/>
@@ -187,7 +196,10 @@ export function PartiallyEditableTextarea({
 				const beforeText = value.substring(lastIndex, region.start);
 				if (beforeText) {
 					parts.push(
-						<span key={`locked-${idx}-before`} className="select-none text-muted-foreground whitespace-pre-wrap">
+						<span
+							key={`locked-${idx}-before`}
+							className="select-none whitespace-pre-wrap text-muted-foreground"
+						>
 							{beforeText}
 						</span>,
 					);
@@ -200,7 +212,10 @@ export function PartiallyEditableTextarea({
 							value={editableValues[idx] ?? region.content}
 							onChange={(e) => handleEditableChange(idx, e.target.value)}
 							className="min-h-[60px] w-full resize-none border-0 bg-transparent p-0 font-mono text-sm outline-none focus:bg-accent/50"
-							rows={Math.max(3, (editableValues[idx] ?? region.content).split('\n').length)}
+							rows={Math.max(
+								3,
+								(editableValues[idx] ?? region.content).split("\n").length,
+							)}
 						/>
 					</div>,
 				);
@@ -213,7 +228,10 @@ export function PartiallyEditableTextarea({
 			const remainingText = value.substring(lastIndex);
 			if (remainingText) {
 				parts.push(
-					<span key="locked-end" className="select-none text-muted-foreground whitespace-pre-wrap">
+					<span
+						key="locked-end"
+						className="select-none whitespace-pre-wrap text-muted-foreground"
+					>
 						{remainingText}
 					</span>,
 				);
@@ -235,4 +253,3 @@ export function PartiallyEditableTextarea({
 		</div>
 	);
 }
-

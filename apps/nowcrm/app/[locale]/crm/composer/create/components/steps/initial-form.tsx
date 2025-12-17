@@ -30,7 +30,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { PartiallyEditableTextarea } from "./partially-editable-textarea";
 import {
 	Tooltip,
 	TooltipContent,
@@ -38,6 +37,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getEmailChannel } from "@/lib/actions/channels/get-email-channel";
+import { PartiallyEditableTextarea } from "./partially-editable-textarea";
 
 interface InitialFormProps {
 	onSubmit: (data: ReferenceComposition) => void;
@@ -510,7 +510,7 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 														<p className="mt-1 text-xs">
 															{t.Composer.initialForm.tooltipNote2}
 														</p>
-														<p className="mt-1 text-xs font-medium text-primary">
+														<p className="mt-1 font-medium text-primary text-xs">
 															{(t.Composer.initialForm as any).tooltipNote3 ||
 																"We highly recommend writing prompts in English, as it's the best language for LLMs."}
 														</p>
@@ -539,12 +539,13 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 									extractValue(promptText, "Language") || "en";
 								const extractedLanguageRaw = extractLanguageRaw(promptText);
 								const languageValue = form.watch("language");
-								
+
 								// Check for German language in various forms:
 								// - Language code: "de" (from form, extracted code, or raw text)
 								// - English label: "German" or "german" (case-insensitive)
 								// - German label: "Deutsch" or "deutsch" (case-insensitive)
-								const rawLower = extractedLanguageRaw?.toLowerCase().trim() || "";
+								const rawLower =
+									extractedLanguageRaw?.toLowerCase().trim() || "";
 								const isGerman =
 									languageValue === "de" ||
 									extractedLanguageCode === "de" ||
@@ -571,8 +572,7 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 												<div className="space-y-1 leading-none">
 													<FormLabel className="cursor-pointer">
 														{(t.Composer.initialForm as any)
-															.replaceEssetLabel ||
-															"Replace ß with ss"}
+															.replaceEssetLabel || "Replace ß with ss"}
 													</FormLabel>
 													<p className="text-muted-foreground text-sm">
 														{(t.Composer.initialForm as any)

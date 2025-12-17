@@ -12,7 +12,8 @@
 			"!components/ui",
 			"!components/event-calendar",
 			"!tests",
-			"!tests"
+			"!tests",
+			"!**/globals.css"
 		]
 	},
 	"linter": {
