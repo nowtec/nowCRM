@@ -14,4 +14,5 @@ export interface ReferenceComposition {
 	persona?: string;
 	model: aiModelKeys;
 	prompt: string;
+	replaceEsset?: boolean;
 }

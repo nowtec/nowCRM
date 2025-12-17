@@ -16,6 +16,8 @@ export const TEXT_OPERATORS: Operator[] = [
 	{ value: "$notContainsi", label: "Does not contain" },
 	{ value: "$startsWithi", label: "Starts with" },
 	{ value: "$endsWithi", label: "Ends with" },
+	{ value: "$null", label: "Is empty" },
+	{ value: "$notNull", label: "Is not empty" },
 ];
 export const NUMBER_OPERATORS: Operator[] = [
 	{ value: "$eq", label: "Equal" },
@@ -24,6 +26,8 @@ export const NUMBER_OPERATORS: Operator[] = [
 	{ value: "$lte", label: "Less than or equal to" },
 	{ value: "$gt", label: "Greater than" },
 	{ value: "$gte", label: "Greater than or equal to" },
+	{ value: "$null", label: "Is empty" },
+	{ value: "$notNull", label: "Is not empty" },
 ];
 export const DATE_OPERATORS = NUMBER_OPERATORS;
 

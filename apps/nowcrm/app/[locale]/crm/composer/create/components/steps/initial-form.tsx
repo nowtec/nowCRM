@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Form,
 	FormControl,
@@ -29,7 +30,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	Tooltip,
 	TooltipContent,
@@ -37,6 +37,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getEmailChannel } from "@/lib/actions/channels/get-email-channel";
+import { PartiallyEditableTextarea } from "./partially-editable-textarea";
 
 interface InitialFormProps {
 	onSubmit: (data: ReferenceComposition) => void;
@@ -52,6 +53,13 @@ const extractValue = (text: string, field: string) => {
 	if (field === "Language") {
 		return getLanguageValue(match ? match[1].trim() : undefined);
 	}
+	return match ? match[1].trim() : null;
+};
+
+// Function to extract raw language text from prompt (before conversion to code)
+const extractLanguageRaw = (text: string) => {
+	const regex = /Language:\s*\[(.*?)\]/i;
+	const match = text.match(regex);
 	return match ? match[1].trim() : null;
 };
 
@@ -115,6 +123,7 @@ const formSchema = z.object({
 	language: z.enum(["en", "it", "fr", "de"]).default("en"),
 	mainChannel: z.string(),
 	persona: z.string().optional(),
+	replaceEsset: z.boolean().optional(),
 });
 
 // Step types for the form flow
@@ -162,6 +171,7 @@ export default function InitialForm({
 					promptBase: initialData.promptBase || "",
 					model: initialData.model || "gpt-4o-mini",
 					prompt: initialData.prompt || "",
+					replaceEsset: initialData.replaceEsset || false,
 				}
 			: {
 					title: "",
@@ -172,6 +182,7 @@ export default function InitialForm({
 					persona: "",
 					model: "gpt-4o-mini",
 					prompt: "",
+					replaceEsset: false,
 				},
 	});
 
@@ -181,17 +192,13 @@ export default function InitialForm({
 		const language = form.getValues().language || "en";
 		const persona = form.getValues().persona || "Professional";
 
-		return `Take a deep breath and work on this problem step-by-step:
-Based on the user's request, generate a text with the following attributes:
-
-Category/Topic: [${category}]
+		return `Category/Topic: [${category}]
 
 Language: [${getLanguageLabel(language)}]
 
 Persona: [${persona}]
 
-User Task: ${promptBase}
-
+User Task:${promptBase}
 The output should reflect the tone, vocabulary, and perspective typical for the chosen persona. Keep the content aligned with the task, and relevant to the selected category. The output should contain only content without other text.
 `;
 	};
@@ -256,6 +263,7 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 				language: extractedLanguage.toLowerCase() as "en" | "it" | "fr" | "de",
 				persona: extractedPersona,
 				category: extractedCategory || "",
+				replaceEsset: values.replaceEsset || false,
 			};
 
 			console.log(updatedValues);
@@ -502,13 +510,18 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 														<p className="mt-1 text-xs">
 															{t.Composer.initialForm.tooltipNote2}
 														</p>
+														<p className="mt-1 font-medium text-primary text-xs">
+															{(t.Composer.initialForm as any).tooltipNote3 ||
+																"We highly recommend writing prompts in English, as it's the best language for LLMs."}
+														</p>
 													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
 										</div>
 										<FormControl>
-											<Textarea
-												{...field}
+											<PartiallyEditableTextarea
+												value={field.value}
+												onChange={field.onChange}
 												rows={20}
 												className="font-mono text-sm"
 												placeholder={t.Composer.initialForm.tooltip}
@@ -518,6 +531,60 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 									</FormItem>
 								)}
 							/>
+
+							{/* Show replaceEsset checkbox only when German language is detected */}
+							{(() => {
+								const promptText = form.watch("prompt");
+								const extractedLanguageCode =
+									extractValue(promptText, "Language") || "en";
+								const extractedLanguageRaw = extractLanguageRaw(promptText);
+								const languageValue = form.watch("language");
+
+								// Check for German language in various forms:
+								// - Language code: "de" (from form, extracted code, or raw text)
+								// - English label: "German" or "german" (case-insensitive)
+								// - German label: "Deutsch" or "deutsch" (case-insensitive)
+								const rawLower =
+									extractedLanguageRaw?.toLowerCase().trim() || "";
+								const isGerman =
+									languageValue === "de" ||
+									extractedLanguageCode === "de" ||
+									rawLower === "de" ||
+									rawLower === "german" ||
+									rawLower === "deutsch" ||
+									extractedLanguageRaw === "German" ||
+									extractedLanguageRaw === "Deutsch";
+
+								if (!isGerman) return null;
+
+								return (
+									<FormField
+										control={form.control}
+										name="replaceEsset"
+										render={({ field }) => (
+											<FormItem className="flex flex-row items-start space-x-3 space-y-0">
+												<FormControl>
+													<Checkbox
+														checked={field.value}
+														onCheckedChange={field.onChange}
+													/>
+												</FormControl>
+												<div className="space-y-1 leading-none">
+													<FormLabel className="cursor-pointer">
+														{(t.Composer.initialForm as any)
+															.replaceEssetLabel || "Replace ß with ss"}
+													</FormLabel>
+													<p className="text-muted-foreground text-sm">
+														{(t.Composer.initialForm as any)
+															.replaceEssetDescription ||
+															"Replace German esset (ß) characters with double s (ss) in generated content"}
+													</p>
+												</div>
+											</FormItem>
+										)}
+									/>
+								);
+							})()}
 
 							<Button type="submit" className="w-full">
 								<ListPlus className="mr-2 h-4 w-4" />
