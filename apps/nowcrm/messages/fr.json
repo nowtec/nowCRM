@@ -1061,7 +1061,8 @@
       "replaceEssetLabel": "Remplacer ß par ss",
       "replaceEssetDescription": "Remplacer les caractères eszett allemands (ß) par double s (ss) dans le contenu généré",
       "tooltipNote1": "Ces champs sont requis pour le bon fonctionnement du prompt et le traitement des données.",
-      "tooltipNote2": "S'ils sont absents, les valeurs par défaut du prompt sélectionné seront utilisées."
+      "tooltipNote2": "S'ils sont absents, les valeurs par défaut du prompt sélectionné seront utilisées.",
+      "tooltipNote3": "Nous recommandons fortement d'écrire les invites en anglais, car c'est la meilleure langue pour les LLM."
     },
     "textEditor": {
       "stepTitle": "Étape 2 : Modifier le contenu généré",

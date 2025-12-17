@@ -1061,7 +1061,8 @@
       "replaceEssetLabel": "Sostituisci ß con ss",
       "replaceEssetDescription": "Sostituisci i caratteri eszett tedeschi (ß) con doppia s (ss) nel contenuto generato",
       "tooltipNote1": "Questi campi sono richiesti per il corretto funzionamento del prompt e la gestione dei dati.",
-      "tooltipNote2": "Se mancanti, verranno utilizzati i valori predefiniti del prompt selezionato."
+      "tooltipNote2": "Se mancanti, verranno utilizzati i valori predefiniti del prompt selezionato.",
+      "tooltipNote3": "Raccomandiamo vivamente di scrivere i prompt in inglese, poiché è la migliore lingua per gli LLM."
     },
     "textEditor": {
       "stepTitle": "Passaggio 2: Modifica del contenuto generato",

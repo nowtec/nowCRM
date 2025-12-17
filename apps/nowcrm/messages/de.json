@@ -1061,7 +1061,8 @@
       "replaceEssetLabel": "ß durch ss ersetzen",
       "replaceEssetDescription": "Deutsche Eszett-Zeichen (ß) durch Doppel-s (ss) im generierten Inhalt ersetzen",
       "tooltipNote1": "Diese Felder sind für die korrekte Funktion des Prompts und die Datenverarbeitung erforderlich.",
-      "tooltipNote2": "Wenn sie fehlen, werden Standardwerte aus dem ausgewählten Prompt verwendet."
+      "tooltipNote2": "Wenn sie fehlen, werden Standardwerte aus dem ausgewählten Prompt verwendet.",
+      "tooltipNote3": "Wir empfehlen dringend, Prompts auf Englisch zu schreiben, da dies die beste Sprache für LLMs ist."
     },
     "textEditor": {
       "stepTitle": "Schritt 2: Generierten Inhalt bearbeiten",

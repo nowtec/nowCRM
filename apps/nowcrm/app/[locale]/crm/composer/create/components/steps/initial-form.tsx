@@ -510,6 +510,10 @@ The output should reflect the tone, vocabulary, and perspective typical for the 
 														<p className="mt-1 text-xs">
 															{t.Composer.initialForm.tooltipNote2}
 														</p>
+														<p className="mt-1 text-xs font-medium text-primary">
+															{(t.Composer.initialForm as any).tooltipNote3 ||
+																"We highly recommend writing prompts in English, as it's the best language for LLMs."}
+														</p>
 													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>

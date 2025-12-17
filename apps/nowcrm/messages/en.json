@@ -1064,7 +1064,8 @@
       "replaceEssetLabel": "Replace ß with ss",
       "replaceEssetDescription": "Replace German esset (ß) characters with double s (ss) in generated content",
       "tooltipNote1": "These fields are required for correct prompt functioning and data handling.",
-      "tooltipNote2": "If missing, default values from selected prompt will be used."
+      "tooltipNote2": "If missing, default values from selected prompt will be used.",
+      "tooltipNote3": "We highly recommend writing prompts in English, as it's the best language for LLMs."
     },
     "textEditor": {
       "stepTitle": "Step 2: Edit Generated Content",
