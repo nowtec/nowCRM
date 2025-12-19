@@ -5,7 +5,7 @@ import type { JourneyStepRuleScore } from "./journey-step-rule-score";
 export interface JourneyStepRule extends Omit<BaseType, "name"> {
 	label: string;
 	condition: string;
-	journeys_step_connection: JourneyStepConnection;
+	journey_step_connection: JourneyStepConnection;
 	condition_enity: string;
 	condition_operator: string;
 	condition_value: string;
@@ -18,7 +18,7 @@ export interface JourneyStepRule extends Omit<BaseType, "name"> {
 export interface Form_JourneyStepRule extends Omit<BaseFormType, "name"> {
 	label: string;
 	condition: string;
-	journeys_step_connection: DocumentId;
+	journey_step_connection: DocumentId;
 	condition_enity: string;
 	condition_operator: string;
 	condition_value: string;
