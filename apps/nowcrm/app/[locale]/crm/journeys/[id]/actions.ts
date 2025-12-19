@@ -436,7 +436,7 @@ export async function updateConnectionRules(
 			session.jwt,
 			{
 				filters: {
-					journeys_step_connection: { documentId: { $eq: connectionId } },
+					journey_step_connection: { documentId: { $eq: connectionId } },
 				},
 				populate: {
 					journey_step_rule_scores: true,
@@ -460,8 +460,16 @@ export async function updateConnectionRules(
 			existingRules.map((rule) => rule.documentId),
 		);
 
+		// Track created/updated rules to return to frontend
+		const processedRules: Array<{
+			documentId: DocumentId;
+			originalIndex: number;
+			scores: Array<{ documentId: DocumentId; attribute: string; value: string }>;
+		}> = [];
+
 		// Process each rule
-		for (const rule of rules) {
+		for (let i = 0; i < rules.length; i++) {
+			const rule = rules[i];
 			if (rule.documentId && checkDocumentId(rule.documentId)) {
 				// Rule exists, update it
 				existingRuleIds.delete(rule.documentId);
@@ -483,6 +491,12 @@ export async function updateConnectionRules(
 				);
 
 				// Handle scores for this rule
+				const updatedScores: Array<{
+					documentId: DocumentId;
+					attribute: string;
+					value: string;
+				}> = [];
+
 				if (rule.scores && rule.scores.length > 0) {
 					// Get existing scores for this rule
 					const existingScores =
@@ -507,9 +521,14 @@ export async function updateConnectionRules(
 								},
 								session.jwt,
 							);
+							updatedScores.push({
+								documentId: score.documentId,
+								attribute: score.attribute,
+								value: score.value,
+							});
 						} else {
 							// Create new score
-							await journeyStepRuleScoresService.create(
+							const newScoreResult = await journeyStepRuleScoresService.create(
 								{
 									journey_step_rule: rule.documentId,
 									name: score.attribute,
@@ -518,6 +537,13 @@ export async function updateConnectionRules(
 								},
 								session.jwt,
 							);
+							if (newScoreResult.success && newScoreResult.data) {
+								updatedScores.push({
+									documentId: newScoreResult.data.documentId,
+									attribute: score.attribute,
+									value: score.value,
+								});
+							}
 						}
 					}
 
@@ -538,14 +564,23 @@ export async function updateConnectionRules(
 						);
 					}
 				}
+
+				processedRules.push({
+					documentId: rule.documentId,
+					originalIndex: i,
+					scores: updatedScores,
+				});
 			} else {
 				// Create new rule
 				const newRuleResult = await journeyStepRulesService.create(
 					{
-						journeys_step_connection: connectionId,
+						journey_step_connection: connectionId,
 						condition: rule.condition,
 						condition_operator: rule.condition_operator,
-						condition_value: rule.condition_value,
+						condition_value:
+							typeof rule.condition_value === "object"
+								? JSON.stringify(rule.condition_value)
+								: rule.condition_value,
 						label: rule.label,
 						ready_condition: rule.ready_condition,
 						additional_data: rule.additional_data,
@@ -555,6 +590,12 @@ export async function updateConnectionRules(
 					session.jwt,
 				);
 
+				const createdScores: Array<{
+					documentId: DocumentId;
+					attribute: string;
+					value: string;
+				}> = [];
+
 				if (
 					newRuleResult.success &&
 					newRuleResult.data &&
@@ -563,7 +604,7 @@ export async function updateConnectionRules(
 				) {
 					// Create scores for the new rule
 					for (const score of rule.scores) {
-						await journeyStepRuleScoresService.create(
+						const newScoreResult = await journeyStepRuleScoresService.create(
 							{
 								journey_step_rule: newRuleResult.data.documentId,
 								name: score.attribute,
@@ -572,7 +613,22 @@ export async function updateConnectionRules(
 							},
 							session.jwt,
 						);
+						if (newScoreResult.success && newScoreResult.data) {
+							createdScores.push({
+								documentId: newScoreResult.data.documentId,
+								attribute: score.attribute,
+								value: score.value,
+							});
+						}
 					}
+				}
+
+				if (newRuleResult.success && newRuleResult.data) {
+					processedRules.push({
+						documentId: newRuleResult.data.documentId,
+						originalIndex: i,
+						scores: createdScores,
+					});
 				}
 			}
 		}
@@ -583,7 +639,7 @@ export async function updateConnectionRules(
 		}
 
 		return {
-			data: true,
+			data: processedRules,
 			status: 200,
 			success: true,
 		};

@@ -415,7 +415,7 @@ async duplicate(ctx) {
 		};
 		if (contact) surveyData.contact = contact.documentId;
 
-		const survey = await strapi.db.query('api::survey.survey').create({ data: surveyData });
+		const survey = await strapi.documents('api::survey.survey').create({ data: surveyData });
 
 		if (!survey) {
 			return { success: false, message: "Failed to create survey" };
