@@ -4,15 +4,16 @@ export function formatDateTimeFields(contact: any): any {
 	for (const field of datetimeFields) {
 		const raw = contact[field];
 
-		if (raw !== undefined && raw !== null) {
-			const parsedDate = tryParseDateTime(raw);
-			if (parsedDate) {
-				contact[field] = parsedDate.toISOString();
-			} else {
-				throw new Error(
-					`Field "${field}" must be a valid datetime string. Received: ${raw}`,
-				);
-			}
+		if (raw === undefined || raw === null) continue;
+
+		const parsedDate = tryParseDateTime(raw);
+		if (parsedDate) {
+			contact[field] = parsedDate.toISOString();
+		} else {
+			console.warn(
+				`formatDateTimeFields: skipping invalid "${field}" value: "${raw}"`,
+			);
+			delete contact[field];
 		}
 	}
 

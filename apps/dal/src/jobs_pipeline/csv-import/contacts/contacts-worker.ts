@@ -273,12 +273,7 @@ export const startContactsWorkers = () => {
 					`[${workerId}] Cache filter: ${newContacts.length} new, ${updateContacts.length} updated (${existingContactIds.length} IDs found)`,
 				);
 
-				const toCreate = sanitizeContacts(newContacts);
-				logger.info(
-					`[${workerId}] ${toCreate.length}/${newContacts.length} new contacts ready`,
-				);
-
-				const _cleaned = toCreate
+				const toCreate = sanitizeContacts(newContacts)
 					.map(cleanEmptyStringsToNull)
 					.map(formatDateTimeFields)
 					.map(validateEnumerations)

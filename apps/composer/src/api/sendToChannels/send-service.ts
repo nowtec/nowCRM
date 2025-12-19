@@ -302,7 +302,7 @@ export class SendToChannelsService {
 			const items = Array.isArray(json.data) ? json.data : [];
 			if (items.length === 0) break;
 
-			allIds.push(...items.map((item: any) => item.id));
+			allIds.push(...items.map((item: any) => item.documentId));
 			page++;
 		}
 

@@ -33,6 +33,7 @@ export default factories.createCoreController('api::list.list', ({ strapi }) => 
       if (!original) return ctx.notFound("Original list not found");
 
       const {
+        documentId,
         id: _,
         createdAt,
         updatedAt,

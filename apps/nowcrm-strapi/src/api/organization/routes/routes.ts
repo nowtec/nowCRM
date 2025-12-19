@@ -3,7 +3,7 @@ export default {
     // Duplicate a organization
     {
       method: 'POST',
-      path: '/organization/duplicate',
+      path: '/organizations/duplicate',
       handler: 'organization.duplicate',
     },
   ],

@@ -11,12 +11,19 @@ import requestLogger from "@/common/middleware/request-logger";
 import "./jobs_pipeline/start-workers";
 
 import path from "node:path";
+import { serverAdapter } from "./views/bull-board";
+import { queueRouter } from "./api/queue/queue-router";
 
 const logger = pino({ name: "server start" });
 const __dirname = path.resolve();
 
 console.log(__dirname);
 const app: Express = express();
+app.use("/admin/queues", (req, _res, next) => {
+	next();
+}, serverAdapter.getRouter());
+
+app.use("/api", queueRouter);
 app.use(express.static(path.join(`${__dirname}/src`, "public")));
 
 // Set the application to trust the reverse proxy
