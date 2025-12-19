@@ -360,6 +360,7 @@ function convertJourneyToReactFlow(
 					const conditions =
 						connection.journey_step_rules?.map((rule) => ({
 							id: `condition-${rule.documentId}`,
+							documentId: rule.documentId,
 							type: rule.condition,
 							operator: rule.condition_operator,
 							value: rule.condition_value?.includes("value")
@@ -373,6 +374,7 @@ function convertJourneyToReactFlow(
 							conditionField: (rule.additional_data as any)?.conditionField,
 							scores:
 								rule.journey_step_rule_scores?.map((score) => ({
+									documentId: score.documentId,
 									attribute: score.name,
 									value: score.value.toString(),
 								})) || [],

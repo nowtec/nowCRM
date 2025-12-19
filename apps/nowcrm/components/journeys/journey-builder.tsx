@@ -69,7 +69,7 @@ interface JourneyBuilderProps {
 		edge: Edge,
 		conditions: any[],
 		condition_type: "all" | "any",
-	) => Promise<boolean>;
+	) => Promise<{ success: boolean; conditions: any[] | null }>;
 	onConnectionPrioritiesUpdate?: (
 		connectionPriorities: { connectionId: DocumentId; priority: number }[],
 	) => Promise<boolean>;
@@ -1060,15 +1060,20 @@ function JourneyBuilderContent({
 						},
 					};
 
-					const success = await onEdgeConditionsUpdate(
+					const result = await onEdgeConditionsUpdate(
 						edgeWithConnectionId,
 						data.conditions || [],
 						data.condition_type || "all",
 					);
 
-					if (!success) {
+					if (!result.success) {
 						toast.error("Failed to save connection rules");
 						return;
+					}
+
+					// Update data with returned conditions that have documentIds
+					if (result.conditions) {
+						data.conditions = result.conditions;
 					}
 
 					toast.success("Connection rules saved successfully");

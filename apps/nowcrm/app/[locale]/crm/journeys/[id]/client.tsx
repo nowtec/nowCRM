@@ -467,7 +467,7 @@ export default function JourneyClient({
 					toast.error(
 						"Connection not properly initialized. Please refresh and try again.",
 					);
-					return false;
+					return { success: false, conditions: null };
 				}
 
 				function getReadyCondition(condition: any): string {
@@ -525,26 +525,36 @@ export default function JourneyClient({
 				}
 
 				// Format conditions for the backend
-				const formattedRules = conditions.map((condition) => ({
-					documentId: condition.documentId?.startsWith("condition-")
-						? condition.documentId.replace("condition-", "")
-						: undefined,
-					condition: condition.type,
-					ready_condition: condition.value
-						? getReadyCondition(condition)
-						: condition.ready_condition,
-					condition_operator: condition.operator,
-					condition_value: condition.value,
-					additional_data: condition.additional_data,
-					additional_condition: condition.additionalCondition,
-					label: condition.label,
-					scores:
-						condition.scores?.map((score: any) => ({
-							documentId: score.documentId,
-							attribute: score.attribute,
-							value: score.value,
-						})) || [],
-				}));
+				const formattedRules = conditions.map((condition) => {
+					// Extract documentId from either condition.documentId or condition.id
+					let documentId: string | undefined;
+					if (condition.documentId) {
+						documentId = condition.documentId.startsWith("condition-")
+							? condition.documentId.replace("condition-", "")
+							: condition.documentId;
+					} else if (condition.id?.startsWith("condition-")) {
+						documentId = condition.id.replace("condition-", "");
+					}
+
+					return {
+						documentId,
+						condition: condition.type,
+						ready_condition: condition.value
+							? getReadyCondition(condition)
+							: condition.ready_condition,
+						condition_operator: condition.operator,
+						condition_value: condition.value,
+						additional_data: condition.additional_data,
+						additional_condition: condition.additionalCondition,
+						label: condition.label,
+						scores:
+							condition.scores?.map((score: any) => ({
+								documentId: score.documentId,
+								attribute: score.attribute,
+								value: score.value,
+							})) || [],
+					};
+				});
 
 				console.log(formattedRules);
 				// Update connection rules in backend
@@ -554,16 +564,41 @@ export default function JourneyClient({
 					condition_type,
 				);
 
-				if (result.success) {
-					return true;
+				if (result.success && result.data) {
+					// Map the returned documentIds back to the conditions
+					const updatedConditions = conditions.map((condition, index) => {
+						const processedRule = result.data.find(
+							(r: any) => r.originalIndex === index,
+						);
+						if (processedRule) {
+							return {
+								...condition,
+								documentId: processedRule.documentId,
+								id: `condition-${processedRule.documentId}`,
+								scores: condition.scores?.map((score: any, scoreIndex: number) => {
+									const processedScore = processedRule.scores[scoreIndex];
+									return processedScore
+										? {
+												...score,
+												documentId: processedScore.documentId,
+											}
+										: score;
+								}),
+							};
+						}
+						return condition;
+					});
+
+					// Return updated conditions with documentIds
+					return { success: true, conditions: updatedConditions };
 				} else {
 					toast.error("Failed to update connection rules in the backend");
-					return false;
+					return { success: false, conditions: null };
 				}
 			} catch (error) {
 				console.error("Error updating connection rules:", error);
 				toast.error("Failed to update connection rules in the backend");
-				return false;
+				return { success: false, conditions: null };
 			} finally {
 				setIsSaving(false);
 			}
