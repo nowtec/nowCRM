@@ -53,7 +53,6 @@ function normalizeWebhookEvent(ev: any): StringEvent | undefined {
 function readWebhookAttributeValue(data: any, attribute?: string | null) {
 	if (!attribute) return undefined;
 	const entry = data?.entry ?? {};
-
 	// Handle nested attribute paths like "action_type.name"
 	if (attribute.includes(".")) {
 		const parts = attribute.split(".");
@@ -100,7 +99,6 @@ function eventMatches(
 		data,
 		attribute.attribute_name ?? attribute.label,
 	);
-
 	// --- Boolean handling ---
 	if (
 		typeof expected === "boolean" ||
@@ -146,7 +144,7 @@ function eventMatches(
 
 	// --- documentId (ID) handling ---
 	if (expected && typeof expected === "string" && checkDocumentId(expected)) {
-		return rawActual?.documentId === expected;
+		return rawActual === expected;
 	}
 
 	// --- String fallback (including numeric-looking strings) ---
@@ -203,7 +201,6 @@ async function getContactIdFromWebhook(
 export async function processTriggerMessage(data: any) {
 	const normalizedEvent = normalizeWebhookEvent(data?.event);
 	logger.debug(`Finding trigger nodes for ${normalizedEvent ?? data?.event}`);
-
 	const contactId = await getContactIdFromWebhook(data);
 	if (!contactId) {
 		return ServiceResponse.failure(
@@ -248,7 +245,6 @@ export async function processTriggerMessage(data: any) {
 		const entityMatches = add.entity === data?.model;
 		const enabled = add.enabled === true;
 		const eventOk = eventMatches(add.event, data, add.attribute);
-
 		return entityMatches && enabled && eventOk;
 	});
 	if (filtered_steps.length > 0) {
