@@ -400,13 +400,24 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
 
 		try {
 			console.log("Before save - items:", formData.form_items.length);
-			// Strip media and id from payload
+			console.log("Form data before save:", {
+				keep_contact: formData.keep_contact,
+				override_contact: formData.override_contact,
+				form_view: formData.form_view,
+			});
+			// Strip media, id, and documentId from payload
 			const {
 				documentId: formId,
+				id,
 				form_items,
 				logo,
 				cover,
 				slug,
+				keep_contact,
+				override_contact,
+				form_view,
+				createdAt,
+				updatedAt,
 				...regularFields
 			} = formData;
 
@@ -433,13 +444,19 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ formId }) => {
 			// change any to Form_FormEntity
 			const payload: any = {
 				...regularFields,
-				slug: formData.slug ?? "",
-				keep_contact: formData.keep_contact ?? false,
-				override_contact: formData.override_contact ?? false,
-				form_view: formData.form_view ?? false,
+				slug: desiredSlug,
+				keep_contact: keep_contact ?? false,
+				override_contact: override_contact ?? false,
+				form_view: form_view ?? false,
 				submit_confirm_text: formData.submit_confirm_text ?? "",
 				submission_success_text: formData.submission_success_text ?? "",
 			};
+
+			console.log("Payload being sent:", {
+				keep_contact: payload.keep_contact,
+				override_contact: payload.override_contact,
+				form_view: payload.form_view,
+			});
 
 			// change to Custom_FormEntityItem
 			const newFormItems: any[] = (form_items || []).map((item) => ({

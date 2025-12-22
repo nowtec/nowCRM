@@ -575,15 +575,17 @@ export default function JourneyClient({
 								...condition,
 								documentId: processedRule.documentId,
 								id: `condition-${processedRule.documentId}`,
-								scores: condition.scores?.map((score: any, scoreIndex: number) => {
-									const processedScore = processedRule.scores[scoreIndex];
-									return processedScore
-										? {
-												...score,
-												documentId: processedScore.documentId,
-											}
-										: score;
-								}),
+								scores: condition.scores?.map(
+									(score: any, scoreIndex: number) => {
+										const processedScore = processedRule.scores[scoreIndex];
+										return processedScore
+											? {
+													...score,
+													documentId: processedScore.documentId,
+												}
+											: score;
+									},
+								),
 							};
 						}
 						return condition;

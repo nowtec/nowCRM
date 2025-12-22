@@ -26,7 +26,12 @@ export type Condition = {
 	operator: string;
 	value?: string | { label: string; value: string };
 	label?: string;
-	scores?: Array<{ id?: number; documentId?: string; attribute: string; value: string }>;
+	scores?: Array<{
+		id?: number;
+		documentId?: string;
+		attribute: string;
+		value: string;
+	}>;
 	showScores?: boolean;
 	//Condiiton fields neede when deep search is used
 	conditionOperator?: string;
