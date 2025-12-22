@@ -28,6 +28,12 @@ export async function getOrCreateContact(
 						channel: true,
 					},
 				},
+				organization: true,
+				department: true,
+				keywords: true,
+				contact_interests: true,
+				salutation: true,
+				industry: true,
 			},
 		});
 

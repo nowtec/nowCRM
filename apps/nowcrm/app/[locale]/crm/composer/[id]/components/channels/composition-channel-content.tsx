@@ -295,9 +295,7 @@ export function CompositionChannelContent({
 	};
 
 	const allowedMentions = [
-		"@contact.id",
 		"@contact.email",
-		"@contact.name",
 		"@contact.first_name",
 		"@contact.last_name",
 		"@contact.address_line1",
@@ -310,15 +308,14 @@ export function CompositionChannelContent({
 		"@contact.phone",
 		"@contact.mobile_phone",
 		"@contact.salutation",
+		"@contact.description",
 		"@contact.gender",
+		"@contact.country",
 		"@contact.birth_date",
-		"@contact.organization",
-		"@contact.department",
-		"@contact.keywords",
-		"@contact.contact_interests",
-		"@contact.createdAt",
-		"@contact.updatedAt",
-		"@contact.document",
+		"@contact.organization.name",
+		"@contact.department.name",
+		"@contact.keywords.name",
+		"@contact.contact_interests.name",
 	];
 
 	return (

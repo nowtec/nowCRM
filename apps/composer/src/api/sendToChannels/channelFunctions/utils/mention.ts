@@ -14,9 +14,7 @@ export async function checkMentions(
 	}
 
 	const allowedMentions = [
-		"@contact.id",
 		"@contact.email",
-		"@contact.name",
 		"@contact.first_name",
 		"@contact.last_name",
 		"@contact.address_line1",
@@ -30,14 +28,13 @@ export async function checkMentions(
 		"@contact.mobile_phone",
 		"@contact.salutation",
 		"@contact.gender",
+		"@contact.country",
+		"@contact.description",
 		"@contact.birth_date",
-		"@contact.organization",
-		"@contact.department",
-		"@contact.keywords",
-		"@contact.contact_interests",
-		"@contact.createdAt",
-		"@contact.updatedAt",
-		"@contact.document",
+		"@contact.organization.name",
+		"@contact.department.name",
+		"@contact.keywords.name",
+		"@contact.contact_interests.name",
 	];
 
 	const mentions = text.match(/\B@[\w.]+/g) || [];
@@ -87,7 +84,10 @@ export async function replaceMentionsInText(
 	mentions: string[],
 ): Promise<string> {
 	let updatedText = text;
-
+	console.log(
+		"[CONTACT STRUCTURE]",
+		JSON.stringify(contact, null, 2)
+	);
 	// 1) Find all unique text_block.<name> placeholders
 	//    where <name> may contain letters, digits, spaces or hyphens.
 	const blockRegex = /@text_block\.([\w\s-]+)/g;
@@ -127,17 +127,43 @@ export async function replaceMentionsInText(
 		const [, field, filename] = mention.split(".");
 		let replace_string = "";
 
-		if (field in contact && contact[field]) {
-			replace_string = contact[field];
-		} else if (field === "document") {
-			if (contact.documents) {
-				const doc = contact.documents.find((el: any) => el.name === filename);
-				replace_string = doc ? doc.url : "";
-			}
-		} else if (field === "organization") {
-			const org = contact.organization;
-			replace_string = org ? org.name : "";
-		}
+// DEBUG: what mention we are processing
+console.log("[MENTION]", { mention, field, filename });
+
+if (field === "organization" && filename === "name") {
+	console.log("[RESOLVE] organization.name", contact.organization);
+	replace_string = contact.organization?.name ?? "";
+
+} else if (field === "department" && filename === "name") {
+	console.log("[RESOLVE] department.name", contact.department);
+	replace_string = contact.department?.name ?? "";
+
+} else if (field === "keywords" && filename === "name") {
+	console.log("[RESOLVE] keywords", contact.keywords);
+	replace_string = Array.isArray(contact.keywords)
+		? contact.keywords.map((k: any) => k.name).join(", ")
+		: "";
+
+} else if (field === "contact_interests" && filename === "name") {
+	console.log("[RESOLVE] contact_interests", contact.contact_interests);
+	replace_string = Array.isArray(contact.contact_interests)
+		? contact.contact_interests.map((i: any) => i.name).join(", ")
+		: "";
+
+} else if (field === "document") {
+	console.log("[RESOLVE] document", filename);
+	if (contact.documents) {
+		const doc = contact.documents.find((el: any) => el.name === filename);
+		replace_string = doc ? doc.url : "";
+	}
+
+} else if (field in contact && contact[field]) {
+	console.log("[RESOLVE] primitive field", field, contact[field]);
+	replace_string = String(contact[field]);
+} else {
+	console.warn("[MENTION UNRESOLVED]", mention);
+}
+
 
 		updatedText = updatedText.replaceAll(mention, replace_string);
 	}

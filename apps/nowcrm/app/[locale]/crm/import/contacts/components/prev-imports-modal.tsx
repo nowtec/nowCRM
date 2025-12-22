@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/tooltip";
 import { downloadCsv } from "@/lib/actions/import/download-csv";
 import {
-	getImportProgressMap,
 	getPreviousImports,
 } from "@/lib/actions/import/fetch-import";
 
@@ -42,12 +41,11 @@ export default function PreviousImportsModal({
 		setIsLoading(true);
 
 		try {
-			const [importsRes, progressRes] = await Promise.all([
+			const [importsRes] = await Promise.all([
 				getPreviousImports(page, apiPageSize, "contacts"),
-				getImportProgressMap(),
 			]);
 
-			if (!importsRes.success || !progressRes.success) {
+			if (!importsRes.success) {
 				toast.error("Failed to load imports. Please try again later.");
 				return;
 			}
@@ -60,11 +58,8 @@ export default function PreviousImportsModal({
 				setPreviousImports([]);
 				return;
 			}
-			const progressMap = progressRes.data || new Map();
-
 			const enriched = imports.map((imp) => ({
 				...imp,
-				progressPercent: progressMap.get(imp.jobId),
 			}));
 
 			setPreviousImports(enriched);
@@ -88,15 +83,9 @@ export default function PreviousImportsModal({
 
 		const fetchProgress = async () => {
 			try {
-				const progressRes = await getImportProgressMap();
-				if (!progressRes.success || !progressRes.data) return;
-
-				const progressMap = progressRes.data;
-
 				setPreviousImports((prev) =>
 					prev.map((imp) => ({
 						...imp,
-						progressPercent: progressMap.get(imp.jobId) ?? imp.progressPercent,
 					})),
 				);
 			} catch (_error) {
