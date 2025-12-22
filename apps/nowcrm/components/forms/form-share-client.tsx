@@ -387,7 +387,10 @@ const FormShareClient: React.FC<FormShareClientProps> = ({
 		const currentField = visibleItems[currentStep];
 
 		const isValid = await form.trigger(currentField.name);
-		if (!isValid) return;
+		if (!isValid) {
+			// Validation failed, allow retry
+			return;
+		}
 
 		isNavigatingRef.current = true;
 		setDirection("forward");
