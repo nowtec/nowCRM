@@ -125,6 +125,7 @@ const FormShareClient: React.FC<FormShareClientProps> = ({
 	);
 	const [touchStart, setTouchStart] = useState<number | null>(null);
 	const [isTransitioning, setIsTransitioning] = useState(false);
+	const isNavigatingRef = useRef(false);
 
 	const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -379,34 +380,51 @@ const FormShareClient: React.FC<FormShareClientProps> = ({
 	 * Navigate to the next step in the form
 	 */
 	const goToNextStep = useCallback(async () => {
+		// Prevent multiple simultaneous navigation calls
+		if (isNavigatingRef.current || isTransitioning) return;
 		if (!visibleItems || currentStep >= visibleItems.length) return;
 
 		const currentField = visibleItems[currentStep];
 
 		const isValid = await form.trigger(currentField.name);
-		if (!isValid) return;
+		if (!isValid) {
+			// Validation failed, allow retry
+			return;
+		}
 
+		isNavigatingRef.current = true;
 		setDirection("forward");
 		setIsTransitioning(true);
 		setTimeout(() => {
-			setCurrentStep((prev) => prev + 1);
-			setIsTransitioning(false);
+			setCurrentStep((prev) => {
+				const nextStep = prev + 1;
+				isNavigatingRef.current = false;
+				setIsTransitioning(false);
+				return nextStep;
+			});
 		}, 300);
-	}, [currentStep, form, visibleItems]);
+	}, [currentStep, form, visibleItems, isTransitioning]);
 
 	/**
 	 * Navigate to the previous step in the form
 	 */
 	const goToPrevStep = useCallback(() => {
+		// Prevent multiple simultaneous navigation calls
+		if (isNavigatingRef.current || isTransitioning) return;
 		if (currentStep > 0) {
+			isNavigatingRef.current = true;
 			setDirection("backward");
 			setIsTransitioning(true);
 			setTimeout(() => {
-				setCurrentStep((prev) => prev - 1);
-				setIsTransitioning(false);
+				setCurrentStep((prev) => {
+					const prevStep = prev - 1;
+					isNavigatingRef.current = false;
+					setIsTransitioning(false);
+					return prevStep;
+				});
 			}, 300);
 		}
-	}, [currentStep]);
+	}, [currentStep, isTransitioning]);
 	// ===== KEYBOARD NAVIGATION =====
 	/**
 	 * Handle keyboard navigation for the form

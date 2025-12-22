@@ -1,5 +1,4 @@
 import {
-	CommunicationChannel,
 	checkDocumentId,
 	type DocumentId,
 	ServiceResponse,
@@ -154,17 +153,58 @@ function eventMatches(
 	return String(rawActual) === String(expected);
 }
 
-/** Contact id extraction */
-function getContactIdFromWebhook(data: any): DocumentId | undefined {
-	if (data?.model === "contact") return data?.entry?.documentId;
-	return data?.entry?.contact?.documentId;
+/** Contact id extraction - tries documentId first, then falls back to id or email lookup */
+async function getContactIdFromWebhook(
+	data: any,
+): Promise<DocumentId | undefined> {
+	if (data?.model === "contact") {
+		if (data?.entry?.documentId) {
+			return data.entry.documentId;
+		}
+	}
+
+	if (data?.entry?.contact?.documentId) {
+		return data.entry.contact.documentId;
+	}
+
+	// Fallback: try to extract id or email and find contact
+	const entry = data?.model === "contact" ? data?.entry : data?.entry?.contact;
+	if (!entry) {
+		return undefined;
+	}
+
+	if (entry.id) {
+		const idResult = await strapiCircuitBreaker.execute(() =>
+			contactsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+				filters: { id: { $eq: entry.id } },
+				pagination: { page: 1, pageSize: 1 },
+			}),
+		);
+		if (idResult.data && idResult.data.length > 0) {
+			return idResult.data[0].documentId;
+		}
+	}
+
+	if (entry.email) {
+		const emailResult = await strapiCircuitBreaker.execute(() =>
+			contactsService.findAll(env.JOURNEYS_STRAPI_API_TOKEN, {
+				filters: { email: { $eqi: entry.email } },
+				pagination: { page: 1, pageSize: 1 },
+			}),
+		);
+		if (emailResult.data && emailResult.data.length > 0) {
+			return emailResult.data[0].documentId;
+		}
+	}
+
+	return undefined;
 }
 
 export async function processTriggerMessage(data: any) {
 	const normalizedEvent = normalizeWebhookEvent(data?.event);
 	logger.debug(`Finding trigger nodes for ${normalizedEvent ?? data?.event}`);
 
-	const contactId = getContactIdFromWebhook(data);
+	const contactId = await getContactIdFromWebhook(data);
 	if (!contactId) {
 		return ServiceResponse.failure(
 			"No contact was found in that webhook call",

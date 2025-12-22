@@ -464,7 +464,11 @@ export async function updateConnectionRules(
 		const processedRules: Array<{
 			documentId: DocumentId;
 			originalIndex: number;
-			scores: Array<{ documentId: DocumentId; attribute: string; value: string }>;
+			scores: Array<{
+				documentId: DocumentId;
+				attribute: string;
+				value: string;
+			}>;
 		}> = [];
 
 		// Process each rule
