@@ -1,5 +1,4 @@
 import {
-	CommunicationChannel,
 	checkDocumentId,
 	type DocumentId,
 	ServiceResponse,
