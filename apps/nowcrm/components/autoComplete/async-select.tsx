@@ -24,6 +24,7 @@ type AsyncSelectProps = {
 	showDefaultCheckbox?: boolean;
 	extraOptions?: Record<string, any>;
 	deduplicateByLabel?: boolean;
+	extractAdditionalFields?: string[];
 };
 
 export const AsyncSelect = ({
@@ -41,6 +42,7 @@ export const AsyncSelect = ({
 	showDefaultCheckbox = false, //  Default false
 	extraOptions,
 	deduplicateByLabel,
+	extractAdditionalFields,
 }: AsyncSelectProps) => {
 	const [options, setOptions] = useState<Option[]>([]);
 	const [selectedOption, setSelectedOption] = useState<Option | undefined>(
@@ -110,7 +112,23 @@ export const AsyncSelect = ({
 
 							const value = item.documentId;
 
-							return label && value != null ? { label, value } : null;
+							const additional_data =
+							extractAdditionalFields?.reduce<Record<string, any>>((acc, field) => {
+								if (item?.[field] !== undefined) {
+									acc[field] = item[field];
+								}
+								return acc;
+							}, {}) ?? undefined;
+						return label && value != null
+							? {
+									label,
+									value,
+									...(additional_data && Object.keys(additional_data).length > 0
+										? { additional_data }
+										: {}),
+								}
+							: null;
+
 						})
 						.filter((opt: any): opt is Option => !!opt);
 
