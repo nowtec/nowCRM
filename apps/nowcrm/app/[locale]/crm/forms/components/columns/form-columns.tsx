@@ -17,10 +17,10 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
+import { activateForm } from "@/lib/actions/forms/activate-form";
 import { RouteConfig } from "@/lib/config/routes-config";
 import { formatDateTimeStrapi } from "@/lib/strapi-date";
 import { shareForm } from "./share-form";
-import { activateForm } from "@/lib/actions/forms/activate-form";
 
 const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
 	const router = useRouter();
@@ -89,12 +89,12 @@ const SwitchAction: React.FC<{ form: FormEntity }> = ({ form }) => {
 			onCheckedChange={async (value) => {
 				const res = await activateForm(value, form.documentId);
 				if (!res.success || !res.data) {
-				toast.error(res.errorMessage ?? "Failed to activate form");
-				return;
-			}
-			toast.success(`Form ${res.data.active ? "activated" : "deactivated"}`);
-			router.refresh();
-		}}
+					toast.error(res.errorMessage ?? "Failed to activate form");
+					return;
+				}
+				toast.success(`Form ${res.data.active ? "activated" : "deactivated"}`);
+				router.refresh();
+			}}
 		/>
 	);
 };

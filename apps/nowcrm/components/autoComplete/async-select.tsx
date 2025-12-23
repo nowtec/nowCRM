@@ -113,22 +113,25 @@ export const AsyncSelect = ({
 							const value = item.documentId;
 
 							const additional_data =
-							extractAdditionalFields?.reduce<Record<string, any>>((acc, field) => {
-								if (item?.[field] !== undefined) {
-									acc[field] = item[field];
-								}
-								return acc;
-							}, {}) ?? undefined;
-						return label && value != null
-							? {
-									label,
-									value,
-									...(additional_data && Object.keys(additional_data).length > 0
-										? { additional_data }
-										: {}),
-								}
-							: null;
-
+								extractAdditionalFields?.reduce<Record<string, any>>(
+									(acc, field) => {
+										if (item?.[field] !== undefined) {
+											acc[field] = item[field];
+										}
+										return acc;
+									},
+									{},
+								) ?? undefined;
+							return label && value != null
+								? {
+										label,
+										value,
+										...(additional_data &&
+										Object.keys(additional_data).length > 0
+											? { additional_data }
+											: {}),
+									}
+								: null;
 						})
 						.filter((opt: any): opt is Option => !!opt);
 

@@ -9,8 +9,8 @@ import {
 import { auth } from "@/auth";
 
 export async function activateForm(
-    status: boolean,
-    formId: DocumentId,
+	status: boolean,
+	formId: DocumentId,
 ): Promise<StandardResponse<FormEntity>> {
 	const session = await auth();
 	if (!session) {
@@ -21,7 +21,11 @@ export async function activateForm(
 		};
 	}
 	try {
-		const res = await formsService.update(formId, { active: status }, session.jwt);
+		const res = await formsService.update(
+			formId,
+			{ active: status },
+			session.jwt,
+		);
 		return res;
 	} catch (error) {
 		return handleError(error);

@@ -33,7 +33,7 @@ export function FormAnswerRule({
 		condition.operator,
 	);
 	const answerType =
-	condition?.additional_data?.formAnswer?.additional_data?.type;
+		condition?.additional_data?.formAnswer?.additional_data?.type;
 
 	const isNumber = answerType === "number";
 	return (
@@ -82,9 +82,9 @@ export function FormAnswerRule({
 						condition?.additional_data?.formAnswer as Option | undefined
 					}
 					disabled={!formId}
-					fetchFilters={{ form: {documentId: { $eq: formId } }}}
+					fetchFilters={{ form: { documentId: { $eq: formId } } }}
 					extractAdditionalFields={["type"]}
-					labelBuilder={(item: FormEntityItem) => item.label }
+					labelBuilder={(item: FormEntityItem) => item.label}
 					onValueChange={(value) => {
 						updateCondition(condition.id, {
 							additional_data: {
@@ -132,7 +132,6 @@ export function FormAnswerRule({
 						)}
 					</SelectContent>
 				</Select>
-
 			</div>
 
 			<div>
