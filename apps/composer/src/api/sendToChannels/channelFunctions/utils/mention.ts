@@ -25,8 +25,9 @@ export async function checkMentions(
 		"@contact.language",
 		"@contact.function",
 		"@contact.phone",
+		"@contact.contact_status",
 		"@contact.mobile_phone",
-		"@contact.salutation",
+		"@contact.salutation.name",
 		"@contact.gender",
 		"@contact.country",
 		"@contact.description",
@@ -44,7 +45,6 @@ export async function checkMentions(
 	const validMentions = normalizedMentions.filter((mention) =>
 		allowedMentions.includes(mention),
 	);
-
 	const mention_fields: string[] = [];
 	let _mentionEntity = "";
 
@@ -84,10 +84,6 @@ export async function replaceMentionsInText(
 	mentions: string[],
 ): Promise<string> {
 	let updatedText = text;
-	console.log(
-		"[CONTACT STRUCTURE]",
-		JSON.stringify(contact, null, 2)
-	);
 	// 1) Find all unique text_block.<name> placeholders
 	//    where <name> may contain letters, digits, spaces or hyphens.
 	const blockRegex = /@text_block\.([\w\s-]+)/g;
@@ -127,41 +123,35 @@ export async function replaceMentionsInText(
 		const [, field, filename] = mention.split(".");
 		let replace_string = "";
 
-// DEBUG: what mention we are processing
-console.log("[MENTION]", { mention, field, filename });
+
 
 if (field === "organization" && filename === "name") {
-	console.log("[RESOLVE] organization.name", contact.organization);
 	replace_string = contact.organization?.name ?? "";
 
 } else if (field === "department" && filename === "name") {
-	console.log("[RESOLVE] department.name", contact.department);
 	replace_string = contact.department?.name ?? "";
 
+} else if (field === "salutation" && filename === "name") {
+  replace_string = contact.salutation?.name ?? "";
+		
 } else if (field === "keywords" && filename === "name") {
-	console.log("[RESOLVE] keywords", contact.keywords);
 	replace_string = Array.isArray(contact.keywords)
 		? contact.keywords.map((k: any) => k.name).join(", ")
 		: "";
 
-} else if (field === "contact_interests" && filename === "name") {
-	console.log("[RESOLVE] contact_interests", contact.contact_interests);
-	replace_string = Array.isArray(contact.contact_interests)
+} else if (field === "contact_interests" && filename === "name") {	replace_string = Array.isArray(contact.contact_interests)
 		? contact.contact_interests.map((i: any) => i.name).join(", ")
 		: "";
 
 } else if (field === "document") {
-	console.log("[RESOLVE] document", filename);
 	if (contact.documents) {
 		const doc = contact.documents.find((el: any) => el.name === filename);
 		replace_string = doc ? doc.url : "";
 	}
 
 } else if (field in contact && contact[field]) {
-	console.log("[RESOLVE] primitive field", field, contact[field]);
 	replace_string = String(contact[field]);
 } else {
-	console.warn("[MENTION UNRESOLVED]", mention);
 }
 
 

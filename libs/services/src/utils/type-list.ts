@@ -20,10 +20,16 @@ export function generateFieldsFromObject(obj: Record<string, any>) {
 
 			// 2. Arrays (of objects) ➔ contact.key
 		} else if (Array.isArray(value)) {
-			fieldsList.push({
-				id: String(idCounter++),
-				name: `contact.${key}`,
-			});
+	const first = value[0];
+
+	fieldsList.push({
+		id: String(idCounter++),
+		name:
+			first && typeof first === "object" && "name" in first
+				? `contact.${key}.name`
+				: `contact.${key}`,
+	});
+
 
 			// 3. Plain objects ➔ contact.key.name
 		} else {
