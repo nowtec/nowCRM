@@ -1,6 +1,6 @@
 "use client";
 
-import type { DocumentId } from "@nowcrm/services";
+import type { DocumentId, FormEntityItem } from "@nowcrm/services";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -32,6 +32,10 @@ export function FormAnswerRule({
 	const [conditionValue, setConditionValue] = useState<string>(
 		condition.operator,
 	);
+	const answerType =
+	condition?.additional_data?.formAnswer?.additional_data?.type;
+
+	const isNumber = answerType === "number";
 	return (
 		<div className="space-y-4">
 			{/* Operator dropdown */}
@@ -78,7 +82,9 @@ export function FormAnswerRule({
 						condition?.additional_data?.formAnswer as Option | undefined
 					}
 					disabled={!formId}
-					fetchFilters={{ form: { $eq: formId } }}
+					fetchFilters={{ form: {documentId: { $eq: formId } }}}
+					extractAdditionalFields={["type"]}
+					labelBuilder={(item: FormEntityItem) => item.label }
 					onValueChange={(value) => {
 						updateCondition(condition.id, {
 							additional_data: {
@@ -111,11 +117,22 @@ export function FormAnswerRule({
 					<SelectTrigger className="w-full">
 						<SelectValue placeholder="Select operator" />
 					</SelectTrigger>
+
 					<SelectContent>
 						<SelectItem value="$eqi">Equals</SelectItem>
 						<SelectItem value="$nei">Not Equals</SelectItem>
+
+						{isNumber && (
+							<>
+								<SelectItem value="$gte">Greater or equal</SelectItem>
+								<SelectItem value="$gt">Greater than</SelectItem>
+								<SelectItem value="$lte">Less or equal</SelectItem>
+								<SelectItem value="$lt">Less than</SelectItem>
+							</>
+						)}
 					</SelectContent>
 				</Select>
+
 			</div>
 
 			<div>
