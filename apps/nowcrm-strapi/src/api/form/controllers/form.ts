@@ -196,9 +196,10 @@ async duplicate(ctx) {
 		}
 
 		// 1️⃣ Fetch form with override_contact
-		const form = await strapi.db.query('api::form.form').findOne({
-			where: { documentId: body.formId, active: true },
-			select: ['documentId', 'name', 'slug', 'override_contact', 'keep_contact', 'webhook_url', 'submit_confirm_text']
+		const form = await strapi.documents('api::form.form').findOne({
+			documentId: body.formId,
+			filters: { active: true },
+			fields: ['name', 'slug', 'override_contact', 'keep_contact', 'webhook_url', 'submit_confirm_text']
 		});
 
 		if (!form) {
@@ -209,11 +210,14 @@ async duplicate(ctx) {
 		let contact = null;
 
 		if (form.keep_contact && body.identifier) {
-			const whereEmail =  { email: { $eqi: body.identifier } }; // case-insensitive equality
-			contact = await strapi.db.query('api::contact.contact').findOne({ where: whereEmail });
+			const contacts = await strapi.documents('api::contact.contact').findMany({
+				filters: { email: { $eqi: body.identifier } }, // case-insensitive equality
+				limit: 1
+			});
+			contact = contacts && contacts.length > 0 ? contacts[0] : null;
 
 			if (!contact) {
-				contact = await strapi.db.query('api::contact.contact').create({
+				contact = await strapi.documents('api::contact.contact').create({
 					data: {
 						email: body.identifier,
 						publishedAt: new Date().toISOString()
@@ -315,20 +319,23 @@ async duplicate(ctx) {
 
 				// Special handling for organization relation
 				if (match === 'organization') {
-					let org = await strapi.db.query('api::organization.organization').findOne({
-						where: { name: value }
+					const orgName = String(value);
+					const orgs = await strapi.documents('api::organization.organization').findMany({
+						filters: { name: orgName },
+						limit: 1
 					});
+					let org = orgs && orgs.length > 0 ? orgs[0] : null;
 
 					if (!org) {
-						org = await strapi.db.query('api::organization.organization').create({
+						org = await strapi.documents('api::organization.organization').create({
 							data: {
-								name: value,
+								name: orgName,
 								publishedAt: new Date().toISOString()
 							}
 						});
-						console.log(`🏢 Created new organization: ${value}`);
+						console.log(`🏢 Created new organization: ${orgName}`);
 					} else {
-						console.log(`🏢 Linked existing organization: ${value}`);
+						console.log(`🏢 Linked existing organization: ${orgName}`);
 					}
 
 					updates.organization = org.documentId;
@@ -357,9 +364,11 @@ async duplicate(ctx) {
 				const now = new Date().toISOString();
 
 				// 1️⃣ Look up "Email" channel (case-insensitive)
-				const channel = await strapi.db.query('api::channel.channel').findOne({
-					where: { name: { $containsi: 'email' } }
+				const channels = await strapi.documents('api::channel.channel').findMany({
+					filters: { name: { $containsi: 'email' } },
+					limit: 1
 				});
+				const channel = channels && channels.length > 0 ? channels[0] : null;
 
 				console.log("channel ");
 				console.log(channel);
@@ -368,36 +377,38 @@ async duplicate(ctx) {
 					console.warn(`⚠️ No 'Email' channel found. Skipping subscription.`);
 				} else {
 					// 2️⃣ Check for existing subscription
-					const existing = await strapi.db.query('api::subscription.subscription').findOne({
-						where: {
-							channel: channel.documentId,
-							contact: contact.documentId
-						}
+					const existingSubs = await strapi.documents('api::subscription.subscription').findMany({
+						filters: {
+							channel: { documentId: channel.documentId },
+							contact: { documentId: contact.documentId }
+						},
+						limit: 1
 					});
+					const existing = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
 
 					if (existing) {
 						// Reactivate existing subscription
-						await strapi.db.query('api::subscription.subscription').update({
-							where: { documentId: existing.documentId },
+						const res = await strapi.documents('api::subscription.subscription').update({
+							documentId: existing.documentId,
 							data: {
 								active: true,
 								unsubscribed_at: null,
 								subscribed_at: now,
 								publishedAt: now
-							}
+							} as any
 						});
 						console.log(`🔁 Reactivated subscription for contact ${contact.email}`);
 					} else {
 						// 3️⃣ Create new subscription
 						const data = {
-							channel: channel.documentId,		
-							contact: contact.documentId,
+							channel: channel.id,		
+							contact: contact.id,
 							subscribed_at: now,
 							active: true,
 							publishedAt: now
 						};
 
-						await strapi.db.query('api::subscription.subscription').create({ data });
+						await strapi.documents('api::subscription.subscription').create({ data });
 
 						console.log(`✅ Created subscription for contact ${contact.email}`);
 					}
@@ -415,7 +426,7 @@ async duplicate(ctx) {
 		};
 		if (contact) surveyData.contact = contact.documentId;
 
-		const survey = await strapi.db.query('api::survey.survey').create({ data: surveyData });
+		const survey = await strapi.documents('api::survey.survey').create({ data: surveyData });
 
 		if (!survey) {
 			return { success: false, message: "Failed to create survey" };
@@ -464,7 +475,7 @@ async duplicate(ctx) {
 		if (contact) eventData.contact = contact.documentId;
 		if (body.identifier) eventData.destination = body.identifier;
 
-		await strapi.db.query('api::event.event').create({ data: eventData });
+		await strapi.documents('api::event.event').create({ data: eventData });
 
 		// 7️⃣ Optional webhook
 		if (form?.webhook_url) {
