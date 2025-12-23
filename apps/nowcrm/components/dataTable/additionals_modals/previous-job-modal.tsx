@@ -21,10 +21,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getCompositionJobs } from "@/lib/actions/composer/get-composition-jobs";
-import {
-	getImportProgressMap,
-	getPreviousImports,
-} from "@/lib/actions/import/fetch-import";
+import { getPreviousImports } from "@/lib/actions/import/fetch-import";
 
 interface PreviousJobsModalProps {
 	isOpen: boolean;
@@ -177,11 +174,10 @@ export default function PreviousJobsModal({
 
 		try {
 			if (mode === "contacts") {
-				const [importsRes, progressRes] = await Promise.all([
+				const [importsRes] = await Promise.all([
 					getPreviousImports(page, apiPageSize, "mass-actions"),
-					getImportProgressMap(),
 				]);
-				if (!importsRes.success || !progressRes.success) {
+				if (!importsRes.success) {
 					toast.error("Failed to load data. Please try again later.");
 					return;
 				}
@@ -224,13 +220,9 @@ export default function PreviousJobsModal({
 		if (!isOpen || mode !== "contacts") return;
 		const fetchProgress = async () => {
 			try {
-				const progressRes = await getImportProgressMap();
-				if (!progressRes.success || !progressRes.data) return;
-				const progressMap = progressRes.data;
 				setPreviousImports((prev) =>
 					(prev as ImportRecord[]).map((imp) => ({
 						...imp,
-						progressPercent: progressMap.get(imp.jobId) ?? imp.progressPercent,
 					})),
 				);
 			} catch {

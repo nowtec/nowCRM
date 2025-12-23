@@ -4,18 +4,20 @@ export function validateIntegerFields(contact: any) {
 	for (const field of integerFields) {
 		const value = contact[field];
 
-		if (value !== undefined) {
-			const parsed = Number.parseInt(value, 10);
+		if (value === undefined || value === null) continue;
 
-			if (Number.isNaN(parsed)) {
-				throw new Error(
-					`Field "${field}" must be an integer. Received: ${value}`,
-				);
-			}
+		const parsed = Number.parseInt(value, 10);
 
-			contact[field] = parsed;
+		if (Number.isNaN(parsed)) {
+			console.warn(
+				`validateIntegerFields: skipping invalid "${field}" value: "${value}"`,
+			);
+			delete contact[field];
+			continue;
 		}
+
+		contact[field] = parsed;
 	}
 
-	return true;
+	return contact;
 }

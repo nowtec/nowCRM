@@ -30,6 +30,7 @@ async duplicate(ctx) {
 
       const {
         id: _,
+        documentId: __,
         createdAt,
         updatedAt,
         publishedAt,

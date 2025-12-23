@@ -7,21 +7,62 @@ export function cleanEmptyStringsToNull(
 		const value = obj[key];
 
 		if (typeof value === "string") {
-			const trimmed = value.trim();
-			cleaned[key] = trimmed === "" ? null : trimmed;
-		} else if (Array.isArray(value)) {
-			cleaned[key] = value.map((item) =>
-				typeof item === "string"
-					? item.trim() === ""
-						? null
-						: item.trim()
-					: item,
-			);
-		} else if (value && typeof value === "object") {
-			cleaned[key] = cleanEmptyStringsToNull(value);
-		} else {
-			cleaned[key] = value;
+			let v: string;
+			try {
+				v = value.trim();
+			} catch {
+				continue;
+			}
+
+			if (key === "phone" || key === "mobile_phone") {
+				let res = "";
+				for (let i = 0; i < v.length; i++) {
+					const c = v[i];
+					if (c === "+" && i === 0) {
+						res += c;
+					} else if (c >= "0" && c <= "9") {
+						res += c;
+					}
+				}
+				v = res;
+			}
+
+			if (v === "") {
+				cleaned[key] = null;
+			} else {
+				cleaned[key] = v;
+			}
+			continue;
 		}
+
+		if (Array.isArray(value)) {
+			const arr = value
+				.map((item) => {
+					if (typeof item !== "string") return item;
+					try {
+						const t = item.trim();
+						return t === "" ? null : t;
+					} catch {
+						return null;
+					}
+				})
+				.filter((v) => v !== undefined);
+
+			if (arr.length > 0) {
+				cleaned[key] = arr;
+			}
+			continue;
+		}
+
+		if (value && typeof value === "object") {
+			const nested = cleanEmptyStringsToNull(value);
+			if (Object.keys(nested).length > 0) {
+				cleaned[key] = nested;
+			}
+			continue;
+		}
+
+		cleaned[key] = value;
 	}
 
 	return cleaned;

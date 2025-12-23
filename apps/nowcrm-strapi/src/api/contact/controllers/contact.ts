@@ -32,7 +32,8 @@ export default factories.createCoreController('api::contact.contact', ({ strapi 
       // Sanitize and prepare new contact
       const {
         subscriptions,
-        documentId: _,
+        id: _id,
+        documentId: _docId,
         unsubscribe_token,
         createdAt,
         updatedAt,

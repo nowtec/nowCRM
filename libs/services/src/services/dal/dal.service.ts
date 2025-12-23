@@ -12,7 +12,7 @@ class DalService {
 		type: "contacts" | "organizations" | "mass-actions" = "contacts",
 	): Promise<StandardResponse<ImportRecord[]>> {
 		try {
-			const url = `${envServices.DAL_URL}${API_ROUTES_DAL.QUEUE_DATA}?page=${page}&jobsPerPage=${jobsPerPage}&type=${type}`;
+			const url = `${envServices.DAL_URL}api/${API_ROUTES_DAL.QUEUE_DATA}?page=${page}&jobsPerPage=${jobsPerPage}&type=${type}`;
 
 			const response = await fetch(url, {
 				cache: "no-store",

@@ -14,9 +14,7 @@ export async function checkMentions(
 	}
 
 	const allowedMentions = [
-		"@contact.id",
 		"@contact.email",
-		"@contact.name",
 		"@contact.first_name",
 		"@contact.last_name",
 		"@contact.address_line1",
@@ -27,17 +25,17 @@ export async function checkMentions(
 		"@contact.language",
 		"@contact.function",
 		"@contact.phone",
+		"@contact.contact_status",
 		"@contact.mobile_phone",
-		"@contact.salutation",
+		"@contact.salutation.name",
 		"@contact.gender",
+		"@contact.country",
+		"@contact.description",
 		"@contact.birth_date",
-		"@contact.organization",
-		"@contact.department",
-		"@contact.keywords",
-		"@contact.contact_interests",
-		"@contact.createdAt",
-		"@contact.updatedAt",
-		"@contact.document",
+		"@contact.organization.name",
+		"@contact.department.name",
+		"@contact.keywords.name",
+		"@contact.contact_interests.name",
 	];
 
 	const mentions = text.match(/\B@[\w.]+/g) || [];
@@ -47,7 +45,6 @@ export async function checkMentions(
 	const validMentions = normalizedMentions.filter((mention) =>
 		allowedMentions.includes(mention),
 	);
-
 	const mention_fields: string[] = [];
 	let _mentionEntity = "";
 
@@ -87,7 +84,6 @@ export async function replaceMentionsInText(
 	mentions: string[],
 ): Promise<string> {
 	let updatedText = text;
-
 	// 1) Find all unique text_block.<name> placeholders
 	//    where <name> may contain letters, digits, spaces or hyphens.
 	const blockRegex = /@text_block\.([\w\s-]+)/g;
@@ -127,16 +123,28 @@ export async function replaceMentionsInText(
 		const [, field, filename] = mention.split(".");
 		let replace_string = "";
 
-		if (field in contact && contact[field]) {
-			replace_string = contact[field];
+		if (field === "organization" && filename === "name") {
+			replace_string = contact.organization?.name ?? "";
+		} else if (field === "department" && filename === "name") {
+			replace_string = contact.department?.name ?? "";
+		} else if (field === "salutation" && filename === "name") {
+			replace_string = contact.salutation?.name ?? "";
+		} else if (field === "keywords" && filename === "name") {
+			replace_string = Array.isArray(contact.keywords)
+				? contact.keywords.map((k: any) => k.name).join(", ")
+				: "";
+		} else if (field === "contact_interests" && filename === "name") {
+			replace_string = Array.isArray(contact.contact_interests)
+				? contact.contact_interests.map((i: any) => i.name).join(", ")
+				: "";
 		} else if (field === "document") {
 			if (contact.documents) {
 				const doc = contact.documents.find((el: any) => el.name === filename);
 				replace_string = doc ? doc.url : "";
 			}
-		} else if (field === "organization") {
-			const org = contact.organization;
-			replace_string = org ? org.name : "";
+		} else if (field in contact && contact[field]) {
+			replace_string = String(contact[field]);
+		} else {
 		}
 
 		updatedText = updatedText.replaceAll(mention, replace_string);

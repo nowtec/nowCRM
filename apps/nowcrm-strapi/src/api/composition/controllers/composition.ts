@@ -7,7 +7,7 @@ import { factories } from '@strapi/strapi'
 export default factories.createCoreController('api::composition.composition', ({ strapi }) => ({
 
   async duplicate(ctx) {
-    const { documentId } = ctx.request.body;
+    const documentId = ctx.request.body?.documentId ||ctx.request.body?.id;
     const user = ctx.state.user;
 
     if (!documentId) return ctx.badRequest("Missing composition id");

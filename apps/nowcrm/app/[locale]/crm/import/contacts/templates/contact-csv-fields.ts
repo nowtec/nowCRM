@@ -24,7 +24,7 @@ export const contactCSVTemplateFields = [
 	"description",
 	"contact_interests",
 	"priority",
-	"status",
+	"contact_status",
 	"tags",
 	"keywords",
 	"last_access",

@@ -10,9 +10,3 @@ export async function getPreviousImports(
 ): Promise<StandardResponse<ImportRecord[]>> {
 	return await dalService.fetchPreviousImports(page, jobsPerPage, type);
 }
-
-export async function getImportProgressMap(): Promise<
-	StandardResponse<Map<string, number>>
-> {
-	return await dalService.fetchProgressMap();
-}
