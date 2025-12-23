@@ -17,9 +17,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { downloadCsv } from "@/lib/actions/import/download-csv";
-import {
-	getPreviousImports,
-} from "@/lib/actions/import/fetch-import";
+import { getPreviousImports } from "@/lib/actions/import/fetch-import";
 
 interface PreviousImportsModalProps {
 	isOpen: boolean;

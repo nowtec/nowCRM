@@ -21,9 +21,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getCompositionJobs } from "@/lib/actions/composer/get-composition-jobs";
-import {
-	getPreviousImports,
-} from "@/lib/actions/import/fetch-import";
+import { getPreviousImports } from "@/lib/actions/import/fetch-import";
 
 interface PreviousJobsModalProps {
 	isOpen: boolean;

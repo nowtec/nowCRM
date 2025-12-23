@@ -123,37 +123,29 @@ export async function replaceMentionsInText(
 		const [, field, filename] = mention.split(".");
 		let replace_string = "";
 
-
-
-if (field === "organization" && filename === "name") {
-	replace_string = contact.organization?.name ?? "";
-
-} else if (field === "department" && filename === "name") {
-	replace_string = contact.department?.name ?? "";
-
-} else if (field === "salutation" && filename === "name") {
-  replace_string = contact.salutation?.name ?? "";
-		
-} else if (field === "keywords" && filename === "name") {
-	replace_string = Array.isArray(contact.keywords)
-		? contact.keywords.map((k: any) => k.name).join(", ")
-		: "";
-
-} else if (field === "contact_interests" && filename === "name") {	replace_string = Array.isArray(contact.contact_interests)
-		? contact.contact_interests.map((i: any) => i.name).join(", ")
-		: "";
-
-} else if (field === "document") {
-	if (contact.documents) {
-		const doc = contact.documents.find((el: any) => el.name === filename);
-		replace_string = doc ? doc.url : "";
-	}
-
-} else if (field in contact && contact[field]) {
-	replace_string = String(contact[field]);
-} else {
-}
-
+		if (field === "organization" && filename === "name") {
+			replace_string = contact.organization?.name ?? "";
+		} else if (field === "department" && filename === "name") {
+			replace_string = contact.department?.name ?? "";
+		} else if (field === "salutation" && filename === "name") {
+			replace_string = contact.salutation?.name ?? "";
+		} else if (field === "keywords" && filename === "name") {
+			replace_string = Array.isArray(contact.keywords)
+				? contact.keywords.map((k: any) => k.name).join(", ")
+				: "";
+		} else if (field === "contact_interests" && filename === "name") {
+			replace_string = Array.isArray(contact.contact_interests)
+				? contact.contact_interests.map((i: any) => i.name).join(", ")
+				: "";
+		} else if (field === "document") {
+			if (contact.documents) {
+				const doc = contact.documents.find((el: any) => el.name === filename);
+				replace_string = doc ? doc.url : "";
+			}
+		} else if (field in contact && contact[field]) {
+			replace_string = String(contact[field]);
+		} else {
+		}
 
 		updatedText = updatedText.replaceAll(mention, replace_string);
 	}
