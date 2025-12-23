@@ -208,23 +208,26 @@ async duplicate(ctx) {
 
 		// 2️⃣ Lookup or create contact
 		let contact = null;
-
+		let isNewContact = false;
+		
 		if (form.keep_contact && body.identifier) {
-			const contacts = await strapi.documents('api::contact.contact').findMany({
-				filters: { email: { $eqi: body.identifier } }, // case-insensitive equality
-				limit: 1
+		  const contacts = await strapi.documents('api::contact.contact').findMany({
+			filters: { email: { $eqi: body.identifier } },
+			limit: 1
+		  });
+		  contact = contacts && contacts.length > 0 ? contacts[0] : null;
+		
+		  if (!contact) {
+			contact = await strapi.documents('api::contact.contact').create({
+			  data: {
+				email: body.identifier,
+				publishedAt: new Date().toISOString()
+			  }
 			});
-			contact = contacts && contacts.length > 0 ? contacts[0] : null;
-
-			if (!contact) {
-				contact = await strapi.documents('api::contact.contact').create({
-					data: {
-						email: body.identifier,
-						publishedAt: new Date().toISOString()
-					}
-				});
-			}
+			isNewContact = true;
+		  }
 		}
+		
 
 		// 🔍 Fuzzy matching helpers
 		function levenshtein(a, b) {
@@ -294,7 +297,7 @@ async duplicate(ctx) {
 		}
 
 		// 3️⃣ Update contact fields (including organization linking)
-		if (contact && form.override_contact) {
+		if (contact && (isNewContact || form.override_contact)) {
 			const contactModel = strapi.contentTypes["api::contact.contact"];
 			const contactFields = Object.keys(contactModel.attributes || {});
 			const updates : any = {};
