@@ -19,9 +19,11 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { Editor } from "@tiptap/core";
 
 interface StyledLinkButtonProps {
-	editor: any;
+	editor: Editor;
 }
 
 const buttonStyles = {
@@ -63,6 +65,7 @@ const buttonStyles = {
 };
 
 export default function StyledLinkButton({ editor }: StyledLinkButtonProps) {
+
 	const [isOpen, setIsOpen] = useState(false);
 	const [url, setUrl] = useState("");
 	const [text, setText] = useState("");
@@ -174,9 +177,9 @@ export default function StyledLinkButton({ editor }: StyledLinkButtonProps) {
 			<DialogContent className="sm:max-w-md">
 				<div className="space-y-4">
 					<div className="flex items-center justify-between">
-						<h4 className="font-medium">
+						<DialogTitle className="font-medium">
 							{isEditing ? "Edit Button Link" : "Add Button Link"}
-						</h4>
+						</DialogTitle>
 						{isEditing && (
 							<Button
 								variant="outline"

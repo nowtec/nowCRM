@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
-import Editor from "@/components/editor/Editor";
+import Editor from "@/components/editor/editor-client";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -123,7 +123,10 @@ export function ChannelSettingsForm({
 											type="button"
 											variant="outline"
 											size="sm"
-											onClick={() => setIsEditing(false)}
+											onClick={() => {
+												setIsEditing(false);
+												form.resetField("unsubscribe_text");
+											}}
 											className="flex cursor-pointer items-center gap-1"
 											disabled={isSaving}
 										>
@@ -281,6 +284,7 @@ export function ChannelSettingsForm({
 												key="unsubscribe_text_edit"
 												value={field.value || ""}
 												disableToolbar
+												editable={false}
 											/>
 										)}
 									</FormControl>

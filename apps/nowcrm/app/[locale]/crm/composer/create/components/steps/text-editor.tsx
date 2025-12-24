@@ -4,7 +4,7 @@ import type { ReferenceComposition } from "@nowcrm/services";
 import { HelpCircle, Loader2 } from "lucide-react";
 import { useMessages } from "next-intl";
 import { useState } from "react";
-import Editor from "@/components/editor/Editor";
+import Editor from "@/components/editor/editor-client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

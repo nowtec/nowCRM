@@ -5,6 +5,7 @@ import type {
 	createAdditionalComposition,
 	DocumentId,
 } from "@nowcrm/services";
+import type { Editor as EditorType } from "@tiptap/react";
 import {
 	AlertCircle,
 	Archive,
@@ -27,8 +28,7 @@ import { useMessages } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import toast from "react-hot-toast";
-import type { Editor as EditorType } from "reactjs-tiptap-editor";
-import Editor from "@/components/editor/Editor";
+import Editor from "@/components/editor/editor-client";
 import EventTable from "@/components/events/event-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +61,7 @@ import { FileUploadHandler } from "../../../../../../../components/uploaders/fil
 import { AnalyticsSection } from "../analytics/email-analytics";
 import { channelAnalyticsConfigs } from "../analytics/metrics";
 import { ResultPreview } from "../result-preview";
+import { renderWithMentions } from "./render-with-mentions";
 
 interface ChannelTab {
 	id: string;
@@ -513,7 +514,6 @@ export function CompositionChannelContent({
 																	value={field.value}
 																	ref={editorRef}
 																	onChange={field.onChange}
-																	className="w-full"
 																	max_content={tab.maximum_content_lenght}
 																/>
 															)}
@@ -537,7 +537,6 @@ export function CompositionChannelContent({
 														key={`result_${tab.id}-looking`}
 														value={field.value}
 														ref={editorRef}
-														className="w-full"
 														max_content={tab.maximum_content_lenght}
 														disableToolbar
 													/>
@@ -545,7 +544,9 @@ export function CompositionChannelContent({
 											) : (
 												<div className="min-h-[200px] rounded-lg border p-4">
 													<p className="whitespace-pre-wrap text-base leading-relaxed">
-														{field.value || "No content available"}
+														{field.value
+															? renderWithMentions(field.value, allowedMentions)
+															: "No content available"}
 													</p>
 												</div>
 											)}
