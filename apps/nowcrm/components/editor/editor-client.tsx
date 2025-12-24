@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import React from 'react';
 
-const Editor = dynamic(() => import('@/components/editor/editor'), {
+const Editor = dynamic(() => import('@/components/editor/editor-tiptap'), {
   ssr: false,
   loading: () => <p>Loading...</p>,
 });
