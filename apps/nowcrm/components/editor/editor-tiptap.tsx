@@ -384,5 +384,3 @@ const extensions = [
   )
 }
 
-
-{}
