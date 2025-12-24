@@ -148,7 +148,7 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 			.optional(),
 		gender: z.string().optional(),
 		birth_date: z.date().optional(),
-		language: z.string(),
+		language: z.string().optional(),
 	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -179,7 +179,7 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 				: undefined,
 			gender: contact.gender || "",
 			birth_date: new Date(contact.birth_date) || undefined,
-			language: contact.language,
+			language: contact.language || "",
 		},
 	});
 
@@ -379,7 +379,7 @@ export function EditDialog({ contact, isOpen, onClose }: EditDialogProps) {
 									</FormLabel>
 									<Select
 										onValueChange={field.onChange}
-										defaultValue={field.value}
+										defaultValue={field.value || ""}
 									>
 										<FormControl>
 											<SelectTrigger>

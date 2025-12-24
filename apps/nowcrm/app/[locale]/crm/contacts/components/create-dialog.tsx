@@ -57,7 +57,7 @@ export default function CreateContactDialog({
 		last_name: z.string().optional(),
 		email: z.string().optional(),
 		address_line1: z.string().optional(),
-		language: z.string(),
+		language: z.string().optional(),
 	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -257,7 +257,10 @@ export default function CreateContactDialog({
 										<FaGlobe className="mr-2 text-primary" />{" "}
 										{t("common.labels.language")}
 									</FormLabel>
-									<Select onValueChange={field.onChange} value={field.value}>
+									<Select
+										onValueChange={field.onChange}
+										value={field.value || ""}
+									>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue
