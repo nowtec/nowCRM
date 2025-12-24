@@ -23,6 +23,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    turbopackFileSystemCacheForDev: true,
     serverActions: {
       bodySizeLimit: '200mb',
     },

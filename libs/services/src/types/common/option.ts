@@ -1,1 +1,5 @@
-export type Option = Record<"value" | "label", string> & Record<string, string>;
+export type Option = {
+	value: string;
+	label: string;
+	additional_data?: Record<string, any>;
+};

@@ -23,6 +23,7 @@ type Props = {
 	defaultOption?: Option;
 	extraOptions?: Record<string, any>;
 	deduplicateByLabel?: boolean;
+	extractAdditionalFields?: string[];
 };
 
 export const AsyncSelectField = ({
@@ -38,6 +39,7 @@ export const AsyncSelectField = ({
 	showDefaultCheckbox = false,
 	extraOptions,
 	deduplicateByLabel,
+	extractAdditionalFields,
 }: Props) => {
 	const formValue = form.watch(`${name}`);
 	return (
@@ -62,6 +64,7 @@ export const AsyncSelectField = ({
 							defaultOption={defaultOption}
 							extraOptions={extraOptions}
 							deduplicateByLabel={deduplicateByLabel}
+							extractAdditionalFields={extractAdditionalFields}
 						/>
 					</FormControl>
 					<FormMessage />

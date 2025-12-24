@@ -21,7 +21,11 @@ import {
 } from "../ui/command";
 import { Skeleton } from "../ui/skeleton";
 
-export type Option = Record<"value" | "label", string> & Record<string, string>;
+export type Option = {
+	value: string;
+	label: string;
+	additional_data?: Record<string, any>;
+};
 
 type AutoCompleteProps = {
 	options: Option[];
@@ -185,7 +189,7 @@ export const AutoComplete = ({
 						) : null}
 						{options.length > 0 && !isLoading ? (
 							<CommandGroup>
-								{options.map((option, index) => {
+								{options?.map((option, index) => {
 									const isSelected = selected?.value === option.value;
 									return (
 										<CommandItem

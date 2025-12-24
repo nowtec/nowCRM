@@ -9,7 +9,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { GrAddCircle } from "react-icons/gr";
 import * as z from "zod";
-import Editor from "@/components/editor/Editor";
+import Editor from "@/components/editor/editor-client";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
