@@ -84,9 +84,7 @@ export async function replaceMentionsInText(
 	mentions: string[],
 ): Promise<string> {
 	let updatedText = text;
-	// 1) Find all unique text_block.<name> placeholders
-	//    where <name> may contain letters, digits, spaces or hyphens.
-	const blockRegex = /@text_block\.([\w\s-]+)/g;
+	const blockRegex = /#text_block\.([\w\s-]+)/g;
 
 	const rawNames = new Set<string>();
 	let match = blockRegex.exec(text);
@@ -112,13 +110,13 @@ export async function replaceMentionsInText(
 	);
 
 	for (const rawName of rawNames) {
-		const placeholder = `@text_block.${rawName}`;
+		const placeholder = `#text_block.${rawName}`;
 		const content = blockFetches[rawName];
 		updatedText = updatedText.replaceAll(placeholder, content);
 	}
 
 	for (const mention of mentions) {
-		if (mention.startsWith("@text_block.")) continue;
+		if (mention.startsWith("#text_block.")) continue;
 
 		const [, field, filename] = mention.split(".");
 		let replace_string = "";
@@ -144,7 +142,6 @@ export async function replaceMentionsInText(
 			}
 		} else if (field in contact && contact[field]) {
 			replace_string = String(contact[field]);
-		} else {
 		}
 
 		updatedText = updatedText.replaceAll(mention, replace_string);

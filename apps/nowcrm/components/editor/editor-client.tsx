@@ -19,6 +19,7 @@ export interface EditorProps {
 }
 
 const EditorClient = (props: EditorProps) => {
+  
   return (
     <>
       <Editor {...props}/>

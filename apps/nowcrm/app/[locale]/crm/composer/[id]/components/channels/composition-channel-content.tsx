@@ -537,6 +537,7 @@ export function CompositionChannelContent({
 														ref={editorRef}
 														max_content={tab.maximum_content_lenght}
 														disableToolbar
+														editable={false}
 													/>
 												</div>
 											) : (

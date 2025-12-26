@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { themeActions } from "reactjs-tiptap-editor/theme";
 import { cn } from "@/lib/utils";
 
 export function ThemeSwitcher({ className }: { className?: string }) {
@@ -19,6 +20,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
 
 	const toggleTheme = () => {
 		setTheme(isDark ? "light" : "dark");
+		themeActions.setTheme(isDark ? "light" : "dark");
 	};
 
 	// Render a placeholder with the same dimensions during SSR

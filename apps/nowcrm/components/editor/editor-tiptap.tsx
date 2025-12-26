@@ -79,6 +79,7 @@ import LinkedVideoToolbarButton from './extensions/LinkedVideoButton'
 import { StyledLink } from './extensions/StyledLink'
 import { LinkedImage } from './extensions/LinkedImage'
 import { LinkedVideo } from './extensions/LinkedVideo'
+import { useTheme } from 'next-themes'
 
 function convertBase64ToBlob(base64: string) {
   const arr = base64.split(',')
@@ -193,6 +194,9 @@ export interface EditorProps {
 
 export default function EditorTipTap(props: EditorProps) {
 
+  const { theme } = useTheme()
+  console.log(theme)
+
 const BaseKit = [
   DocumentColumn,
   Text,
@@ -289,26 +293,41 @@ const extensions = [
     },
   }),
   Mention.configure({
-    suggestion: {
-      char: "@",
-      allowSpaces: true,
-      items: async ({ query }: any) => {
-        const contactMatches = CONTACT_MENTIONS.filter((item) =>
-          item.name.toLowerCase().startsWith(query.toLowerCase()),
-        )
-          .slice(0, 5)
-          .map((item) => item.name);
-
-        const textblock_data = await findTextBlock({
-          filters: { name: { $containsi: query.replaceAll("-", " ") } },
-        });
-
-        const merged = [...contactMatches, ...textblock_data];
-        const unique = Array.from(new Set(merged));
-        return unique;
+    suggestions:[
+      {
+        char: "@",
+        allowSpaces: true,
+        items: async ({ query }: any) => {
+          return CONTACT_MENTIONS
+            .filter((item) =>
+              item.name.toLowerCase().startsWith(query.toLowerCase())
+            )
+            .slice(0, 5)
+            .map((item) => ({
+              id: item.id,     // required unique identifier
+              label: item.name // what the user sees
+            }))
+        },
+        
       },
+      {
+        char: "#",
+        allowSpaces: true,
+        items: async ({ query }: any) => {
+          const textblock_data = await findTextBlock({
+            filters: {
+              name: { $containsi: query.replaceAll("-", " ") },
+            },
+          })
       
-    },
+          return textblock_data.map((value) => ({
+            id: value,
+            label: value,
+          }))
+        },
+      }
+      
+    ]
   }),
   SlashCommand,
   CodeView,
@@ -339,8 +358,9 @@ const extensions = [
 
 
   useEffect(() => {
-    (window as any).editor = editor;
+    (window as any).editor = editor
     editor?.setEditable(props.editable ?? true)
+
   }, [editor]);
 
   return (
@@ -352,7 +372,7 @@ const extensions = [
       }}
     >
 
-      <RichTextProvider editor={editor as Editor} >
+      <RichTextProvider editor={editor as Editor} dark={theme === 'dark'} >
         <div className="overflow-hidden rounded-[0.5rem] bg-background shadow outline outline-1">
           <div className="flex max-h-full w-full flex-col">
 
