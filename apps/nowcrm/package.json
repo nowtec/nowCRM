@@ -86,7 +86,7 @@
     "react-share": "^5.2.2",
     "react-swipeable": "^7.0.2",
     "reactflow": "^11.11.4",
-    "reactjs-tiptap-editor": "^1.0.7",
+    "reactjs-tiptap-editor": "^1.0.8",
     "@tiptap/extension-document": "^3.13.0",
     "@tiptap/extension-hard-break": "^3.13.0",
     "@tiptap/extension-list": "^3.13.0",

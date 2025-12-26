@@ -289,26 +289,41 @@ const extensions = [
     },
   }),
   Mention.configure({
-    suggestion: {
-      char: "@",
-      allowSpaces: true,
-      items: async ({ query }: any) => {
-        const contactMatches = CONTACT_MENTIONS.filter((item) =>
-          item.name.toLowerCase().startsWith(query.toLowerCase()),
-        )
-          .slice(0, 5)
-          .map((item) => item.name);
-
-        const textblock_data = await findTextBlock({
-          filters: { name: { $containsi: query.replaceAll("-", " ") } },
-        });
-
-        const merged = [...contactMatches, ...textblock_data];
-        const unique = Array.from(new Set(merged));
-        return unique;
+    suggestions:[
+      {
+        char: "@",
+        allowSpaces: true,
+        items: async ({ query }: any) => {
+          return CONTACT_MENTIONS
+            .filter((item) =>
+              item.name.toLowerCase().startsWith(query.toLowerCase())
+            )
+            .slice(0, 5)
+            .map((item) => ({
+              id: item.id,     // required unique identifier
+              label: item.name // what the user sees
+            }))
+        },
+        
       },
+      {
+        char: "#",
+        allowSpaces: true,
+        items: async ({ query }: any) => {
+          const textblock_data = await findTextBlock({
+            filters: {
+              name: { $containsi: query.replaceAll("-", " ") },
+            },
+          })
       
-    },
+          return textblock_data.map((value) => ({
+            id: value,
+            label: value,
+          }))
+        },
+      }
+      
+    ]
   }),
   SlashCommand,
   CodeView,
