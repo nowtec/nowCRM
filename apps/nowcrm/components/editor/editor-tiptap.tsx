@@ -79,6 +79,7 @@ import LinkedVideoToolbarButton from './extensions/LinkedVideoButton'
 import { StyledLink } from './extensions/StyledLink'
 import { LinkedImage } from './extensions/LinkedImage'
 import { LinkedVideo } from './extensions/LinkedVideo'
+import { useTheme } from 'next-themes'
 
 function convertBase64ToBlob(base64: string) {
   const arr = base64.split(',')
@@ -192,6 +193,9 @@ export interface EditorProps {
 }
 
 export default function EditorTipTap(props: EditorProps) {
+
+  const { theme } = useTheme()
+  console.log(theme)
 
 const BaseKit = [
   DocumentColumn,
@@ -354,8 +358,9 @@ const extensions = [
 
 
   useEffect(() => {
-    (window as any).editor = editor;
+    (window as any).editor = editor
     editor?.setEditable(props.editable ?? true)
+
   }, [editor]);
 
   return (
@@ -367,7 +372,7 @@ const extensions = [
       }}
     >
 
-      <RichTextProvider editor={editor as Editor} >
+      <RichTextProvider editor={editor as Editor} dark={theme === 'dark'} >
         <div className="overflow-hidden rounded-[0.5rem] bg-background shadow outline outline-1">
           <div className="flex max-h-full w-full flex-col">
 

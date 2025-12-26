@@ -6,6 +6,8 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
+import { themeActions } from 'reactjs-tiptap-editor/theme'
+
 export function ThemeSwitcher({ className }: { className?: string }) {
 	const { theme, setTheme } = useTheme();
 	const [mounted, setMounted] = useState(false);
@@ -19,6 +21,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
 
 	const toggleTheme = () => {
 		setTheme(isDark ? "light" : "dark");
+		themeActions.setTheme(isDark ? "light" : "dark");
 	};
 
 	// Render a placeholder with the same dimensions during SSR

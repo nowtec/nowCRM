@@ -19,7 +19,7 @@ export const renderWithMentions = (text: string, mentions: string[]) => {
 			return (
 				<span
 					key={index}
-					className="rounded bg-blue-100 px-1 font-mono text-blue-800"
+					className="rounded bg-accent px-1 font-mono "
 				>
 					{part}
 				</span>
@@ -30,7 +30,7 @@ export const renderWithMentions = (text: string, mentions: string[]) => {
 			return (
 				<span
 					key={index}
-					className="rounded bg-green-100 px-1 font-mono text-green-800"
+					className="rounded bg-accent px-1 font-mono"
 				>
 					{part}
 				</span>
