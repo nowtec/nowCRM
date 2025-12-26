@@ -3,7 +3,7 @@ export const renderWithMentions = (text: string, mentions: string[]) => {
 
 	// Escape mentions for regex usage
 	const escapedMentions = mentions.map((m) =>
-		m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+		m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
 	);
 
 	// Match #text_block.<message>
@@ -11,16 +11,13 @@ export const renderWithMentions = (text: string, mentions: string[]) => {
 
 	const combinedPattern = new RegExp(
 		`(${escapedMentions.join("|")}|${textBlockPattern})`,
-		"g"
+		"g",
 	);
 
 	return text.split(combinedPattern).map((part, index) => {
 		if (mentions.includes(part)) {
 			return (
-				<span
-					key={index}
-					className="rounded bg-accent px-1 font-mono "
-				>
+				<span key={index} className="rounded bg-accent px-1 font-mono">
 					{part}
 				</span>
 			);
@@ -28,10 +25,7 @@ export const renderWithMentions = (text: string, mentions: string[]) => {
 
 		if (part.startsWith("#text_block.")) {
 			return (
-				<span
-					key={index}
-					className="rounded bg-accent px-1 font-mono"
-				>
+				<span key={index} className="rounded bg-accent px-1 font-mono">
 					{part}
 				</span>
 			);

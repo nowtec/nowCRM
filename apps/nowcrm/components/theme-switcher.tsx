@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { themeActions } from "reactjs-tiptap-editor/theme";
 import { cn } from "@/lib/utils";
-
-import { themeActions } from 'reactjs-tiptap-editor/theme'
 
 export function ThemeSwitcher({ className }: { className?: string }) {
 	const { theme, setTheme } = useTheme();
