@@ -171,6 +171,161 @@ pnpm dev
 
 The frontend will start in development mode and connect to the locally running backend services.
 
+---
+
+## 🚀 Production Deployment
+
+### Prerequisites
+
+Before deploying to production, ensure you have:
+- Docker and Docker Compose installed on your production server
+- A customer domain configured with DNS pointing to your server
+- All required secrets and credentials (SMTP, S3, database, etc.)
+- Access to the nowCRM container images from GitHub Container Registry
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/nowtec/nowCRM.git
+cd nowCRM
+```
+
+### 2. Create the External Network
+
+The production compose file uses an external network that must be created first:
+
+```bash
+docker network create my_net
+```
+
+### 3. Prepare Environment Variables
+
+Copy the sample environment file and configure it with your production values:
+
+```bash
+cp .env.sample .env
+```
+
+**Important:** Edit `.env` and fill in all required values. Critical variables include:
+
+- `CUSTOMER_DOMAIN` - Your production domain (e.g., `example.com`)
+- `STRAPI_DATABASE_*` - PostgreSQL database credentials
+- `STRAPI_ADMIN_JWT_SECRET`, `STRAPI_API_TOKEN_SALT`, `STRAPI_APP_KEYS` - Generate secure random values
+- `CRM_AUTH_SECRET` - Generate a secure random value for NextAuth
+- `CRM_TOTP_ENCRYPTION_KEY` - 32-digit key for 2FA encryption
+- `S3_*` - S3-compatible storage credentials for file uploads
+- `STRAPI_AWS_*` - AWS S3 credentials for Strapi media storage
+- `COMPOSER_OPENAI_API_KEY`, `COMPOSER_ANTHROPIC_KEY` - AI service API keys
+- `COMPOSER_SMTP_*`, `DAL_SMTP_*` - SMTP credentials for email sending
+- `SSL_EMAIL` - Email address for Let's Encrypt SSL certificate generation
+
+### 4. Verify Required Files
+
+Ensure the following files are present:
+- `docker-compose.prod.yaml` - Production compose configuration
+- `caddy/Caddyfile` - Caddy reverse proxy configuration
+- `rabbitmq/rabbitmq_delayed_message_exchange-4.1.0.ez` - RabbitMQ plugin
+
+### 5. Pull Required Images
+
+Pull the latest production images from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/nowtec/nowcrm/strapi:latest
+docker pull ghcr.io/nowtec/nowcrm/nowcrm:latest
+docker pull ghcr.io/nowtec/nowcrm/journeys:latest
+docker pull ghcr.io/nowtec/nowcrm/composer:latest
+docker pull ghcr.io/nowtec/nowcrm/dal:latest
+```
+
+Or specify a version with the `VERSION` environment variable:
+
+c```bash
+VERSION=v0.4.7 docker compose -f docker-compose.prod.yaml pull
+```
+
+### 6. Start Production Services
+
+Start all services in detached mode:
+
+```bash
+docker compose -f docker-compose.prod.yaml up -d
+```
+
+### 7. Verify Deployment
+
+Check that all services are running:
+
+```bash
+docker compose -f docker-compose.prod.yaml ps
+```
+
+Verify service logs:
+
+```bash
+docker compose -f docker-compose.prod.yaml logs -f
+```
+
+### 8. Access Your Services
+
+Once running, your services will be accessible at:
+
+- **CRM**: `https://crm.{CUSTOMER_DOMAIN}`
+- **Strapi Admin**: `https://admin.{CUSTOMER_DOMAIN}`
+- **Strapi API**: `https://api.{CUSTOMER_DOMAIN}`
+- **Journeys**: `https://journeys.{CUSTOMER_DOMAIN}`
+- **Composer**: `https://composer.{CUSTOMER_DOMAIN}`
+- **DAL**: `https://dal.{CUSTOMER_DOMAIN}`
+- **RabbitMQ Management**: `https://rabbitmq.{CUSTOMER_DOMAIN}`
+
+### 9. Post-Deployment Setup
+
+1. **Create Strapi Admin User**: Access `https://admin.{CUSTOMER_DOMAIN}` and create the initial admin user
+2. **Configure Channels**: Set up email, SMS, and other channels in the CRM admin panel
+3. **Verify Health Checks**: Run through the [Installation Verification Protocol](#installation-verification-protocol)
+4. **Configure Backups**: Set up automated backups for PostgreSQL and Redis volumes
+
+### Managing Production Services
+
+**View logs:**
+```bash
+docker compose -f docker-compose.prod.yaml logs -f [service_name]
+```
+
+**Restart a service:**
+```bash
+docker compose -f docker-compose.prod.yaml restart [service_name]
+```
+
+**Stop all services:**
+```bash
+docker compose -f docker-compose.prod.yaml down
+```
+
+**Update to a new version:**
+```bash
+VERSION=v0.4.8 docker compose -f docker-compose.prod.yaml pull
+docker compose -f docker-compose.prod.yaml up -d
+```
+
+### Troubleshooting
+
+**Services fail to start:**
+- Check that the `my_net` network exists: `docker network ls`
+- Verify all environment variables are set in `.env`
+- Check service logs: `docker compose -f docker-compose.prod.yaml logs`
+
+**SSL certificate issues:**
+- Ensure `SSL_EMAIL` is set correctly in `.env`
+- Check Caddy logs: `docker compose -f docker-compose.prod.yaml logs caddy`
+- Verify DNS is properly configured for your domain
+
+**Database connection issues:**
+- Verify PostgreSQL container is healthy: `docker compose -f docker-compose.prod.yaml ps postgres`
+- Check database credentials in `.env`
+- Review PostgreSQL logs: `docker compose -f docker-compose.prod.yaml logs postgres`
+
+---
 
 ## 🔨 Queueing System (DAL)
 

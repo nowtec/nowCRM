@@ -1,0 +1,38 @@
+{
+    email {$SSL_EMAIL}
+}
+
+# CRM Application
+crm.{$CUSTOMER_DOMAIN} {
+    reverse_proxy nowcrm:3000
+}
+
+# Strapi Admin
+admin.{$CUSTOMER_DOMAIN} {
+    reverse_proxy strapi:1337
+}
+
+# Strapi API
+api.{$CUSTOMER_DOMAIN} {
+    reverse_proxy strapi:1337
+}
+
+# Journeys Service
+journeys.{$CUSTOMER_DOMAIN} {
+    reverse_proxy journeys:3010
+}
+
+# Composer Service
+composer.{$CUSTOMER_DOMAIN} {
+    reverse_proxy composer:3020
+}
+
+# DAL Service
+dal.{$CUSTOMER_DOMAIN} {
+    reverse_proxy dal:6001
+}
+
+# RabbitMQ Management UI
+rabbitmq.{$CUSTOMER_DOMAIN} {
+    reverse_proxy rabbitmq:15672
+}

@@ -1,0 +1,86 @@
+---
+description: File structure guidelines for NOWCRM
+globs: []
+alwaysApply: true
+---
+# File Structure Guidelines
+
+## Directory Organization
+```
+apps/nowcrm/
+├── components/     # Reusable UI components
+├── app/            # Route components  
+├── i18n/           # I18N configuration
+├── lib/            # Handling server actions and different utils
+├── hooks/          # Custom hooks
+├── types/          # Type definitions
+└── messages/       # I18N jsons for each language
+
+apps/composer/src/
+├── api/            # Api routes
+├── api-docs/       # Handling api routes setup
+├── common/         # Common and reused utils
+├── lib/            # Functions, types and workers
+└── scheduler/      # Scheduler which are integrated with composer calendar
+
+apps/journeys/src/
+├── api/            # Handling webhooks api routes for journeys
+├── common/         # Common and reused utils
+├── consumers/      # All journeys consumers setup
+├── cron/           # Cron jobs which acts as a producer to create new jobs
+├── jobs/           # All job configuration
+├── lib/            # Functions, types and workers
+└── rabbitmq/       # Rabbitmq setup
+```
+
+## File Naming
+- **kebab-case** for all files and directories
+- **Descriptive suffixes** for clarity
+```
+// ✅ Correct naming
+user.tsx
+user.component.tsx
+user.service.ts
+user.test.tsx
+```
+
+## Index Files & Barrel Exports
+```typescript
+// ✅ Clean barrel exports in index.ts
+export { UserCard } from './user-card.component';
+export { UserList } from './user-list.component';
+export type { UserCardProps, UserListProps } from './types';
+
+// ✅ Usage - clean imports
+import { UserCard, UserList } from '@/components/user';
+```
+
+## File Size Guidelines
+- **Components**: Under 300 lines if possible
+- **Services**: Under 500 lines if possible
+- **Extract logic** into hooks/utilities when files grow large
+- **Use composition** over large monolithic components
+
+## Configuration Files
+
+### Project Configuration
+```
+.vscode/                       # VSCode settings
+├── settings.json
+├── extensions.json
+└── launch.json
+
+.github/                       # GitHub workflows
+├── workflows/
+└── templates/
+
+.cursor/                       # Cursor rules
+├── rules/
+└── environment.json
+```
+
+### Build Configuration
+- Keep build configs in root or package directories
+- Use consistent naming for config files
+- Comment complex configurations
+- Version control all configuration files
