@@ -23,7 +23,7 @@ const RELATIONS = new Set([
 	"contact_interests",
 	"journeys",
 	"journey_steps",
-	"survey_items",
+	"surveys",
 	"subscriptions",
 ]);
 

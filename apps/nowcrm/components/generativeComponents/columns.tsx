@@ -203,8 +203,8 @@ export const columns: ColumnDef<Contact>[] = [
 		},
 	},
 	{
-		accessorKey: "status",
-		header: "Status",
+		accessorKey: "contact_status",
+		header: "Contact Status",
 		meta: {
 			hidden: true,
 		},
