@@ -1,0 +1,36 @@
+---
+description: NOWCRM architecture overview - monorepo structure, tech stack, and development principles
+globs: []
+alwaysApply: true
+---
+
+# NOWCRM Architecture
+
+## Tech Stack
+- **Frontend**: React 19, TypeScript, NextJs 15, ShadCN components
+- **Backend**: Nodejs, PostgreSQL, Redis, Rabbitmq
+- **Monorepo**: pnpm workspace with docker composer
+
+## app Structure
+```
+./
+├── nowcrm/          # Nextjs front app
+├── dal/             # Orchestrates heavy asynchronous or bulk operations using BullMQ.
+├── composer/        # Handles content generation, channel dispatch, and AWS SES event ingestion. |
+├── journeys/        # Manages automated multi-step marketing journeys.
+└── strapi/          # Headless CMS used as the universal data backend, authentication layer, and admin panel.
+```
+
+## library Structure
+```
+./
+├── services/        # Handle types, services which talks withs strapi and common functions
+```
+
+## Key Principles
+- **Functional components only** (no classes)
+- **Named exports only** (no default exports)
+- **Types over interfaces** (except for extending third-party)
+- **String literals over enums**
+- **No 'any' type allowed**
+- **Event handlers over useEffect** for state updates
