@@ -102,7 +102,7 @@ type Props = {
 
 export const SurveyItemsCell: React.FC<Props> = ({ contact }) => {
 	const [expanded, setExpanded] = useState(false);
-	const items = contact.survey_items || [];
+	const items = contact.surveys || [];
 
 	const visibleItems = expanded ? items : items.slice(0, 2);
 	const hasMore = items.length > 2;
@@ -116,7 +116,7 @@ export const SurveyItemsCell: React.FC<Props> = ({ contact }) => {
 						className="w-fit rounded-md border bg-muted shadow-none"
 					>
 						<CardContent className="px-3 py-1 text-sm">
-							<strong>{item.question}</strong>: {item.answer}
+							<strong>{item.name}</strong>: {item.form_id}
 						</CardContent>
 					</Card>
 				))}
@@ -482,8 +482,8 @@ export const getColumns = (
 		},
 	},
 	{
-		accessorKey: "survey_items",
-		header: "Survey Items",
+		accessorKey: "surveys",
+		header: "Surveys",
 		cell: ({ row }) => {
 			const contact = row.original;
 			return <SurveyItemsCell contact={contact} />;
@@ -500,8 +500,8 @@ export const getColumns = (
 		},
 	},
 	{
-		accessorKey: "status",
-		header: "Status",
+		accessorKey: "contact_status",
+		header: "Contact Status",
 		meta: {
 			hidden: true,
 		},

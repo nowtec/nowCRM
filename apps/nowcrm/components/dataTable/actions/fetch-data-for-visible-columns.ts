@@ -59,7 +59,7 @@ export async function fetchDataForVisibleColumns(input: {
 			contact_interests: { fields: ["name"] },
 			journeys: { fields: ["name"] },
 			journey_steps: { fields: ["name"] },
-			survey_items: { fields: ["question", "answer"] },
+			surveys: { fields: ["name"] },
 			tags: { fields: ["name", "color"] },
 		},
 		sort: [`${sortBy}:${sortOrder}`] as any,
