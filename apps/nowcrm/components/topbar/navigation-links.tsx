@@ -42,7 +42,6 @@ const publicNavLinks = [
 	{ href: RouteConfig.userguide, label: "User Guide" },
 	{ href: RouteConfig.policy.base, label: "Privacy Policy" },
 	{ href: RouteConfig.terms, label: "Terms of Use" },
-	{ href: RouteConfig.signup, label: "Subscribe" },
 ];
 
 // Utility for link styling
