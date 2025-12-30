@@ -86,6 +86,82 @@ async function deepDuplicateFormItem(
   return created;
 }
 
+async function ensureSubscription({
+	contact,
+	channelName,
+	shouldSubscribe
+}: {
+	contact: any;
+	channelName: string;
+	shouldSubscribe: boolean;
+}) {
+	if (!contact || !shouldSubscribe) return;
+
+	try {
+		const now = new Date().toISOString();
+
+		// 1️⃣ Find channel by name (case-insensitive)
+		const channels = await strapi
+			.documents('api::channel.channel')
+			.findMany({
+				filters: { name: { $containsi: channelName } },
+				limit: 1
+			});
+
+		const channel = channels?.[0] ?? null;
+
+		if (!channel) {
+			console.warn(`⚠️ No '${channelName}' channel found. Skipping subscription.`);
+			return;
+		}
+
+		// 2️⃣ Check existing subscription
+		const existingSubs = await strapi
+			.documents('api::subscription.subscription')
+			.findMany({
+				filters: {
+					channel: { documentId: channel.documentId },
+					contact: { documentId: contact.documentId }
+				},
+				limit: 1
+			});
+
+		const existing = existingSubs?.[0] ?? null;
+
+		if (existing) {
+			await strapi
+				.documents('api::subscription.subscription')
+				.update({
+					documentId: existing.documentId,
+					data: {
+						active: true,
+						unsubscribed_at: null,
+						subscribed_at: now,
+						publishedAt: now
+					} as any
+				});
+
+			console.log(`🔁 Reactivated ${channelName} subscription for ${contact.email}`);
+		} else {
+			await strapi
+				.documents('api::subscription.subscription')
+				.create({
+					data: {
+						channel: channel.id,
+						contact: contact.id,
+						subscribed_at: now,
+						active: true,
+						publishedAt: now
+					}
+				});
+
+			console.log(`✅ Created ${channelName} subscription for ${contact.email}`);
+		}
+	} catch (err) {
+		console.warn(`⚠️ Failed to process ${channelName} subscription:`, err);
+	}
+}
+
 
 export default factories.createCoreController('api::form.form', ({ strapi }) => ({
 async duplicate(ctx) {
@@ -363,62 +439,23 @@ async duplicate(ctx) {
 		);
 
 		if (contact && shouldSubscribe) {
-			try {
-				const now = new Date().toISOString();
-
-				// 1️⃣ Look up "Email" channel (case-insensitive)
-				const channels = await strapi.documents('api::channel.channel').findMany({
-					filters: { name: { $containsi: 'email' } },
-					limit: 1
-				});
-				const channel = channels && channels.length > 0 ? channels[0] : null;
-
-				console.log("channel ");
-				console.log(channel);
-
-				if (!channel) {
-					console.warn(`⚠️ No 'Email' channel found. Skipping subscription.`);
-				} else {
-					// 2️⃣ Check for existing subscription
-					const existingSubs = await strapi.documents('api::subscription.subscription').findMany({
-						filters: {
-							channel: { documentId: channel.documentId },
-							contact: { documentId: contact.documentId }
-						},
-						limit: 1
-					});
-					const existing = existingSubs && existingSubs.length > 0 ? existingSubs[0] : null;
-
-					if (existing) {
-						// Reactivate existing subscription
-						const res = await strapi.documents('api::subscription.subscription').update({
-							documentId: existing.documentId,
-							data: {
-								active: true,
-								unsubscribed_at: null,
-								subscribed_at: now,
-								publishedAt: now
-							} as any
-						});
-						console.log(`🔁 Reactivated subscription for contact ${contact.email}`);
-					} else {
-						// 3️⃣ Create new subscription
-						const data = {
-							channel: channel.id,		
-							contact: contact.id,
-							subscribed_at: now,
-							active: true,
-							publishedAt: now
-						};
-
-						await strapi.documents('api::subscription.subscription').create({ data });
-
-						console.log(`✅ Created subscription for contact ${contact.email}`);
-					}
-				}
-			} catch (err) {
-				console.warn(`⚠️ Failed to create subscription:`, err);
-			}
+			await ensureSubscription({
+				contact,
+				channelName: 'email',
+				shouldSubscribe
+			});
+			
+			await ensureSubscription({
+				contact,
+				channelName: 'sms',
+				shouldSubscribe
+			});
+			
+			await ensureSubscription({
+				contact,
+				channelName: 'whatsapp',
+				shouldSubscribe
+			});
 		}
 
 		// 4️⃣ Create survey

@@ -67,12 +67,6 @@ export default function Footer() {
 							Guide
 						</a>
 						<span className="mx-2">•</span>
-						<a
-							href={RouteConfig.signup}
-							className="transition-colors hover:text-foreground"
-						>
-							Subscribe
-						</a>
 					</nav>
 				</div>
 			</div>
