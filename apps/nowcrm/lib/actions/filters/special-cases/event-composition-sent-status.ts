@@ -73,7 +73,7 @@ export function buildEventCompositionSentStatusCondition(
 		// Contacts that HAVE events with the selected composition AND action = "email_sent"
 		return {
 			events: {
-				$and: [compositionFilter, { action: { $eq: "email_sent" } }],
+				$and: [compositionFilter, { action: { $eqi: "send" } }],
 			},
 		};
 	} else {
@@ -102,7 +102,7 @@ export function buildEventCompositionSentStatusAloneCondition(
 		// Contacts that HAVE events with action = "email_sent"
 		return {
 			events: {
-				action: { $eq: "email_sent" },
+				action: { $eqi: "send" },
 			},
 		};
 	} else {
@@ -111,7 +111,7 @@ export function buildEventCompositionSentStatusAloneCondition(
 		return {
 			$not: {
 				events: {
-					action: { $eq: "email_sent" },
+					action: { $eqi: "send" },
 				},
 			},
 		};

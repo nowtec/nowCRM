@@ -209,6 +209,7 @@ export class SNSWebhookServiceApi {
 		const records: EmailRecord[] = [];
 
 		let compositionId: string | undefined;
+		let mainCompositionId: string | undefined;
 		let channel: string | undefined;
 
 		if (sesMessage.mail.tags?.composition_id) {
@@ -219,6 +220,17 @@ export class SNSWebhookServiceApi {
 			);
 			if (compHeader) {
 				compositionId = compHeader.value;
+			}
+		}
+
+		if (sesMessage.mail.tags?.main_composition_id) {
+			mainCompositionId = sesMessage.mail.tags.main_composition_id[0];
+		} else if (sesMessage.mail.headers) {
+			const mainCompHeader = sesMessage.mail.headers.find(
+				(h) => h.name.toLowerCase() === "x-main-composition-id",
+			);
+			if (mainCompHeader) {
+				mainCompositionId = mainCompHeader.value;
 			}
 		}
 
@@ -305,6 +317,7 @@ export class SNSWebhookServiceApi {
 				source: sesMessage.mail.source,
 				destination: destination,
 				composition_id: compositionId,
+				main_composition_id: mainCompositionId,
 				channel,
 				status: headerStatus,
 				action:
@@ -426,10 +439,11 @@ export class SNSWebhookServiceApi {
 
 			// Create a new event entry with contact relation
 			const eventData: Partial<Form_Event> = {
-				action: record.action || "",
+				action: record.action || "email_sent",
 				payload: record.payload || "",
 				source: record.source,
 				channel: record.channel,
+				composition: record.main_composition_id,
 				composition_item: record.composition_id,
 				external_id: record.external_id,
 				event_status: record.status,
@@ -458,6 +472,7 @@ export class SNSWebhookServiceApi {
 					await eventsService.create(
 						{
 							contact: contactId,
+							composition: record.main_composition_id,
 							composition_item: record.composition_id,
 							external_id: "",
 							destination: record.destination,

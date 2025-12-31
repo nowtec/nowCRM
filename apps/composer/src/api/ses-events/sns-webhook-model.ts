@@ -90,6 +90,7 @@ export const EmailRecordSchema = z.object({
 	status: z.string(),
 	// Add additional fields for Strapi
 	composition_id: z.string().optional(),
+	main_composition_id: z.string().optional(),
 	channel: z.string().optional(),
 	action: z.string().optional(),
 	payload: z.string().optional(),
