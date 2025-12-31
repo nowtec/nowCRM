@@ -40,7 +40,7 @@ export async function processEmailChannel(
 			from,
 			subject,
 			data?.ignoreSubscription || false,
-			composition.documentId
+			composition.documentId,
 		],
 	);
 }

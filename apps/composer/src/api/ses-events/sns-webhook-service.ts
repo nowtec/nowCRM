@@ -443,7 +443,7 @@ export class SNSWebhookServiceApi {
 				payload: record.payload || "",
 				source: record.source,
 				channel: record.channel,
-				composition: record.main_composition_id || 'here composition main id',
+				composition: record.main_composition_id || "here composition main id",
 				composition_item: record.composition_id,
 				external_id: record.external_id,
 				event_status: record.status,
@@ -472,7 +472,8 @@ export class SNSWebhookServiceApi {
 					await eventsService.create(
 						{
 							contact: contactId,
-							composition: record.main_composition_id || 'here composition main id',
+							composition:
+								record.main_composition_id || "here composition main id",
 							composition_item: record.composition_id,
 							external_id: "",
 							destination: record.destination,

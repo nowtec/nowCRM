@@ -2,7 +2,7 @@ import {
 	CommunicationChannel,
 	type CompositionItem,
 	type Contact,
-	DocumentId,
+	type DocumentId,
 	ServiceResponse,
 } from "@nowcrm/services";
 import { settingsService } from "@nowcrm/services/server";
@@ -20,7 +20,7 @@ export async function sendEmail(
 	subject: string,
 	composition: CompositionItem,
 	ignoreSubscription: boolean,
-	compositionId: DocumentId
+	compositionId: DocumentId,
 ): Promise<ServiceResponse<string | null>> {
 	// one is until settings migrates to each user
 	const settings = await settingsService.find(env.COMPOSER_STRAPI_API_TOKEN);
@@ -135,7 +135,7 @@ export async function emailPost(
 	email_from: string,
 	title: string,
 	ignoreSubscription: boolean,
-	compositionId: DocumentId
+	compositionId: DocumentId,
 ): Promise<ServiceResponse<boolean>> {
 	let formated_text = composition.result || "";
 	let formated_subject = title || "";
@@ -197,7 +197,7 @@ export async function emailPost(
 		formated_subject,
 		compositionForEmail,
 		ignoreSubscription,
-		compositionId
+		compositionId,
 	);
 
 	if (!messageId.responseObject) {
