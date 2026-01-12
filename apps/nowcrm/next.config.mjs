@@ -24,6 +24,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
     turbopackFileSystemCacheForDev: true,
+    proxyClientMaxBodySize: '200mb',
     serverActions: {
       bodySizeLimit: '200mb',
     },
