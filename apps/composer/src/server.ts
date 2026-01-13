@@ -48,7 +48,6 @@ app.use("/send-to-channels", sendToChannelsRouter);
 app.use("/webhook", snsWebhookRouter);
 app.use("/admin/queues/api", queueRouter);
 
-
 // Error handlers
 app.use(errorHandler());
 

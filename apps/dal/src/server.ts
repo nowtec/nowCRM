@@ -48,7 +48,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/mass-actions", massActionsRouter);
 app.use("/health-check", healthCheckRouter);
 
-
 // Error handlers
 app.use(errorHandler());
 

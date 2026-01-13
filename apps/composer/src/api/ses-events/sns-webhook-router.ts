@@ -1,37 +1,7 @@
-import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
-import { z } from "zod";
-import { createApiResponse } from "@/api-docs/open-api-response-builders";
 import { snsWebhookController } from "./sns-webhook-controller";
-import { SNSMessageSchema } from "./sns-webhook-model";
 
-export const snsWebhookRegistry = new OpenAPIRegistry();
 export const snsWebhookRouter: Router = express.Router();
-
-// Register the SNS message schema
-snsWebhookRegistry.register("SNSMessage", SNSMessageSchema);
-
-snsWebhookRegistry.registerPath({
-	method: "post",
-	path: "/webhook/ses-event-to-strapi",
-	tags: ["Webhooks"],
-	request: {
-		body: {
-			content: {
-				"application/json": {
-					schema: SNSMessageSchema,
-				},
-			},
-		},
-	},
-	responses: createApiResponse(
-		z.object({
-			message: z.string(),
-		}),
-		"Success",
-		200,
-	),
-});
 
 // Update the route handler to match the path
 snsWebhookRouter
