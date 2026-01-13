@@ -1,0 +1,934 @@
+{
+  "$schema": "https://www.krakend.io/schema/v2.12/krakend.json",
+  "version": 3,
+  "timeout": "3000ms",
+  "cache_ttl": "300s",
+  "output_encoding": "json",
+  "debug_endpoint": false,
+  "echo_endpoint": false,
+  "endpoints": [
+    {
+      "endpoint": "/health-check/composer",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health-check",
+          "host": ["http://composer:3020"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/health-check/journeys",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health-check",
+          "host": ["http://journeys:3010"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/health-check/dal",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health-check",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/composer/create-composition",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "has(req_headers.Authorization) && req_headers.Authorization != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "method": "GET",
+          "encoding": "json",
+          "group": "auth",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "auth_service"
+            }
+          }
+        },
+        {
+          "url_pattern": "/composer/create-composition",
+          "host": ["http://composer:3020"],
+          "method": "POST",
+          "encoding": "json"
+        }
+      ]
+    },    
+    {
+      "endpoint": "/composer/create-reference",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/composer/create-reference",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/composer/regenerate",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/composer/regenerate",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/composer/quick-write",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/composer/quick-write",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/composer/structured-response",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/composer/structured-response",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/send-to-channels",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/send-to-channels",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/send-to-channels/health-check",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/send-to-channels/health-check",
+          "host": ["http://composer:3020"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/send-to-channels/get-callback/{provider}",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/send-to-channels/get-callback/{provider}",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/send-to-channels/callback/{provider}",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/send-to-channels/callback/{provider}",
+          "host": ["http://composer:3020"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/send-to-channels/callback/{provider}",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/send-to-channels/callback/{provider}",
+          "host": ["http://composer:3020"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/webhook/composer",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/webhook",
+          "host": ["http://composer:3020"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/admin/queues/composer/{path}",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/admin/queues/{path}",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/admin/queues/api/composer/{path}",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/admin/queues/api/{path}",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/admin/queues/api/composer/{path}",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/admin/queues/api/{path}",
+          "host": ["http://composer:3020"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/webhooks/journeys/trigger",
+      "method": "POST",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/webhooks/trigger",
+          "host": ["http://journeys:3010"],
+          "encoding": "json"
+        }
+      ]
+    },
+    {
+      "endpoint": "/dal/upload",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/delete",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/delete",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/update",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/update",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/export",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/export",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/anonymize",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/anonymize",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/add-to-list",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/add-to-list",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/add-to-organization",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/add-to-organization",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/add-to-journey",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/add-to-journey",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/update-subscription",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/mass-actions/update-subscription",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/admin/queues/dal/{path}",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/admin/queues/{path}",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/dal/queue/{path}",
+      "method": "GET",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/api/{path}",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/dal/queue/{path}",
+      "method": "POST",
+      "output_encoding": "json",
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/users/me",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "method": "GET",
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/api/{path}",
+          "host": ["http://nowcrm-dal:6001"],
+          "encoding": "json",
+          "extra_config": {
+            "validation/cel": [
+              {
+                "check_expr": "req_headers['Authorization'] != ''"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/{path}",
+      "method": "GET",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/{path}",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "headers_to_pass": ["Authorization"],
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/{path}",
+      "method": "POST",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/{path}",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "headers_to_pass": ["Authorization"],
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/{path}",
+      "method": "PUT",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/{path}",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "headers_to_pass": ["Authorization"],
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/{path}",
+      "method": "DELETE",
+      "output_encoding": "json",
+      "input_headers": ["Authorization"],
+      "backend": [
+        {
+          "url_pattern": "/api/{path}",
+          "host": ["http://strapi:1337"],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "headers_to_pass": ["Authorization"],
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "extra_config": {
+    "security/cors": {
+    "allow_origins": ["*"],
+    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"],
+    "expose_headers": ["Content-Length"],
+    "max_age": "12h",
+    "allow_credentials": false
+    },
+    "security/http": {
+      "allowed_hosts": [],
+      "ssl_redirect": false,
+      "frame_deny": true,
+      "content_type_nosniff": true,
+      "browser_xss_filter": true,
+      "referrer_policy": "same-origin"
+    },
+    "telemetry/logging": {
+      "level": "INFO",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true
+    }
+  }
+}

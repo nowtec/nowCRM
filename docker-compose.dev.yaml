@@ -283,6 +283,18 @@ services:
     networks:
       - my_net
 
+  krakend:
+    container_name: krakend-nowtec
+    image: krakend-nowtec
+    build: ./apps/krakend/
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - strapi
+    networks:
+      - my_net
+
   mailpit:
     container_name: mailpit
     image: axllent/mailpit:latest

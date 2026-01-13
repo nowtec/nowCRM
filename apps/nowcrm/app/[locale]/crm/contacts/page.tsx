@@ -27,7 +27,6 @@ export default async function Page(props: {
 	const finalFilters = {};
 
 	const session = await auth();
-
 	// Default visible fields - columns that are shown by default (used for initial fetch)
 	const DEFAULT_VISIBLE_FIELDS = [
 		"id",
@@ -55,6 +54,7 @@ export default async function Page(props: {
 		return <ErrorMessage response={response} />;
 	}
 	const { meta } = response;
+	console.log(session.jwt)
 	return (
 		<div className="container">
 			<HelloMessage />

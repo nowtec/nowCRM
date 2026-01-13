@@ -228,6 +228,25 @@ sendToChannelsRouter.get("/get-callback-linkedin", async (req, res, next) => {
 	}
 });
 
+sendToChannelsRouter.get("/get-callback/:provider", async (req, res, next) => {
+	try {
+		const { provider } = req.params;
+		switch (provider) {
+			case "linkedin":
+				return sendController.getRefreshUrlLinkedIn(req, res, next);
+			case "twitter":
+				return sendController.getRefreshUrlTwitter(req, res, next);
+			case "unipile":
+				return sendController.getRefreshUrlUnipile(req, res, next);
+			default:
+				res.status(400).send({ error: `Unknown provider: ${provider}` });
+		}
+	} catch (error) {
+		console.log(error);
+		res.status(400).send({ error: error });
+	}
+});
+
 sendToChannelsRouter.get("/health-check", async (req, res, next) => {
 	try {
 		return sendController.runHealthCheck(req, res, next);
