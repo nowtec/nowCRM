@@ -286,7 +286,9 @@ services:
   krakend:
     container_name: krakend-nowtec
     image: krakend-nowtec
-    build: ./apps/krakend/
+    build:
+      context: ./apps/krakend
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -294,6 +296,7 @@ services:
       - strapi
     networks:
       - my_net
+
 
   mailpit:
     container_name: mailpit
