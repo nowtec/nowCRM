@@ -3,6 +3,7 @@ import helmet from "helmet";
 import { pino } from "pino";
 import { healthCheckRouter } from "@/api/health-check/health-check-router";
 import uploadRouter from "@/api/import/upload-csv";
+import importProgressRouter from "@/api/import-progress";
 import { massActionsRouter } from "@/api/mass-actions/mass-actions-router";
 import errorHandler from "@/common/middleware/error-handler";
 import rateLimiter from "@/common/middleware/rate-limiter";
@@ -47,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/mass-actions", massActionsRouter);
 app.use("/health-check", healthCheckRouter);
+app.use("/", importProgressRouter);
 
 // Error handlers
 app.use(errorHandler());

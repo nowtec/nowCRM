@@ -14,41 +14,9 @@
       "backend": [
         {
           "url_pattern": "/health-check",
-          "host": ["http://composer:3020"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/health-check/journeys",
-      "method": "GET",
-      "output_encoding": "json",
-      "backend": [
-        {
-          "url_pattern": "/health-check",
-          "host": ["http://journeys:3010"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/health-check/dal",
-      "method": "GET",
-      "output_encoding": "json",
-      "backend": [
-        {
-          "url_pattern": "/health-check",
-          "host": ["http://nowcrm-dal:6001"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -61,7 +29,10 @@
     {
       "endpoint": "/composer/create-composition",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -72,7 +43,9 @@
       "backend": [
         {
           "url_pattern": "/composer/create-composition",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "method": "POST",
           "encoding": "json",
           "extra_config": {
@@ -82,11 +55,14 @@
           }
         }
       ]
-    },    
+    },
     {
       "endpoint": "/composer/create-reference",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -97,7 +73,9 @@
       "backend": [
         {
           "url_pattern": "/composer/create-reference",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -110,7 +88,10 @@
     {
       "endpoint": "/composer/regenerate",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -121,7 +102,9 @@
       "backend": [
         {
           "url_pattern": "/composer/regenerate",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -134,7 +117,10 @@
     {
       "endpoint": "/composer/quick-write",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -145,7 +131,9 @@
       "backend": [
         {
           "url_pattern": "/composer/quick-write",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -158,7 +146,10 @@
     {
       "endpoint": "/composer/structured-response",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -169,7 +160,9 @@
       "backend": [
         {
           "url_pattern": "/composer/structured-response",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -182,7 +175,10 @@
     {
       "endpoint": "/send-to-channels",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -193,7 +189,9 @@
       "backend": [
         {
           "url_pattern": "/send-to-channels",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -210,7 +208,9 @@
       "backend": [
         {
           "url_pattern": "/send-to-channels/health-check",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -223,7 +223,9 @@
     {
       "endpoint": "/send-to-channels/get-callback/{provider}",
       "method": "GET",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -234,7 +236,9 @@
       "backend": [
         {
           "url_pattern": "/send-to-channels/get-callback/{provider}",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -251,7 +255,9 @@
       "backend": [
         {
           "url_pattern": "/send-to-channels/callback/{provider}",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -268,7 +274,9 @@
       "backend": [
         {
           "url_pattern": "/send-to-channels/callback/{provider}",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -285,7 +293,9 @@
       "backend": [
         {
           "url_pattern": "/webhook",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -298,7 +308,9 @@
     {
       "endpoint": "/admin/queues/composer/{path}",
       "method": "GET",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -309,7 +321,9 @@
       "backend": [
         {
           "url_pattern": "/admin/queues/{path}",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -322,7 +336,9 @@
     {
       "endpoint": "/admin/queues/api/composer/{path}",
       "method": "GET",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -333,7 +349,9 @@
       "backend": [
         {
           "url_pattern": "/admin/queues/api/{path}",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -346,7 +364,10 @@
     {
       "endpoint": "/admin/queues/api/composer/{path}",
       "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
       "extra_config": {
         "validation/cel": [
           {
@@ -357,7 +378,449 @@
       "backend": [
         {
           "url_pattern": "/admin/queues/api/{path}",
-          "host": ["http://composer:3020"],
+          "host": [
+            "http://composer:3020"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/health-check/dal",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health-check",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/dal/import-progress",
+      "method": "GET",
+      "input_headers": [
+        "Authorization"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/import-progress",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/dal/upload-csv",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/upload-csv",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/delete",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/delete",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/update",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/update",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/export",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/export",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/anonymize",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/anonymize",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/add-to-list",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/add-to-list",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/add-to-organization",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/add-to-organization",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/add-to-journey",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/add-to-journey",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/mass-actions/update-subscription",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/mass-actions/update-subscription",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/admin/queues/dal/{path}",
+      "method": "GET",
+      "input_headers": [
+        "Authorization"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/admin/queues/{path}",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/dal/queue-data",
+      "method": "GET",
+      "input_headers": [
+        "Authorization"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/queue-data",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/dal/queue/{path}",
+      "method": "GET",
+      "input_headers": [
+        "Authorization"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/{path}",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/dal/queue/{path}",
+      "method": "POST",
+      "input_headers": [
+        "Authorization",
+        "Content-Type"
+      ],
+      "extra_config": {
+        "validation/cel": [
+          {
+            "check_expr": "req_headers['Authorization'] != ''"
+          }
+        ]
+      },
+      "backend": [
+        {
+          "url_pattern": "/api/{path}",
+          "host": [
+            "http://nowcrm-dal:6001"
+          ],
+          "encoding": "json",
+          "extra_config": {
+            "backend/http": {
+              "return_error_details": "backend_status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "endpoint": "/health-check/journeys",
+      "method": "GET",
+      "output_encoding": "json",
+      "backend": [
+        {
+          "url_pattern": "/health-check",
+          "host": [
+            "http://journeys:3010"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -374,295 +837,9 @@
       "backend": [
         {
           "url_pattern": "/webhooks/trigger",
-          "host": ["http://journeys:3010"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/dal/upload",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/delete",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/delete",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/update",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/update",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/export",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/export",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/anonymize",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/anonymize",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/add-to-list",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/add-to-list",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/add-to-organization",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/add-to-organization",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/add-to-journey",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/add-to-journey",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/mass-actions/update-subscription",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/mass-actions/update-subscription",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/admin/queues/dal/{path}",
-      "method": "GET",
-      "input_headers": ["Authorization"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/admin/queues/{path}",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/api/dal/queue/{path}",
-      "method": "GET",
-      "input_headers": ["Authorization"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/api/{path}",
-          "host": ["http://nowcrm-dal:6001"],
-          "encoding": "json",
-          "extra_config": {
-            "backend/http": {
-              "return_error_details": "backend_status"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "endpoint": "/api/dal/queue/{path}",
-      "method": "POST",
-      "input_headers": ["Authorization", "Content-Type"],
-      "extra_config": {
-        "validation/cel": [
-          {
-            "check_expr": "req_headers['Authorization'] != ''"
-          }
-        ]
-      },
-      "backend": [
-        {
-          "url_pattern": "/api/{path}",
-          "host": ["http://nowcrm-dal:6001"],
+          "host": [
+            "http://journeys:3010"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -676,15 +853,21 @@
       "endpoint": "/api/{path}",
       "method": "GET",
       "output_encoding": "json",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "backend": [
         {
           "url_pattern": "/api/{path}",
-          "host": ["http://strapi:1337"],
+          "host": [
+            "http://strapi:1337"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
-              "headers_to_pass": ["Authorization"],
+              "headers_to_pass": [
+                "Authorization"
+              ],
               "return_error_details": "backend_status"
             }
           }
@@ -695,15 +878,21 @@
       "endpoint": "/api/{path}",
       "method": "POST",
       "output_encoding": "json",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "backend": [
         {
           "url_pattern": "/api/{path}",
-          "host": ["http://strapi:1337"],
+          "host": [
+            "http://strapi:1337"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
-              "headers_to_pass": ["Authorization"],
+              "headers_to_pass": [
+                "Authorization"
+              ],
               "return_error_details": "backend_status"
             }
           }
@@ -714,15 +903,21 @@
       "endpoint": "/api/{path}",
       "method": "PUT",
       "output_encoding": "json",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "backend": [
         {
           "url_pattern": "/api/{path}",
-          "host": ["http://strapi:1337"],
+          "host": [
+            "http://strapi:1337"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
-              "headers_to_pass": ["Authorization"],
+              "headers_to_pass": [
+                "Authorization"
+              ],
               "return_error_details": "backend_status"
             }
           }
@@ -733,15 +928,21 @@
       "endpoint": "/api/{path}",
       "method": "DELETE",
       "output_encoding": "json",
-      "input_headers": ["Authorization"],
+      "input_headers": [
+        "Authorization"
+      ],
       "backend": [
         {
           "url_pattern": "/api/{path}",
-          "host": ["http://strapi:1337"],
+          "host": [
+            "http://strapi:1337"
+          ],
           "encoding": "json",
           "extra_config": {
             "backend/http": {
-              "headers_to_pass": ["Authorization"],
+              "headers_to_pass": [
+                "Authorization"
+              ],
               "return_error_details": "backend_status"
             }
           }
@@ -755,22 +956,41 @@
   },
   "extra_config": {
     "plugin/http-server": {
-      "name": ["auth-plugin"],
+      "name": [
+        "auth-plugin"
+      ],
       "auth-plugin": {
         "auth_url": "http://strapi:1337/api/users/me",
         "auth_header_name": "Authorization",
         "timeout": "5s",
         "cache_ttl": "600s",
-        "excluded_paths": ["/health-check/composer", "/health-check/journeys", "/health-check/dal"]
+        "excluded_paths": [
+          "/health-check/composer",
+          "/health-check/journeys",
+          "/health-check/dal"
+        ]
       }
     },
     "security/cors": {
-    "allow_origins": ["*"],
-    "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization"],
-    "expose_headers": ["Content-Length"],
-    "max_age": "12h",
-    "allow_credentials": false
+      "allow_origins": [
+        "*"
+      ],
+      "allow_methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+      ],
+      "allow_headers": [
+        "Content-Type",
+        "Authorization"
+      ],
+      "expose_headers": [
+        "Content-Length"
+      ],
+      "max_age": "12h",
+      "allow_credentials": false
     },
     "security/http": {
       "allowed_hosts": [],
