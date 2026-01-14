@@ -12,7 +12,13 @@ class DalService {
 		type: "contacts" | "organizations" | "mass-actions" = "contacts",
 	): Promise<StandardResponse<ImportRecord[]>> {
 		try {
-			const url = `${envServices.DAL_URL}api/${API_ROUTES_DAL.QUEUE_DATA}?page=${page}&jobsPerPage=${jobsPerPage}&type=${type}`;
+			const url = new URL(
+				`api/${API_ROUTES_DAL.QUEUE_DATA}`,
+				envServices.API_GATEWAY,
+			);
+			url.searchParams.set("page", page.toString());
+			url.searchParams.set("jobsPerPage", jobsPerPage.toString());
+			url.searchParams.set("type", type);
 
 			const response = await fetch(url, {
 				cache: "no-store",
@@ -99,14 +105,12 @@ class DalService {
 		upstreamFormData.append("listId", listId);
 
 		try {
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.UPLOAD}`,
-				{
-					method: "POST",
-					body: upstreamFormData,
-					cache: "no-store",
-				},
-			);
+			const url = new URL(API_ROUTES_DAL.UPLOAD, envServices.DAL_URL);
+			const res = await fetch(url, {
+				method: "POST",
+				body: upstreamFormData,
+				cache: "no-store",
+			});
 
 			if (!res.ok) {
 				console.error(await res.text());
@@ -134,16 +138,14 @@ class DalService {
 
 			console.log("[API] Deleting contacts with payload:", updatedPayload);
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_DELETE}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(updatedPayload),
+			const url = new URL(API_ROUTES_DAL.MASS_DELETE, envServices.DAL_URL);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(updatedPayload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -180,16 +182,14 @@ class DalService {
 			console.log(`[Export] Requested by user: ${userEmail}`);
 			console.log("[API] Export contacts with payload:", updatedPayload);
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_EXPORT}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(updatedPayload),
+			const url = new URL(API_ROUTES_DAL.MASS_EXPORT, envServices.DAL_URL);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(updatedPayload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -221,16 +221,14 @@ class DalService {
 
 			console.log(">>> ADD TO LIST PAYLOAD:", JSON.stringify(payload, null, 2));
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_ADD_TO_LIST}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
+			const url = new URL(API_ROUTES_DAL.MASS_ADD_TO_LIST, envServices.DAL_URL);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(payload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -250,12 +248,10 @@ class DalService {
 
 	async fetchProgressMap(): Promise<StandardResponse<Map<string, number>>> {
 		try {
-			const response = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.PROGRESS}`,
-				{
-					cache: "no-store",
-				},
-			);
+			const url = new URL(API_ROUTES_DAL.PROGRESS, envServices.DAL_URL);
+			const response = await fetch(url, {
+				cache: "no-store",
+			});
 
 			if (!response.ok) {
 				throw new Error("Failed to fetch progress map");
@@ -296,16 +292,14 @@ class DalService {
 				JSON.stringify(payload, null, 2),
 			);
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_UPDATE}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
+			const url = new URL(API_ROUTES_DAL.MASS_UPDATE, envServices.DAL_URL);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(payload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -340,16 +334,17 @@ class DalService {
 				JSON.stringify(payload, null, 2),
 			);
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_ADD_TO_JOURNEY}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
-				},
+			const url = new URL(
+				API_ROUTES_DAL.MASS_ADD_TO_JOURNEY,
+				envServices.DAL_URL,
 			);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(payload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -388,16 +383,17 @@ class DalService {
 				JSON.stringify(payload, null, 2),
 			);
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_UPDATE_SUBSCRIPTION}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
-				},
+			const url = new URL(
+				API_ROUTES_DAL.MASS_UPDATE_SUBSCRIPTION,
+				envServices.DAL_URL,
 			);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(payload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -429,16 +425,17 @@ class DalService {
 
 			console.log(">>> ADD TO Orgs PAYLOAD:", JSON.stringify(payload, null, 2));
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_ADD_TO_ORGANIZATION}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(payload),
-				},
+			const url = new URL(
+				API_ROUTES_DAL.MASS_ADD_TO_ORGANIZATION,
+				envServices.DAL_URL,
 			);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(payload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();
@@ -471,16 +468,14 @@ class DalService {
 
 			console.log("[API] Anonymized contacts with payload:", updatedPayload);
 
-			const res = await fetch(
-				`${envServices.DAL_URL}${API_ROUTES_DAL.MASS_ANONYMIZE}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify(updatedPayload),
+			const url = new URL(API_ROUTES_DAL.MASS_ANONYMIZE, envServices.DAL_URL);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify(updatedPayload),
+			});
 
 			if (!res.ok) {
 				const errorText = await res.text();

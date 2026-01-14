@@ -23,7 +23,10 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		},
 		token: string,
 	): Promise<{ success: boolean; message?: string }> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.FORM_SUBMIT}`;
+		const url = new URL(
+			`api/${API_ROUTES_STRAPI.FORM_SUBMIT}`,
+			envServices.API_GATEWAY,
+		);
 
 		const formData = new FormData();
 		formData.append("formId", payload.formId);
@@ -61,7 +64,10 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		targetField: string,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.UPLOAD}`;
+		const url = new URL(
+			`api/${API_ROUTES_STRAPI.UPLOAD}`,
+			envServices.API_GATEWAY,
+		);
 
 		const formData = new FormData();
 		for (let i = 0; i < files.length; i++) {
@@ -87,7 +93,10 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		assetId: number,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.UPLOAD}/files/${assetId}`;
+		const url = new URL(
+			`api/${API_ROUTES_STRAPI.UPLOAD}/files/${assetId}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {
@@ -106,7 +115,10 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		try {
-			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.FORM_DUPLICATE}`;
+			const url = new URL(
+				`api/${API_ROUTES_STRAPI.FORM_DUPLICATE}`,
+				envServices.API_GATEWAY,
+			);
 
 			const response = await fetch(url, {
 				method: "POST",

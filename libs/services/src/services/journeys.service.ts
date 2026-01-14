@@ -21,7 +21,10 @@ class JourneysService extends BaseService<Journey, Form_Journey> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		try {
-			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.JOURNEY_DUPLICATE}`;
+			const url = new URL(
+				`api/${API_ROUTES_STRAPI.JOURNEY_DUPLICATE}`,
+				envServices.API_GATEWAY,
+			);
 
 			const response = await fetch(url, {
 				method: "POST",

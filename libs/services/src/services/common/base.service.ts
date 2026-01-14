@@ -49,7 +49,10 @@ class BaseService<T, FormT> {
 		fetchOptions?: RequestInit & { next?: any },
 	): Promise<StandardResponse<T[]>> {
 		const query = qs.stringify(options, { encodeValuesOnly: true });
-		const url = new URL(`${this.endpoint}?${query}`, envServices.STRAPI_URL);
+		const url = new URL(
+			`api/${this.endpoint}?${query}`,
+			envServices.API_GATEWAY,
+		);
 		try {
 			const response = await fetch(url, {
 				...fetchOptions,
@@ -75,7 +78,10 @@ class BaseService<T, FormT> {
 		fetchOptions?: RequestInit & { next?: any },
 	): Promise<StandardResponse<number>> {
 		const query = qs.stringify(options, { encodeValuesOnly: true });
-		const url = new URL(`${this.endpoint}?${query}`, envServices.STRAPI_URL);
+		const url = new URL(
+			`api/${this.endpoint}?${query}`,
+			envServices.API_GATEWAY,
+		);
 		try {
 			const response = await fetch(url, {
 				...fetchOptions,
@@ -138,8 +144,8 @@ class BaseService<T, FormT> {
 				);
 
 				const url = new URL(
-					`${this.endpoint}?${query}`,
-					envServices.STRAPI_URL,
+					`api/${this.endpoint}?${query}`,
+					envServices.API_GATEWAY,
 				);
 				const resp = await fetch(url, {
 					...fetchOptions,
@@ -224,8 +230,8 @@ class BaseService<T, FormT> {
 	): Promise<StandardResponse<T>> {
 		const query = qs.stringify(options, { encodeValuesOnly: true });
 		const url = new URL(
-			`${this.endpoint}/${id}?${query}`,
-			envServices.STRAPI_URL,
+			`api/${this.endpoint}/${id}?${query}`,
+			envServices.API_GATEWAY,
 		);
 
 		try {
@@ -245,7 +251,7 @@ class BaseService<T, FormT> {
 	 * @returns {Promise<StandardResponse<null>>} - The standard response indicating success or failure.
 	 */
 	async delete(id: DocumentId, token: string): Promise<StandardResponse<null>> {
-		const url = new URL(`${this.endpoint}/${id}`, envServices.STRAPI_URL);
+		const url = new URL(`api/${this.endpoint}/${id}`, envServices.API_GATEWAY);
 		try {
 			const response = await fetch(url, {
 				method: "DELETE",
@@ -274,7 +280,7 @@ class BaseService<T, FormT> {
 		form: Partial<FormT>,
 		token: string,
 	): Promise<StandardResponse<T>> {
-		const url = new URL(`${this.endpoint}`, envServices.STRAPI_URL);
+		const url = new URL(`api/${this.endpoint}`, envServices.API_GATEWAY);
 
 		try {
 			const response = await fetch(url, {
@@ -302,7 +308,7 @@ class BaseService<T, FormT> {
 		token: string,
 		falseData?: boolean,
 	): Promise<StandardResponse<T>> {
-		const url = new URL(`${this.endpoint}/${id}`, envServices.STRAPI_URL);
+		const url = new URL(`api/${this.endpoint}/${id}`, envServices.API_GATEWAY);
 
 		try {
 			const response = await fetch(url, {
