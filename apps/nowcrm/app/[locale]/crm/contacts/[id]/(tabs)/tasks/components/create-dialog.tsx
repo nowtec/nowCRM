@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { taskStatuses } from "@nowcrm/services";
-import { ListPlus } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarDays, Clock, ListPlus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import * as React from "react";
@@ -11,6 +12,7 @@ import { GrAddCircle } from "react-icons/gr";
 import * as z from "zod";
 import { AsyncSelectField } from "@/components/autoComplete/async-select-field";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
 	Dialog,
 	DialogContent,
@@ -28,6 +30,12 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -46,7 +54,7 @@ const formSchema = z.object({
 		value: z.string(),
 		label: z.string(),
 	}),
-	due_date: z.string().optional(),
+	due_date: z.date(),
 	status: z.enum(["planned", "in progress", "done", "expired"]).optional(),
 });
 
@@ -54,6 +62,7 @@ export default function CreateTaskDialog() {
 	const router = useRouter();
 	const params = useParams<{ locale: string; id: string }>();
 	const [dialogOpen, setDialogOpen] = React.useState(false);
+	const [datetimeOpen, setDatetimeOpen] = React.useState(false);
 	const t = useTranslations();
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -64,7 +73,7 @@ export default function CreateTaskDialog() {
 			assigned_to: undefined,
 			description: "",
 			action: "",
-			due_date: "",
+			due_date: undefined,
 			status: "planned",
 		},
 	});
@@ -72,11 +81,13 @@ export default function CreateTaskDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createTask } = await import("@/lib/actions/tasks/create-task");
+		const { status, ...rest } = values
+		console.log(values)
 		const updated_values = {
-			...values,
-			task_status: values.status as taskStatuses,
-			due_date: new Date(),
-			assigned_to: Number.parseInt(values.assigned_to.value, 10),
+			...rest,
+			task_status: status as taskStatuses,
+			due_date: values.due_date,
+			assigned_to: values.assigned_to.value,
 		};
 		const res = await createTask({
 			...updated_values,
@@ -173,12 +184,79 @@ export default function CreateTaskDialog() {
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>{t("Contacts.tasks.fields.dueDate")}</FormLabel>
-									<FormControl>
-										<Input
-											placeholder={t("Contacts.tasks.fields.dueDate")}
-											{...field}
-										/>
-									</FormControl>
+									<Popover open={datetimeOpen} onOpenChange={setDatetimeOpen}>
+										<PopoverTrigger asChild>
+											<FormControl>
+												<Button
+													variant="outline"
+													className="w-full justify-start text-left font-normal bg-transparent"
+												>
+													<CalendarDays className="mr-2 h-4 w-4" />
+													{field.value ? (
+														<div className="flex items-center gap-2">
+															<span>{format(field.value, "PPP")}</span>
+															<Clock className="h-3 w-3" />
+															<span>{format(field.value, "HH:mm")}</span>
+														</div>
+													) : (
+														<span>{t("Contacts.tasks.fields.dueDate")}</span>
+													)}
+												</Button>
+											</FormControl>
+										</PopoverTrigger>
+										<PopoverContent className="w-auto p-0" align="start">
+											<div className="p-3 border-b">
+												<Calendar
+													mode="single"
+													selected={field.value}
+													onSelect={(date) => {
+														if (date) {
+															// Preserve the time when selecting a new date
+															const currentTime = field.value || new Date();
+															const newDateTime = new Date(date);
+															newDateTime.setHours(currentTime.getHours());
+															newDateTime.setMinutes(currentTime.getMinutes());
+															field.onChange(newDateTime);
+														}
+													}}
+													defaultMonth={field.value || new Date()}
+												/>
+											</div>
+											<div className="p-3 space-y-2">
+												<Label className="text-sm font-medium">Time</Label>
+												<div className="flex gap-2">
+													<Input
+														type="time"
+														value={
+															field.value
+																? format(field.value, "HH:mm")
+																: "09:00"
+														}
+														onChange={(e) => {
+															const [hours, minutes] = e.target.value.split(":");
+															const newDateTime = new Date(
+																field.value || new Date(),
+															);
+															newDateTime.setHours(
+																Number.parseInt(hours, 10),
+																Number.parseInt(minutes, 10),
+															);
+															field.onChange(newDateTime);
+														}}
+														className="flex-1"
+													/>
+													<Button
+														type="button"
+														variant="outline"
+														size="sm"
+														onClick={() => setDatetimeOpen(false)}
+													>
+														Done
+													</Button>
+												</div>
+											</div>
+										</PopoverContent>
+									</Popover>
 									<FormMessage />
 								</FormItem>
 							)}

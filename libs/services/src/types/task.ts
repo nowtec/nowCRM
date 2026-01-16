@@ -15,7 +15,7 @@ export interface Task extends BaseType {
 
 export interface Form_Task extends BaseFormType {
 	due_date: Date;
-	assigned_to?: number; // users plugin still uses number id atm
+	assigned_to?: DocumentId; // users plugin still uses number id atm
 	description: string;
 	contact?: DocumentId;
 	action: string;
