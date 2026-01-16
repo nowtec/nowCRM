@@ -46,6 +46,8 @@ import { deleteSearch } from "@/lib/actions/search_history/delete-search";
 import { getSearchHistory } from "@/lib/actions/search_history/get-search-history";
 import { makeFavorite } from "@/lib/actions/search_history/make-favorite-search";
 import { updateSearchHistoryTemplate } from "@/lib/actions/search_history/update-search-history-template";
+import { contactsFilterConfig } from "@/app/[locale]/crm/contacts/components/advancedFilters/filter-config";
+import { organizationsFilterConfig } from "@/app/[locale]/crm/organizations/components/advancedFilters/filter-config";
 
 interface SearchHistoryPanelProps {
 	entityType: SearchHistoryType;
@@ -69,7 +71,7 @@ export function SearchHistoryPanel({
 	const [favoriteLoading, setFavoriteLoading] = React.useState<Set<string>>(
 		new Set(),
 	);
-	const [editingSearchId, setEditingSearchId] = React.useState<string | null>(
+	const [editingSearchId, setEditingSearchId] = React.useState<DocumentId | null>(
 		null,
 	);
 	const [editingName, setEditingName] = React.useState("");
@@ -163,6 +165,65 @@ export function SearchHistoryPanel({
 		}
 	}
 
+	function getReadableValue(
+		value: any,
+		fieldName: string,
+		fieldConfig: any,
+	): string {
+		if (value === null || value === undefined) {
+			return "";
+		}
+
+		// Handle arrays (for $in, $notIn operators)
+		if (Array.isArray(value)) {
+			if (value.length === 0) return "";
+			// Format array values nicely
+			const formattedValues = value.map((v) => {
+				if (typeof v === "object" && v !== null) {
+					// For relation objects, try to get name or id
+					return v.name || v.title || v.id || JSON.stringify(v);
+				}
+				return String(v);
+			});
+			return formattedValues.length <= 3
+				? formattedValues.join(", ")
+				: `${formattedValues.slice(0, 2).join(", ")} +${formattedValues.length - 2} more`;
+		}
+
+		// Handle objects (for relations)
+		if (typeof value === "object" && value !== null) {
+			return value.name || value.title || value.id || JSON.stringify(value);
+		}
+
+		// Handle dates
+		if (fieldConfig?.type === "date" && typeof value === "string") {
+			try {
+				const date = new Date(value);
+				if (!isNaN(date.getTime())) {
+					return date.toLocaleDateString();
+				}
+			} catch {
+				// Fall through to string conversion
+			}
+		}
+
+		// Handle booleans
+		if (typeof value === "boolean") {
+			return value ? "Yes" : "No";
+		}
+
+		// Handle numbers
+		if (typeof value === "number") {
+			return String(value);
+		}
+
+		// Handle strings - truncate if too long
+		const stringValue = String(value);
+		return stringValue.length > 30
+			? `${stringValue.substring(0, 30)}...`
+			: stringValue;
+	}
+
 	function getFilterDescription(search: SearchHistoryTemplate): string {
 		let stored: any = {};
 		try {
@@ -183,6 +244,12 @@ export function SearchHistoryPanel({
 			return "No filters";
 		}
 
+		// Get the appropriate filter config based on entity type
+		const filterConfig =
+			entityType === "contacts"
+				? contactsFilterConfig
+				: organizationsFilterConfig;
+
 		const filterDescriptions: string[] = [];
 
 		uiFilters.groups.forEach((group: any, groupIndex: number) => {
@@ -196,6 +263,10 @@ export function SearchHistoryPanel({
 				const value = group.filters[key];
 
 				if (value === undefined || value === null || value === "") return;
+
+				// Get field label from config, fallback to field name
+				const fieldConfig = filterConfig.fieldConfigs[fieldName];
+				const fieldLabel = fieldConfig?.label || fieldName;
 
 				const operatorText: Record<string, string> = {
 					$eq: "=",
@@ -217,14 +288,22 @@ export function SearchHistoryPanel({
 				};
 
 				const opText = operatorText[operator] || operator;
-				groupFilters.push(`${fieldName} ${opText} ${value}`);
+				const readableValue = getReadableValue(value, fieldName, fieldConfig);
+
+				if (readableValue) {
+					groupFilters.push(`${fieldLabel} ${opText} ${readableValue}`);
+				}
 			});
 
 			if (groupFilters.length > 0) {
 				const groupLogic = group.logic || "AND";
-				filterDescriptions.push(
-					`Group ${groupIndex + 1} (${groupLogic}): ${groupFilters.join(", ")}`,
-				);
+				if (uiFilters.groups.length > 1) {
+					filterDescriptions.push(
+						`(${groupFilters.join(` ${groupLogic} `)})`,
+					);
+				} else {
+					filterDescriptions.push(groupFilters.join(` ${groupLogic} `));
+				}
 			}
 		});
 
@@ -233,7 +312,10 @@ export function SearchHistoryPanel({
 		}
 
 		const groupLogic = uiFilters.groupLogic || "AND";
-		return filterDescriptions.join(` ${groupLogic} `);
+		const result = filterDescriptions.join(` ${groupLogic} `);
+
+		// Truncate if too long for display
+		return result.length > 100 ? `${result.substring(0, 100)}...` : result;
 	}
 
 	function applySavedSearch(search: SearchHistoryTemplate) {
@@ -284,7 +366,7 @@ export function SearchHistoryPanel({
 		}
 	}
 
-	async function handleRename(searchId: string, newName: string) {
+	async function handleRename(searchId: DocumentId, newName: string) {
 		if (
 			!newName.trim() ||
 			newName === saved.find((s) => s.documentId === searchId)?.name
@@ -294,10 +376,10 @@ export function SearchHistoryPanel({
 			return;
 		}
 
-		setRenameLoading((prev) => new Set(prev).add(searchId));
+		setRenameLoading((prev) => new Set(prev).add(String(searchId)));
 
 		try {
-			const res = await updateSearchHistoryTemplate(searchId, {
+			const res = await updateSearchHistoryTemplate(String(searchId), {
 				name: newName.trim(),
 			});
 
@@ -317,7 +399,7 @@ export function SearchHistoryPanel({
 		} finally {
 			setRenameLoading((prev) => {
 				const newSet = new Set(prev);
-				newSet.delete(searchId);
+				newSet.delete(String(searchId));
 				return newSet;
 			});
 			setEditingSearchId(null);
@@ -355,127 +437,150 @@ export function SearchHistoryPanel({
 	const SavedSearchItem = ({ search }: { search: SearchHistoryTemplate }) => {
 		const isFavorite = search.favorite === true;
 		const isEditing = editingSearchId === search.documentId;
-		const isFavoriteLoading = favoriteLoading.has(search.documentId);
-		const isRenameLoading = renameLoading.has(search.documentId);
+		const isFavoriteLoading = favoriteLoading.has(String(search.documentId));
+		const isRenameLoading = renameLoading.has(String(search.documentId));
 		const hasName = search.name && search.name.trim() !== "";
 
 		return (
-			<div className="flex items-center gap-2 rounded-md border p-2 transition-colors hover:bg-muted/50">
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
+			<div 
+				className="rounded-md border p-2 transition-colors hover:bg-muted/50 w-full max-w-full box-border overflow-hidden"
+				style={{ maxWidth: "100%" }}
+			>
+				<div className="flex items-start gap-1.5 w-full">
+					{/* Star button */}
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-6 w-6 shrink-0 p-0 mt-0.5"
+									onClick={() => toggleFavorite(search.documentId)}
+									disabled={isFavoriteLoading}
+								>
+									{isFavoriteLoading ? (
+										<Loader2 className="h-3 w-3 animate-spin" />
+									) : isFavorite ? (
+										<Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+									) : (
+										<StarOff className="h-3 w-3" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								{isFavoriteLoading
+									? "Updating..."
+									: isFavorite
+										? "Remove from favorites"
+										: "Add to favorites"}
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+
+					{/* Content - takes remaining space */}
+					<div className="flex-1 min-w-0 overflow-hidden">
+						{isEditing ? (
+							<Input
+								value={editingName}
+								onChange={(e) => setEditingName(e.target.value)}
+								onBlur={() => {
+									if (editingName.trim()) {
+										handleRename(search.documentId, editingName);
+									} else {
+										setEditingSearchId(null);
+										setEditingName("");
+									}
+								}}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										if (editingName.trim()) {
+											handleRename(search.documentId, editingName);
+										}
+									}
+									if (e.key === "Escape") {
+										setEditingSearchId(null);
+										setEditingName("");
+									}
+								}}
+								className="h-6 text-sm w-full"
+								disabled={isRenameLoading}
+								autoFocus
+								placeholder="Enter name..."
+							/>
+						) : (
+							<button
+								type="button"
+								onClick={(e) => {
+									if (isEditing) {
+										e.stopPropagation();
+										return;
+									}
+									applySavedSearch(search);
+								}}
+								className="w-full text-left"
+								disabled={isEditing}
+							>
+								<div className="flex items-center gap-2 mb-1">
+									{isRenameLoading && (
+										<Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+									)}
+									<span className="truncate font-medium text-sm">
+										{hasName ? search.name : "Unnamed Search"}
+									</span>
+									{!hasName && (
+										<Badge variant="outline" className="shrink-0 text-xs">
+											Unnamed
+										</Badge>
+									)}
+								</div>
+								<p
+									className="line-clamp-2 text-muted-foreground text-xs mb-1 break-all"
+									title={getFilterDescription(search)}
+								>
+									{getFilterDescription(search)}
+								</p>
+								<p className="truncate text-muted-foreground text-xs">
+									{new Date(search.createdAt).toLocaleDateString()}
+								</p>
+							</button>
+						)}
+					</div>
+
+					{/* Edit button - fixed width */}
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
 							<Button
 								variant="ghost"
 								size="sm"
-								className="h-6 w-6 shrink-0 p-0"
-								onClick={() => toggleFavorite(search.documentId)}
-								disabled={isFavoriteLoading}
+								className="h-6 w-6 shrink-0 p-0 mt-0.5"
+								disabled={isRenameLoading}
 							>
-								{isFavoriteLoading ? (
-									<Loader2 className="h-3 w-3 animate-spin" />
-								) : isFavorite ? (
-									<Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-								) : (
-									<StarOff className="h-3 w-3" />
-								)}
+								<Edit3 className="h-3 w-3" />
 							</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							{isFavoriteLoading
-								? "Updating..."
-								: isFavorite
-									? "Remove from favorites"
-									: "Add to favorites"}
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-
-				<div className="min-w-0 flex-1">
-					{isEditing ? (
-						<Input
-							value={editingName}
-							onChange={(e) => setEditingName(e.target.value)}
-							onBlur={() => {
-								handleRename(search.documentId, editingName);
-							}}
-							onKeyDown={(e) => {
-								if (e.key === "Enter") {
-									handleRename(search.documentId, editingName);
-								}
-								if (e.key === "Escape") {
-									setEditingSearchId(null);
-									setEditingName("");
-								}
-							}}
-							className="h-6 text-sm"
-							disabled={isRenameLoading}
-							autoFocus
-							placeholder="Enter name..."
-						/>
-					) : (
-						<button
-							type="button"
-							onClick={() => applySavedSearch(search)}
-							className="w-full text-left"
-						>
-							<div className="flex items-center gap-2">
-								{isRenameLoading && (
-									<Loader2 className="h-3 w-3 shrink-0 animate-spin" />
-								)}
-								<p className="truncate font-medium text-sm">
-									{hasName ? search.name : "Unnamed Search"}
-								</p>
-								{!hasName && (
-									<Badge variant="outline" className="shrink-0 text-xs">
-										Unnamed
-									</Badge>
-								)}
-							</div>
-							<p
-								className="truncate text-muted-foreground text-xs"
-								title={getFilterDescription(search)}
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem
+								onClick={() => {
+									setEditingSearchId(search.documentId);
+									setEditingName(search.name || "");
+								}}
+								disabled={isRenameLoading}
 							>
-								{getFilterDescription(search)}
-							</p>
-							<p className="truncate text-muted-foreground text-xs">
-								{new Date(search.createdAt).toLocaleDateString()}
-							</p>
-						</button>
-					)}
+								<Edit3 className="mr-2 h-4 w-4" />
+								{hasName ? "Rename" : "Add Name"}
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								className="text-destructive"
+								onClick={() => openDeleteDialog(search.documentId)}
+							>
+								<Trash2 className="mr-2 h-4 w-4" />
+								Delete
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
-
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-6 w-6 shrink-0 p-0"
-							disabled={isRenameLoading}
-						>
-							<Edit3 className="h-3 w-3" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuItem
-							onClick={() => {
-								setEditingSearchId(search.documentId);
-								setEditingName(search.name || "");
-							}}
-							disabled={isRenameLoading}
-						>
-							<Edit3 className="mr-2 h-4 w-4" />
-							{hasName ? "Rename" : "Add Name"}
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem
-							className="text-destructive"
-							onClick={() => openDeleteDialog(search.documentId)}
-						>
-							<Trash2 className="mr-2 h-4 w-4" />
-							Delete
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
 			</div>
 		);
 	};
@@ -484,18 +589,18 @@ export function SearchHistoryPanel({
 	const showFavorites = favoriteSaved.length > 0 && !searchQuery.trim();
 
 	return (
-		<div className="flex h-full flex-col border-r bg-muted/30">
+		<div className="flex h-full w-full max-w-full flex-col border-r bg-muted/30 overflow-hidden box-border">
 			{/* Header */}
-			<div className="border-b p-4">
+			<div className="border-b p-4 w-full max-w-full box-border">
 				<div className="mb-3 flex items-center gap-2">
-					<History className="h-4 w-4" />
-					<h3 className="font-semibold text-sm">Search History</h3>
+					<History className="h-4 w-4 shrink-0" />
+					<h3 className="font-semibold text-sm truncate">Search History</h3>
 				</div>
 				<Input
 					placeholder="Search saved searches..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
-					className="h-8 text-sm"
+					className="h-8 text-sm w-full"
 				/>
 				{searchQuery && (
 					<Button
@@ -511,8 +616,8 @@ export function SearchHistoryPanel({
 			</div>
 
 			{/* Scrollable content */}
-			<ScrollArea className="flex-1">
-				<div className="space-y-2 p-4">
+			<ScrollArea className="flex-1 w-full max-w-full overflow-x-hidden">
+				<div className="space-y-2 p-4 w-full max-w-full box-border">
 					{loadingSaved ? (
 						<div className="flex items-center justify-center py-8">
 							<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
