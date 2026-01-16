@@ -81,8 +81,8 @@ export default function CreateTaskDialog() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		const { default: toast } = await import("react-hot-toast");
 		const { createTask } = await import("@/lib/actions/tasks/create-task");
-		const { status, ...rest } = values
-		console.log(values)
+		const { status, ...rest } = values;
+		console.log(values);
 		const updated_values = {
 			...rest,
 			task_status: status as taskStatuses,
@@ -189,7 +189,7 @@ export default function CreateTaskDialog() {
 											<FormControl>
 												<Button
 													variant="outline"
-													className="w-full justify-start text-left font-normal bg-transparent"
+													className="w-full justify-start bg-transparent text-left font-normal"
 												>
 													<CalendarDays className="mr-2 h-4 w-4" />
 													{field.value ? (
@@ -205,7 +205,7 @@ export default function CreateTaskDialog() {
 											</FormControl>
 										</PopoverTrigger>
 										<PopoverContent className="w-auto p-0" align="start">
-											<div className="p-3 border-b">
+											<div className="border-b p-3">
 												<Calendar
 													mode="single"
 													selected={field.value}
@@ -222,8 +222,8 @@ export default function CreateTaskDialog() {
 													defaultMonth={field.value || new Date()}
 												/>
 											</div>
-											<div className="p-3 space-y-2">
-												<Label className="text-sm font-medium">Time</Label>
+											<div className="space-y-2 p-3">
+												<Label className="font-medium text-sm">Time</Label>
 												<div className="flex gap-2">
 													<Input
 														type="time"
@@ -233,7 +233,8 @@ export default function CreateTaskDialog() {
 																: "09:00"
 														}
 														onChange={(e) => {
-															const [hours, minutes] = e.target.value.split(":");
+															const [hours, minutes] =
+																e.target.value.split(":");
 															const newDateTime = new Date(
 																field.value || new Date(),
 															);
