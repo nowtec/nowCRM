@@ -207,6 +207,45 @@ export function UpdateContactFieldForm({
 						}
 						useFormClear={false}
 					/>
+				) : currentField === "job_title" ? (
+					<AsyncSelect
+						serviceName="contactJobTitlesService"
+						label=""
+						onValueChange={(opt) =>
+							setSelectedOption({
+								field: "job_title",
+								value: opt.label,
+								label: `job_title: ${opt.label}`,
+							})
+						}
+						useFormClear={false}
+					/>
+				) : currentField === "industry" ? (
+					<AsyncSelect
+						serviceName="industriesService"
+						label=""
+						onValueChange={(opt) =>
+							setSelectedOption({
+								field: "industry",
+								value: opt.label,
+								label: `industry: ${opt.label}`,
+							})
+						}
+						useFormClear={false}
+					/>
+				) : currentField === "tags" ? (
+					<AsyncSelect
+						serviceName="tagsService"
+						label=""
+						onValueChange={(opt) =>
+							setSelectedOption({
+								field: "tags",
+								value: opt.label,
+								label: `tags: ${opt.label}`,
+							})
+						}
+						useFormClear={false}
+					/>
 				) : (
 					<FormField
 						control={form.control}
