@@ -15,6 +15,8 @@ import {
 	X,
 } from "lucide-react";
 import * as React from "react";
+import { contactsFilterConfig } from "@/app/[locale]/crm/contacts/components/advancedFilters/filter-config";
+import { organizationsFilterConfig } from "@/app/[locale]/crm/organizations/components/advancedFilters/filter-config";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -46,8 +48,6 @@ import { deleteSearch } from "@/lib/actions/search_history/delete-search";
 import { getSearchHistory } from "@/lib/actions/search_history/get-search-history";
 import { makeFavorite } from "@/lib/actions/search_history/make-favorite-search";
 import { updateSearchHistoryTemplate } from "@/lib/actions/search_history/update-search-history-template";
-import { contactsFilterConfig } from "@/app/[locale]/crm/contacts/components/advancedFilters/filter-config";
-import { organizationsFilterConfig } from "@/app/[locale]/crm/organizations/components/advancedFilters/filter-config";
 
 interface SearchHistoryPanelProps {
 	entityType: SearchHistoryType;
@@ -71,9 +71,8 @@ export function SearchHistoryPanel({
 	const [favoriteLoading, setFavoriteLoading] = React.useState<Set<string>>(
 		new Set(),
 	);
-	const [editingSearchId, setEditingSearchId] = React.useState<DocumentId | null>(
-		null,
-	);
+	const [editingSearchId, setEditingSearchId] =
+		React.useState<DocumentId | null>(null);
 	const [editingName, setEditingName] = React.useState("");
 	const [renameLoading, setRenameLoading] = React.useState<Set<string>>(
 		new Set(),
@@ -167,7 +166,7 @@ export function SearchHistoryPanel({
 
 	function getReadableValue(
 		value: any,
-		fieldName: string,
+		_fieldName: string,
 		fieldConfig: any,
 	): string {
 		if (value === null || value === undefined) {
@@ -199,7 +198,7 @@ export function SearchHistoryPanel({
 		if (fieldConfig?.type === "date" && typeof value === "string") {
 			try {
 				const date = new Date(value);
-				if (!isNaN(date.getTime())) {
+				if (!Number.isNaN(date.getTime())) {
 					return date.toLocaleDateString();
 				}
 			} catch {
@@ -252,7 +251,7 @@ export function SearchHistoryPanel({
 
 		const filterDescriptions: string[] = [];
 
-		uiFilters.groups.forEach((group: any, groupIndex: number) => {
+		uiFilters.groups.forEach((group: any, _groupIndex: number) => {
 			const groupFilters: string[] = [];
 
 			Object.keys(group.filters || {}).forEach((key) => {
@@ -298,9 +297,7 @@ export function SearchHistoryPanel({
 			if (groupFilters.length > 0) {
 				const groupLogic = group.logic || "AND";
 				if (uiFilters.groups.length > 1) {
-					filterDescriptions.push(
-						`(${groupFilters.join(` ${groupLogic} `)})`,
-					);
+					filterDescriptions.push(`(${groupFilters.join(` ${groupLogic} `)})`);
 				} else {
 					filterDescriptions.push(groupFilters.join(` ${groupLogic} `));
 				}
@@ -442,11 +439,11 @@ export function SearchHistoryPanel({
 		const hasName = search.name && search.name.trim() !== "";
 
 		return (
-			<div 
-				className="rounded-md border p-2 transition-colors hover:bg-muted/50 w-full max-w-full box-border overflow-hidden"
+			<div
+				className="box-border w-full max-w-full overflow-hidden rounded-md border p-2 transition-colors hover:bg-muted/50"
 				style={{ maxWidth: "100%" }}
 			>
-				<div className="flex items-start gap-1.5 w-full">
+				<div className="flex w-full items-start gap-1.5">
 					{/* Star button */}
 					<TooltipProvider>
 						<Tooltip>
@@ -454,7 +451,7 @@ export function SearchHistoryPanel({
 								<Button
 									variant="ghost"
 									size="sm"
-									className="h-6 w-6 shrink-0 p-0 mt-0.5"
+									className="mt-0.5 h-6 w-6 shrink-0 p-0"
 									onClick={() => toggleFavorite(search.documentId)}
 									disabled={isFavoriteLoading}
 								>
@@ -478,7 +475,7 @@ export function SearchHistoryPanel({
 					</TooltipProvider>
 
 					{/* Content - takes remaining space */}
-					<div className="flex-1 min-w-0 overflow-hidden">
+					<div className="min-w-0 flex-1 overflow-hidden">
 						{isEditing ? (
 							<Input
 								value={editingName}
@@ -503,7 +500,7 @@ export function SearchHistoryPanel({
 										setEditingName("");
 									}
 								}}
-								className="h-6 text-sm w-full"
+								className="h-6 w-full text-sm"
 								disabled={isRenameLoading}
 								autoFocus
 								placeholder="Enter name..."
@@ -521,7 +518,7 @@ export function SearchHistoryPanel({
 								className="w-full text-left"
 								disabled={isEditing}
 							>
-								<div className="flex items-center gap-2 mb-1">
+								<div className="mb-1 flex items-center gap-2">
 									{isRenameLoading && (
 										<Loader2 className="h-3 w-3 shrink-0 animate-spin" />
 									)}
@@ -535,7 +532,7 @@ export function SearchHistoryPanel({
 									)}
 								</div>
 								<p
-									className="line-clamp-2 text-muted-foreground text-xs mb-1 break-all"
+									className="mb-1 line-clamp-2 break-all text-muted-foreground text-xs"
 									title={getFilterDescription(search)}
 								>
 									{getFilterDescription(search)}
@@ -553,7 +550,7 @@ export function SearchHistoryPanel({
 							<Button
 								variant="ghost"
 								size="sm"
-								className="h-6 w-6 shrink-0 p-0 mt-0.5"
+								className="mt-0.5 h-6 w-6 shrink-0 p-0"
 								disabled={isRenameLoading}
 							>
 								<Edit3 className="h-3 w-3" />
@@ -589,18 +586,18 @@ export function SearchHistoryPanel({
 	const showFavorites = favoriteSaved.length > 0 && !searchQuery.trim();
 
 	return (
-		<div className="flex h-full w-full max-w-full flex-col border-r bg-muted/30 overflow-hidden box-border">
+		<div className="box-border flex h-full w-full max-w-full flex-col overflow-hidden border-r bg-muted/30">
 			{/* Header */}
-			<div className="border-b p-4 w-full max-w-full box-border">
+			<div className="box-border w-full max-w-full border-b p-4">
 				<div className="mb-3 flex items-center gap-2">
 					<History className="h-4 w-4 shrink-0" />
-					<h3 className="font-semibold text-sm truncate">Search History</h3>
+					<h3 className="truncate font-semibold text-sm">Search History</h3>
 				</div>
 				<Input
 					placeholder="Search saved searches..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
-					className="h-8 text-sm w-full"
+					className="h-8 w-full text-sm"
 				/>
 				{searchQuery && (
 					<Button
@@ -616,8 +613,8 @@ export function SearchHistoryPanel({
 			</div>
 
 			{/* Scrollable content */}
-			<ScrollArea className="flex-1 w-full max-w-full overflow-x-hidden">
-				<div className="space-y-2 p-4 w-full max-w-full box-border">
+			<ScrollArea className="w-full max-w-full flex-1 overflow-x-hidden">
+				<div className="box-border w-full max-w-full space-y-2 p-4">
 					{loadingSaved ? (
 						<div className="flex items-center justify-center py-8">
 							<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

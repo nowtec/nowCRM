@@ -67,7 +67,7 @@ export default function CreateContactDialog({
 			last_name: "",
 			email: "",
 			address_line1: "",
-			language: "en"
+			language: "en",
 		},
 	});
 
