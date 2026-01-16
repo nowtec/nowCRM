@@ -42,6 +42,7 @@ async duplicate(ctx) {
 
       const {
         id: _,
+        documentId: d_,
         createdAt,
         updatedAt,
         publishedAt,
@@ -66,6 +67,7 @@ async duplicate(ctx) {
       for (const step of journey_steps) {
         const {
           id: oldStepId,
+          documentId: oldDocId,
           createdAt,
           updatedAt,
           publishedAt,
@@ -104,6 +106,7 @@ async duplicate(ctx) {
         for (const conn of step.connections_from_this_step) {
           const {
             id: _connId,
+            documentId: _docConnId,
             createdAt,
             updatedAt,
             publishedAt,
@@ -135,6 +138,7 @@ async duplicate(ctx) {
               for (const rule of journey_step_rules) {
                 const {
                   id: _ruleId,
+                  documentId: ruleDocId,
                   createdAt,
                   updatedAt,
                   publishedAt,
