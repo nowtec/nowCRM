@@ -64,6 +64,10 @@ export default function CreateContactDialog({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			first_name: "",
+			last_name: "",
+			email: "",
+			address_line1: "",
+			language: "en"
 		},
 	});
 
