@@ -335,7 +335,7 @@ const AdvancedFilters = forwardRef<
 					<div className="flex flex-1 overflow-hidden">
 						{/* Search History Sidebar */}
 						{mode === "search" && entityType && (
-							<div className="w-80 shrink-0">
+							<div className="w-80 max-w-80 shrink-0 overflow-hidden">
 								<SearchHistoryPanel
 									entityType={entityType}
 									onLoadFilters={(filterValues) => {
