@@ -21,9 +21,9 @@
       "type": "text"
     },
     "due_date": {
-      "type": "date"
+      "type": "datetime"
     },
-    "users_permissions_user": {
+    "assigned_to": {
       "type": "relation",
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user"
