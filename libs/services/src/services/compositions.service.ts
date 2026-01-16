@@ -120,7 +120,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 	): Promise<StandardResponse<null>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_STRAPI.COMPOSITION_DUPLICATE}`,
+				`strapi/api/${API_ROUTES_STRAPI.COMPOSITION_DUPLICATE}`,
 				envServices.API_GATEWAY,
 			);
 
@@ -144,7 +144,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		try {
 			const host = envServices.API_GATEWAY.replace(/\/+$/, "");
 
-			const listUrl = new URL("/admin/queues/api/queues", host);
+			const listUrl = new URL("/composer/admin/queues/api/queues", host);
 			listUrl.searchParams.set("activeQueue", "massSendQueue");
 			listUrl.searchParams.set("status", "latest");
 			listUrl.searchParams.set("page", page.toString());
@@ -176,7 +176,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 			const result: JobCompositionRecord[] = [];
 			for (const job of jobsRaw) {
 				const logsUrl = new URL(
-					`/admin/queues/api/queues/${compQueue.name}/${job.id}/logs`,
+					`/composer/admin/queues/api/queues/${compQueue.name}/${job.id}/logs`,
 					host,
 				);
 				let logsArray: any[] = [];

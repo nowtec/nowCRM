@@ -1,6 +1,6 @@
 [
   {
-    "endpoint": "/api/{path}",
+    "endpoint": "/strapi/api/{path}",
     "method": "GET",
     "output_encoding": "json",
     "input_headers": ["Authorization"],
@@ -19,7 +19,7 @@
     ]
   },
   {
-    "endpoint": "/api/{path}",
+    "endpoint": "/strapi/api/{path}",
     "method": "POST",
     "output_encoding": "json",
     "input_headers": ["Authorization"],
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "endpoint": "/api/{path}",
+    "endpoint": "/strapi/api/{path}",
     "method": "PUT",
     "output_encoding": "json",
     "input_headers": ["Authorization"],
@@ -57,7 +57,7 @@
     ]
   },
   {
-    "endpoint": "/api/{path}",
+    "endpoint": "/strapi/api/{path}",
     "method": "DELETE",
     "output_encoding": "json",
     "input_headers": ["Authorization"],

@@ -13,7 +13,7 @@ class DalService {
 	): Promise<StandardResponse<ImportRecord[]>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_DAL.QUEUE_DATA}`,
+				API_ROUTES_DAL.QUEUE_DATA,
 				envServices.API_GATEWAY,
 			);
 			url.searchParams.set("page", page.toString());
@@ -105,7 +105,7 @@ class DalService {
 		upstreamFormData.append("listId", listId);
 
 		try {
-			const url = new URL(API_ROUTES_DAL.UPLOAD, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.UPLOAD, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
 				body: upstreamFormData,
@@ -138,7 +138,7 @@ class DalService {
 
 			console.log("[API] Deleting contacts with payload:", updatedPayload);
 
-			const url = new URL(API_ROUTES_DAL.MASS_DELETE, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.MASS_DELETE, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -182,7 +182,7 @@ class DalService {
 			console.log(`[Export] Requested by user: ${userEmail}`);
 			console.log("[API] Export contacts with payload:", updatedPayload);
 
-			const url = new URL(API_ROUTES_DAL.MASS_EXPORT, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.MASS_EXPORT, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -221,7 +221,7 @@ class DalService {
 
 			console.log(">>> ADD TO LIST PAYLOAD:", JSON.stringify(payload, null, 2));
 
-			const url = new URL(API_ROUTES_DAL.MASS_ADD_TO_LIST, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.MASS_ADD_TO_LIST, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -248,7 +248,7 @@ class DalService {
 
 	async fetchProgressMap(): Promise<StandardResponse<Map<string, number>>> {
 		try {
-			const url = new URL(API_ROUTES_DAL.PROGRESS, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.PROGRESS, envServices.API_GATEWAY);
 			const response = await fetch(url, {
 				cache: "no-store",
 			});
@@ -292,7 +292,7 @@ class DalService {
 				JSON.stringify(payload, null, 2),
 			);
 
-			const url = new URL(API_ROUTES_DAL.MASS_UPDATE, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.MASS_UPDATE, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -336,7 +336,7 @@ class DalService {
 
 			const url = new URL(
 				API_ROUTES_DAL.MASS_ADD_TO_JOURNEY,
-				envServices.DAL_URL,
+				envServices.API_GATEWAY,
 			);
 			const res = await fetch(url, {
 				method: "POST",
@@ -385,7 +385,7 @@ class DalService {
 
 			const url = new URL(
 				API_ROUTES_DAL.MASS_UPDATE_SUBSCRIPTION,
-				envServices.DAL_URL,
+				envServices.API_GATEWAY,
 			);
 			const res = await fetch(url, {
 				method: "POST",
@@ -427,7 +427,7 @@ class DalService {
 
 			const url = new URL(
 				API_ROUTES_DAL.MASS_ADD_TO_ORGANIZATION,
-				envServices.DAL_URL,
+				envServices.API_GATEWAY,
 			);
 			const res = await fetch(url, {
 				method: "POST",
@@ -468,7 +468,7 @@ class DalService {
 
 			console.log("[API] Anonymized contacts with payload:", updatedPayload);
 
-			const url = new URL(API_ROUTES_DAL.MASS_ANONYMIZE, envServices.DAL_URL);
+			const url = new URL(API_ROUTES_DAL.MASS_ANONYMIZE, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {

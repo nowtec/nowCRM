@@ -26,7 +26,7 @@ class CompositionItemsService extends BaseService<
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.UPLOAD}`,
+			`strapi/api/${API_ROUTES_STRAPI.UPLOAD}`,
 			envServices.API_GATEWAY,
 		);
 

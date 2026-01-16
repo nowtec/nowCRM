@@ -22,7 +22,7 @@ class JourneysService extends BaseService<Journey, Form_Journey> {
 	): Promise<StandardResponse<null>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_STRAPI.JOURNEY_DUPLICATE}`,
+				`strapi/api/${API_ROUTES_STRAPI.JOURNEY_DUPLICATE}`,
 				envServices.API_GATEWAY,
 			);
 

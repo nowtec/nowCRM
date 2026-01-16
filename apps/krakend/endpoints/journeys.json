@@ -1,6 +1,6 @@
 [
   {
-    "endpoint": "/health-check/journeys",
+    "endpoint": "/journeys/health-check",
     "method": "GET",
     "output_encoding": "json",
     "backend": [
@@ -17,7 +17,7 @@
     ]
   },
   {
-    "endpoint": "/webhooks/journeys/trigger",
+    "endpoint": "/journeys/webhooks/trigger",
     "method": "POST",
     "output_encoding": "json",
     "backend": [

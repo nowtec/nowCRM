@@ -18,8 +18,8 @@ export async function AddNewIdentityUnipile(
 	}
 	try {
 		const url = reconnect_account
-			? `${env.COMPOSER_URL}send-to-channels/get-callback-unipile?name=${name}&recconect=${reconnect_account}`
-			: `${env.COMPOSER_URL}send-to-channels/get-callback-unipile?name=${name}`;
+			? `${env.API_GATEWAY}/composer/send-to-channels/get-callback/unipile?name=${name}&recconect=${reconnect_account}`
+			: `${env.API_GATEWAY}/composer/send-to-channels/get-callback/unipile?name=${name}`;
 		const rez = await fetch(url, {
 			method: "GET",
 			headers: {

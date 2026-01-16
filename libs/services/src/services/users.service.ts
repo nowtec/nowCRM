@@ -16,7 +16,7 @@ class UsersService extends BaseService<User, Form_User> {
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.UPLOAD}`,
+			`strapi/api/${API_ROUTES_STRAPI.UPLOAD}`,
 			envServices.API_GATEWAY,
 		);
 		const formData = new FormData();
@@ -53,7 +53,7 @@ class UsersService extends BaseService<User, Form_User> {
 		// Returning the updated Strapi User object
 		// Use the base path from the constructor + /:id for the specific user
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.USERS}/${userId}`,
+			`strapi/api/${API_ROUTES_STRAPI.USERS}/${userId}`,
 			envServices.API_GATEWAY,
 		); // e.g., http://host/api/users/123
 
@@ -108,7 +108,7 @@ class UsersService extends BaseService<User, Form_User> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.FORGOT_PASSWORD}`,
+			`strapi/api/${API_ROUTES_STRAPI.FORGOT_PASSWORD}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -131,7 +131,7 @@ class UsersService extends BaseService<User, Form_User> {
 		token: string,
 	): Promise<StandardResponse<strapi_user>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.RESET_PASSWORD}`,
+			`strapi/api/${API_ROUTES_STRAPI.RESET_PASSWORD}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -158,7 +158,7 @@ class UsersService extends BaseService<User, Form_User> {
 		token: string,
 	): Promise<User | null> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.AUTH_LOGIN}`,
+			`strapi/api/${API_ROUTES_STRAPI.AUTH_LOGIN}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -190,7 +190,7 @@ class UsersService extends BaseService<User, Form_User> {
 
 	async getById(userId: number, token: string): Promise<User | null> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.USERS}/${userId}`,
+			`strapi/api/${API_ROUTES_STRAPI.USERS}/${userId}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -219,7 +219,7 @@ class UsersService extends BaseService<User, Form_User> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.REGISTER}`,
+			`strapi/api/${API_ROUTES_STRAPI.REGISTER}`,
 			envServices.API_GATEWAY,
 		);
 		console.log(userData);
@@ -242,7 +242,7 @@ class UsersService extends BaseService<User, Form_User> {
 		token: string;
 	}): Promise<StandardResponse<strapi_user>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.AUTH_LOGIN}`,
+			`strapi/api/${API_ROUTES_STRAPI.AUTH_LOGIN}`,
 			envServices.API_GATEWAY,
 		);
 

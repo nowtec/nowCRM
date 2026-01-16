@@ -74,7 +74,7 @@ class ContactsService extends BaseService<Contact, Form_Contact> {
 		token: string,
 	): Promise<StandardResponse<Contact>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.CONTACT_ANONYMIZE_DATA}`,
+			`strapi/api/${API_ROUTES_STRAPI.CONTACT_ANONYMIZE_DATA}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -98,7 +98,7 @@ class ContactsService extends BaseService<Contact, Form_Contact> {
 	): Promise<StandardResponse<null>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_STRAPI.CONTACTS_DUPLICATE}`,
+				`strapi/api/${API_ROUTES_STRAPI.CONTACTS_DUPLICATE}`,
 				envServices.API_GATEWAY,
 			);
 
@@ -121,7 +121,7 @@ class ContactsService extends BaseService<Contact, Form_Contact> {
 		token: string,
 	): Promise<StandardResponse<Contact>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.CONTACT_EXPORT_DATA}`,
+			`strapi/api/${API_ROUTES_STRAPI.CONTACT_EXPORT_DATA}`,
 			envServices.API_GATEWAY,
 		);
 		try {

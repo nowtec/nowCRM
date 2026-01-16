@@ -23,7 +23,7 @@ class OrganizationsService extends BaseService<
 	): Promise<StandardResponse<null>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_STRAPI.ORGANIZATIONS_DUPLICATE}`,
+				`strapi/api/${API_ROUTES_STRAPI.ORGANIZATIONS_DUPLICATE}`,
 				envServices.API_GATEWAY,
 			);
 

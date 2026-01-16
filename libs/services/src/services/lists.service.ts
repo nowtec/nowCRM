@@ -19,7 +19,7 @@ class ListsService extends BaseService<List, Form_List> {
 		token: string,
 	): Promise<StandardResponse<{ count: number }>> {
 		const url = new URL(
-			`api/${this.endpoint}/${id}/${API_ROUTES_STRAPI.LISTS_COUNT_CONTACTS}`,
+			`strapi/api/${this.endpoint}/${id}/${API_ROUTES_STRAPI.LISTS_COUNT_CONTACTS}`,
 			envServices.API_GATEWAY,
 		);
 		try {
@@ -39,7 +39,7 @@ class ListsService extends BaseService<List, Form_List> {
 	): Promise<StandardResponse<null>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_STRAPI.LISTS_DUPLICATE}`,
+				`strapi/api/${API_ROUTES_STRAPI.LISTS_DUPLICATE}`,
 				envServices.API_GATEWAY,
 			);
 

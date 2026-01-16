@@ -16,7 +16,7 @@ export async function refreshAccessTwitter(): Promise<
 		};
 	}
 	try {
-		const url = `${env.COMPOSER_URL}send-to-channels/get-callback-twitter`;
+		const url = `${env.API_GATEWAY}/composer/send-to-channels/get-callback/twitter`;
 		const rez = await fetch(url, {
 			method: "GET",
 			headers: {

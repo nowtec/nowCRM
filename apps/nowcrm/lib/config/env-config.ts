@@ -13,6 +13,7 @@ const processEnv = {
 	COMPOSER_URL: process.env.COMPOSER_URL || "",
 	DAL_URL: process.env.DAL_URL || "",
 	JOURNEYS_URL: process.env.JOURNEYS_URL || "",
+	API_GATEWAY: process.env.API_GATEWAY || "",
 	CRM_TOTP_ENCRYPTION_KEY: process.env.CRM_TOTP_ENCRYPTION_KEY || "",
 	NT_STACK_VERSION: process.env.NT_STACK_VERSION || "",
 	TEST_RUN: process.env.TEST_RUN || false,
@@ -53,6 +54,9 @@ export const env = cleanEnv(processEnv, {
 	}),
 	JOURNEYS_URL: URLValidator({
 		devDefault: testOnly("http://localhost:3010/"),
+	}),
+	API_GATEWAY: URLValidator({
+		devDefault: testOnly("http://localhost:8080"),
 	}),
 	//  Optional S3 settings (no error if not set)
 	S3_ACCESS_KEY: str({ default: "" }),

@@ -1,6 +1,6 @@
 [
   {
-    "endpoint": "/health-check/dal",
+    "endpoint": "/dal/health-check",
     "method": "GET",
     "output_encoding": "json",
     "backend": [
@@ -19,6 +19,7 @@
   {
     "endpoint": "/dal/import-progress",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -43,6 +44,7 @@
   {
     "endpoint": "/dal/upload-csv",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -65,8 +67,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/delete",
+    "endpoint": "/dal/mass-actions/delete",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -89,8 +92,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/update",
+    "endpoint": "/dal/mass-actions/update",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -113,8 +117,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/export",
+    "endpoint": "/dal/mass-actions/export",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -137,8 +142,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/anonymize",
+    "endpoint": "/dal/mass-actions/anonymize",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -161,8 +167,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/add-to-list",
+    "endpoint": "/dal/mass-actions/add-to-list",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -185,8 +192,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/add-to-organization",
+    "endpoint": "/dal/mass-actions/add-to-organization",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -209,8 +217,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/add-to-journey",
+    "endpoint": "/dal/mass-actions/add-to-journey",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -233,8 +242,9 @@
     ]
   },
   {
-    "endpoint": "/mass-actions/update-subscription",
+    "endpoint": "/dal/mass-actions/update-subscription",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -257,8 +267,9 @@
     ]
   },
   {
-    "endpoint": "/admin/queues/dal/{path}",
+    "endpoint": "/dal/admin/queues/{path}",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -283,6 +294,7 @@
   {
     "endpoint": "/dal/queue-data",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -305,8 +317,9 @@
     ]
   },
   {
-    "endpoint": "/api/dal/queue/{path}",
+    "endpoint": "/dal/api/queue/{path}",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -329,8 +342,9 @@
     ]
   },
   {
-    "endpoint": "/api/dal/queue/{path}",
+    "endpoint": "/dal/api/queue/{path}",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [

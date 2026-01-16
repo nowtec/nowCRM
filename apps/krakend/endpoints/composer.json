@@ -1,6 +1,6 @@
 [
   {
-    "endpoint": "/health-check/composer",
+    "endpoint": "/composer/health-check",
     "method": "GET",
     "output_encoding": "json",
     "backend": [
@@ -19,6 +19,7 @@
   {
     "endpoint": "/composer/create-composition",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -31,7 +32,6 @@
       {
         "url_pattern": "/composer/create-composition",
         "host": ["http://composer:3020"],
-        "method": "POST",
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -44,6 +44,7 @@
   {
     "endpoint": "/composer/create-reference",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -68,6 +69,7 @@
   {
     "endpoint": "/composer/regenerate",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -92,6 +94,7 @@
   {
     "endpoint": "/composer/quick-write",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -116,6 +119,7 @@
   {
     "endpoint": "/composer/structured-response",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -138,8 +142,9 @@
     ]
   },
   {
-    "endpoint": "/send-to-channels",
+    "endpoint": "/composer/send-to-channels",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [
@@ -162,7 +167,7 @@
     ]
   },
   {
-    "endpoint": "/send-to-channels/health-check",
+    "endpoint": "/composer/send-to-channels/health-check",
     "method": "GET",
     "output_encoding": "json",
     "backend": [
@@ -179,8 +184,9 @@
     ]
   },
   {
-    "endpoint": "/send-to-channels/get-callback/{provider}",
+    "endpoint": "/composer/send-to-channels/get-callback/{provider}",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -203,7 +209,7 @@
     ]
   },
   {
-    "endpoint": "/send-to-channels/callback/{provider}",
+    "endpoint": "/composer/send-to-channels/callback/{provider}",
     "method": "GET",
     "output_encoding": "json",
     "backend": [
@@ -220,7 +226,7 @@
     ]
   },
   {
-    "endpoint": "/send-to-channels/callback/{provider}",
+    "endpoint": "/composer/send-to-channels/callback/{provider}",
     "method": "POST",
     "output_encoding": "json",
     "backend": [
@@ -237,7 +243,7 @@
     ]
   },
   {
-    "endpoint": "/webhook/composer",
+    "endpoint": "/composer/webhook",
     "method": "POST",
     "output_encoding": "json",
     "backend": [
@@ -254,8 +260,9 @@
     ]
   },
   {
-    "endpoint": "/admin/queues/composer/{path}",
+    "endpoint": "/composer/admin/queues/{path}",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -278,8 +285,9 @@
     ]
   },
   {
-    "endpoint": "/admin/queues/api/composer/{path}",
+    "endpoint": "/composer/admin/queues/api/{path}",
     "method": "GET",
+    "output_encoding": "json",
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -302,8 +310,9 @@
     ]
   },
   {
-    "endpoint": "/admin/queues/api/composer/{path}",
+    "endpoint": "/composer/admin/queues/api/{path}",
     "method": "POST",
+    "output_encoding": "json",
     "input_headers": ["Authorization", "Content-Type"],
     "extra_config": {
       "validation/cel": [

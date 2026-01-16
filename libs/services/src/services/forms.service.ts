@@ -24,7 +24,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		token: string,
 	): Promise<{ success: boolean; message?: string }> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.FORM_SUBMIT}`,
+			`strapi/api/${API_ROUTES_STRAPI.FORM_SUBMIT}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -65,7 +65,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.UPLOAD}`,
+			`strapi/api/${API_ROUTES_STRAPI.UPLOAD}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -94,7 +94,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
 		const url = new URL(
-			`api/${API_ROUTES_STRAPI.UPLOAD}/files/${assetId}`,
+			`strapi/api/${API_ROUTES_STRAPI.UPLOAD}/files/${assetId}`,
 			envServices.API_GATEWAY,
 		);
 
@@ -116,7 +116,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 	): Promise<StandardResponse<null>> {
 		try {
 			const url = new URL(
-				`api/${API_ROUTES_STRAPI.FORM_DUPLICATE}`,
+				`strapi/api/${API_ROUTES_STRAPI.FORM_DUPLICATE}`,
 				envServices.API_GATEWAY,
 			);
 
