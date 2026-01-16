@@ -28,7 +28,9 @@ import { updateOrganization } from "@/lib/actions/organizations/update-organizat
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),
-	email: z.string().email("Invalid email address").optional(),
+	email: z
+		.union([z.string().email("Invalid email address"), z.literal("")])
+		.optional(),
 	contact_person: z.string().optional(),
 	description: z.string().optional(),
 });
@@ -51,7 +53,7 @@ export function EditDialogOrganizationGeneral({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			name: organization.name,
-			email: organization.email,
+			email: organization.email ?? "",
 			contact_person: organization.contact_person || "",
 			description: organization.description || "",
 		},

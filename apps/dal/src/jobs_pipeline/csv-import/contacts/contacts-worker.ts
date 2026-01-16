@@ -283,7 +283,7 @@ export const startContactsWorkers = () => {
 					logger.warn(`[${workerId}] No new contacts to bulk-create; skipping`);
 				}
 
-				const BULK_SIZE = 500;
+				const BULK_SIZE = 100;
 				const createdIds: CreatedPair[] = [];
 				let successCount = 0;
 
@@ -389,7 +389,7 @@ export const startContactsWorkers = () => {
 							...c,
 						}));
 
-					const UPDATED_BATCH = 500;
+					const UPDATED_BATCH = 100;
 					let updatedCount = 0;
 
 					for (let off = 0; off < toUpdate.length; off += UPDATED_BATCH) {
