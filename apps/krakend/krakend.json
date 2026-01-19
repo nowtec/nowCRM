@@ -8,7 +8,7 @@
   "echo_endpoint": false,
   "endpoints": [
     {
-      "endpoint": "/health-check/composer",
+      "endpoint": "/composer/health-check",
       "method": "GET",
       "output_encoding": "json",
       "backend": [
@@ -29,6 +29,7 @@
     {
       "endpoint": "/composer/create-composition",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -46,7 +47,6 @@
           "host": [
             "http://composer:3020"
           ],
-          "method": "POST",
           "encoding": "json",
           "extra_config": {
             "backend/http": {
@@ -59,6 +59,7 @@
     {
       "endpoint": "/composer/create-reference",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -88,6 +89,7 @@
     {
       "endpoint": "/composer/regenerate",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -117,6 +119,7 @@
     {
       "endpoint": "/composer/quick-write",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -146,6 +149,7 @@
     {
       "endpoint": "/composer/structured-response",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -173,8 +177,9 @@
       ]
     },
     {
-      "endpoint": "/send-to-channels",
+      "endpoint": "/composer/send-to-channels",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -202,7 +207,7 @@
       ]
     },
     {
-      "endpoint": "/send-to-channels/health-check",
+      "endpoint": "/composer/send-to-channels/health-check",
       "method": "GET",
       "output_encoding": "json",
       "backend": [
@@ -221,8 +226,9 @@
       ]
     },
     {
-      "endpoint": "/send-to-channels/get-callback/{provider}",
+      "endpoint": "/composer/send-to-channels/get-callback/{provider}",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -249,7 +255,7 @@
       ]
     },
     {
-      "endpoint": "/send-to-channels/callback/{provider}",
+      "endpoint": "/composer/send-to-channels/callback/{provider}",
       "method": "GET",
       "output_encoding": "json",
       "backend": [
@@ -268,7 +274,7 @@
       ]
     },
     {
-      "endpoint": "/send-to-channels/callback/{provider}",
+      "endpoint": "/composer/send-to-channels/callback/{provider}",
       "method": "POST",
       "output_encoding": "json",
       "backend": [
@@ -287,7 +293,7 @@
       ]
     },
     {
-      "endpoint": "/webhook/composer",
+      "endpoint": "/composer/webhook",
       "method": "POST",
       "output_encoding": "json",
       "backend": [
@@ -306,8 +312,9 @@
       ]
     },
     {
-      "endpoint": "/admin/queues/composer/{path}",
+      "endpoint": "/composer/admin/queues/{path}",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -334,8 +341,9 @@
       ]
     },
     {
-      "endpoint": "/admin/queues/api/composer/{path}",
+      "endpoint": "/composer/admin/queues/api/{path}",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -362,8 +370,9 @@
       ]
     },
     {
-      "endpoint": "/admin/queues/api/composer/{path}",
+      "endpoint": "/composer/admin/queues/api/{path}",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -391,7 +400,7 @@
       ]
     },
     {
-      "endpoint": "/health-check/dal",
+      "endpoint": "/dal/health-check",
       "method": "GET",
       "output_encoding": "json",
       "backend": [
@@ -412,6 +421,7 @@
     {
       "endpoint": "/dal/import-progress",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -440,6 +450,7 @@
     {
       "endpoint": "/dal/upload-csv",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -467,8 +478,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/delete",
+      "endpoint": "/dal/mass-actions/delete",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -496,8 +508,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/update",
+      "endpoint": "/dal/mass-actions/update",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -525,8 +538,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/export",
+      "endpoint": "/dal/mass-actions/export",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -554,8 +568,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/anonymize",
+      "endpoint": "/dal/mass-actions/anonymize",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -583,8 +598,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/add-to-list",
+      "endpoint": "/dal/mass-actions/add-to-list",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -612,8 +628,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/add-to-organization",
+      "endpoint": "/dal/mass-actions/add-to-organization",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -641,8 +658,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/add-to-journey",
+      "endpoint": "/dal/mass-actions/add-to-journey",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -670,8 +688,9 @@
       ]
     },
     {
-      "endpoint": "/mass-actions/update-subscription",
+      "endpoint": "/dal/mass-actions/update-subscription",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -699,8 +718,9 @@
       ]
     },
     {
-      "endpoint": "/admin/queues/dal/{path}",
+      "endpoint": "/dal/admin/queues/{path}",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -729,6 +749,7 @@
     {
       "endpoint": "/dal/queue-data",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -755,8 +776,9 @@
       ]
     },
     {
-      "endpoint": "/api/dal/queue/{path}",
+      "endpoint": "/dal/api/queue/{path}",
       "method": "GET",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization"
       ],
@@ -783,8 +805,9 @@
       ]
     },
     {
-      "endpoint": "/api/dal/queue/{path}",
+      "endpoint": "/dal/api/queue/{path}",
       "method": "POST",
+      "output_encoding": "json",
       "input_headers": [
         "Authorization",
         "Content-Type"
@@ -812,7 +835,7 @@
       ]
     },
     {
-      "endpoint": "/health-check/journeys",
+      "endpoint": "/journeys/health-check",
       "method": "GET",
       "output_encoding": "json",
       "backend": [
@@ -831,7 +854,7 @@
       ]
     },
     {
-      "endpoint": "/webhooks/journeys/trigger",
+      "endpoint": "/journeys/webhooks/trigger",
       "method": "POST",
       "output_encoding": "json",
       "backend": [
@@ -850,7 +873,7 @@
       ]
     },
     {
-      "endpoint": "/api/{path}",
+      "endpoint": "/strapi/api/{path}",
       "method": "GET",
       "output_encoding": "json",
       "input_headers": [
@@ -875,7 +898,7 @@
       ]
     },
     {
-      "endpoint": "/api/{path}",
+      "endpoint": "/strapi/api/{path}",
       "method": "POST",
       "output_encoding": "json",
       "input_headers": [
@@ -900,7 +923,7 @@
       ]
     },
     {
-      "endpoint": "/api/{path}",
+      "endpoint": "/strapi/api/{path}",
       "method": "PUT",
       "output_encoding": "json",
       "input_headers": [
@@ -925,7 +948,7 @@
       ]
     },
     {
-      "endpoint": "/api/{path}",
+      "endpoint": "/strapi/api/{path}",
       "method": "DELETE",
       "output_encoding": "json",
       "input_headers": [
@@ -960,7 +983,7 @@
         "auth-plugin"
       ],
       "auth-plugin": {
-        "auth_url": "http://strapi:1337/api/users/me",
+        "auth_url": "http://strapi:1337/api/token-verify",
         "auth_header_name": "Authorization",
         "timeout": "5s",
         "cache_ttl": "600s",

@@ -1,0 +1,13 @@
+{
+  "kind": "collectionType",
+  "collectionName": "token_verifies",
+  "info": {
+    "singularName": "token-verify",
+    "pluralName": "token-verifies",
+    "displayName": "Token Verify"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {}
+}

@@ -187,15 +187,19 @@ func (r registerer) registerHandlers(_ context.Context, extra map[string]interfa
 }
 
 func (r registerer) validateToken(client *http.Client, authURL, token, headerName string) (bool, int, string) {
-	// Create request to auth endpoint
-	req, err := http.NewRequest("GET", authURL, nil)
+	// Create request to auth endpoint (POST for token-verify)
+	req, err := http.NewRequest("POST", authURL, nil)
 	if err != nil {
 		logger.Error(fmt.Sprintf("[PLUGIN: %s] Failed to create auth request: %v", pluginName, err))
 		return false, 500, "Internal server error"
 	}
 
-	// Set authorization header
-	req.Header.Set(headerName, token)
+	// Set authorization header (ensure Bearer format)
+	authHeaderValue := token
+	if headerName == "Authorization" && len(token) > 7 && token[:7] != "Bearer " {
+		authHeaderValue = "Bearer " + token
+	}
+	req.Header.Set(headerName, authHeaderValue)
 
 	// Make request
 	resp, err := client.Do(req)
@@ -212,35 +216,61 @@ func (r registerer) validateToken(client *http.Client, authURL, token, headerNam
 		return false, 500, "Internal server error"
 	}
 
-	// Check status code
-	if resp.StatusCode == http.StatusOK {
-		return true, 200, "OK"
+	// Parse token-verify response structure
+	var verifyResp struct {
+		Success      bool   `json:"success"`
+		Message      string `json:"message,omitempty"`
+		Error        string `json:"error,omitempty"`
+		Verification struct {
+			UserToken struct {
+				Valid bool                   `json:"valid"`
+				Data  map[string]interface{} `json:"data"`
+			} `json:"userToken"`
+			APIToken struct {
+				Valid bool                   `json:"valid"`
+				Data  map[string]interface{} `json:"data"`
+			} `json:"apiToken"`
+		} `json:"verification"`
 	}
 
-	// Try to parse error message from response
-	var errorMsg string
-	var errorResp map[string]interface{}
-	if err := json.Unmarshal(body, &errorResp); err == nil {
-		if msg, ok := errorResp["message"].(string); ok {
-			errorMsg = msg
-		} else if msg, ok := errorResp["error"].(string); ok {
-			errorMsg = msg
+	// Try to parse JSON response
+	if err := json.Unmarshal(body, &verifyResp); err != nil {
+		logger.Error(fmt.Sprintf("[PLUGIN: %s] Failed to parse auth response: %v", pluginName, err))
+		// Fallback to status code check if JSON parsing fails
+		if resp.StatusCode == http.StatusOK {
+			return true, 200, "OK"
 		}
+		return false, resp.StatusCode, "Invalid token"
 	}
 
-	if errorMsg == "" {
-		errorMsg = "Invalid token"
+	// Check if verification was successful
+	if !verifyResp.Success {
+		errorMsg := verifyResp.Message
+		if errorMsg == "" {
+			errorMsg = verifyResp.Error
+		}
+		if errorMsg == "" {
+			errorMsg = "Token verification failed"
+		}
+		return false, resp.StatusCode, errorMsg
 	}
 
-	// Return appropriate status code
-	if resp.StatusCode == http.StatusUnauthorized {
-		return false, 401, errorMsg
-	}
-	if resp.StatusCode == http.StatusForbidden {
-		return false, 403, errorMsg
+	// Check if either userToken or apiToken is valid
+	userTokenValid := verifyResp.Verification.UserToken.Valid
+	apiTokenValid := verifyResp.Verification.APIToken.Valid
+
+	if !userTokenValid && !apiTokenValid {
+		logger.Warning(fmt.Sprintf("[PLUGIN: %s] Token is neither a valid user token nor API token", pluginName))
+		return false, 401, "Invalid token"
 	}
 
-	return false, resp.StatusCode, errorMsg
+	// Token is valid (either user or API token)
+	tokenType := "API"
+	if userTokenValid {
+		tokenType = "User"
+	}
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Token validated successfully as %s token", pluginName, tokenType))
+	return true, 200, "OK"
 }
 
 func main() {}
@@ -272,7 +302,7 @@ type noopLogger struct{}
 func (n noopLogger) Debug(_ ...interface{})    {}
 func (n noopLogger) Info(_ ...interface{})     {}
 func (n noopLogger) Warning(_ ...interface{})  {}
-func (n noopLogger) Error(_ ...interface{})     {}
+func (n noopLogger) Error(_ ...interface{})    {}
 func (n noopLogger) Critical(_ ...interface{}) {}
 func (n noopLogger) Fatal(_ ...interface{})    {}
 
