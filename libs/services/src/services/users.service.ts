@@ -1,4 +1,6 @@
+import qs from 'qs'
 import { API_ROUTES_STRAPI } from "../api-routes/api-routes-strapi";
+import { StrapiQuery } from "../client";
 import { envServices } from "../env-config";
 import { handleError, handleResponse, type StandardResponse } from "../server";
 import type { Asset } from "../types/common/asset";
@@ -8,6 +10,27 @@ import BaseService from "./common/base.service";
 class UsersService extends BaseService<User, Form_User> {
 	public constructor() {
 		super(API_ROUTES_STRAPI.USERS);
+	}
+	// overriding find method because it return [] instead of data
+	override async find(
+		token: string,
+		options?: StrapiQuery<User>,
+		fetchOptions?: RequestInit & { next?: any },
+	): Promise<StandardResponse<User[]>> {
+		const query = qs.stringify(options, { encodeValuesOnly: true });
+		const url = new URL(
+			`${this.endpoint}?${query}`,
+			envServices.STRAPI_URL,
+		);
+		try {
+			const response = await fetch(url, {
+				...fetchOptions,
+				headers: this.getHeaders(false, token),
+			});
+			return await handleResponse<User[]>(response);
+		} catch (error: any) {
+			return handleError<User[]>(error);
+		}
 	}
 
 	async uploadProfilePicture(
