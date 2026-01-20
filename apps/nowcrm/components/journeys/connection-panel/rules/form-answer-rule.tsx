@@ -92,9 +92,9 @@ export function FormAnswerRule({
 					}
 					disabled={!formId}
 					fetchFilters={{ form: { documentId: { $eq: formId } } }}
-					extractAdditionalFields={["type"]}
+					extractAdditionalFields={["type","name"]}
 					labelBuilder={(item: FormEntityItem) => item.label}
-					onValueChange={(value) => {
+					onValueChange={(value : any) => {
 						updateCondition(condition.id, {
 							additional_data: {
 								formAnswer: value,
@@ -103,7 +103,7 @@ export function FormAnswerRule({
 							},
 							conditionOperator: "$eq",
 							conditionField: "[question]",
-							value: value.label,
+							value: value?.additional_data.name,
 						});
 					}}
 					label="select Form question"
