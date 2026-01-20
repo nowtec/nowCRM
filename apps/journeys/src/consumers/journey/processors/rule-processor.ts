@@ -31,36 +31,11 @@ export async function processRuleMessage(data: ruleProcessorJobData) {
 		contactId,
 	);
 	if (!connections.responseObject) {
-		// Check retry count to prevent infinite republishing
-		// _retryMetadata is added by retry handler, check if it exists
-		const retryMetadata = (data as any)._retryMetadata;
-		const retryCount = retryMetadata?.["x-retry-count"] || 0;
-		const maxRuleRetries = 10; // Max retries for rule checks (connections might take time to evaluate)
-
-		if (retryCount >= maxRuleRetries) {
-			logger.error(
-				{
-					jobId,
-					contactId,
-					stepId,
-					retryCount,
-					maxRuleRetries,
-				},
-				`Rule check exceeded max retries (${maxRuleRetries}), closing job and moving to next step`,
-			);
-			// Close the job and move to next step to prevent infinite loop
-			await closeJob(jobId);
-			// Try to get first connection as fallback
-			const firstConnection = step.connections_from_this_step[0];
-			if (firstConnection?.target_step?.documentId) {
-				await createNextJob(data, firstConnection.target_step.documentId);
-			}
-			return; // Consumer will ack the message
-		}
-
+		// No rules passed - republish to wait until rules are completed
+		// No retry limit - will keep retrying until rules pass
 		logger.debug(
-			{ jobId, contactId, stepId, retryCount, maxRuleRetries },
-			`Requeuing rule job ${jobId} after delay - connections not ready yet (retry ${retryCount + 1}/${maxRuleRetries})`,
+			{ jobId, contactId, stepId },
+			`No rules passed for job ${jobId}, requeuing after delay to wait for rules completion`,
 		);
 		// Republish to RULE_CHECK queue with delay - consumer will ack original message
 		await publishToJourneyQueue("RULE_CHECK", data, CHECK_JOB_TTL_SEC * 1000);
