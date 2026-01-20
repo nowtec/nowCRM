@@ -1,6 +1,6 @@
-import qs from 'qs'
+import qs from "qs";
 import { API_ROUTES_STRAPI } from "../api-routes/api-routes-strapi";
-import { StrapiQuery } from "../client";
+import type { StrapiQuery } from "../client";
 import { envServices } from "../env-config";
 import { handleError, handleResponse, type StandardResponse } from "../server";
 import type { Asset } from "../types/common/asset";
@@ -18,10 +18,7 @@ class UsersService extends BaseService<User, Form_User> {
 		fetchOptions?: RequestInit & { next?: any },
 	): Promise<StandardResponse<User[]>> {
 		const query = qs.stringify(options, { encodeValuesOnly: true });
-		const url = new URL(
-			`${this.endpoint}?${query}`,
-			envServices.STRAPI_URL,
-		);
+		const url = new URL(`${this.endpoint}?${query}`, envServices.STRAPI_URL);
 		try {
 			const response = await fetch(url, {
 				...fetchOptions,

@@ -12,10 +12,7 @@ class DalService {
 		type: "contacts" | "organizations" | "mass-actions" = "contacts",
 	): Promise<StandardResponse<ImportRecord[]>> {
 		try {
-			const url = new URL(
-				API_ROUTES_DAL.QUEUE_DATA,
-				envServices.API_GATEWAY,
-			);
+			const url = new URL(API_ROUTES_DAL.QUEUE_DATA, envServices.API_GATEWAY);
 			url.searchParams.set("page", page.toString());
 			url.searchParams.set("jobsPerPage", jobsPerPage.toString());
 			url.searchParams.set("type", type);
@@ -221,7 +218,10 @@ class DalService {
 
 			console.log(">>> ADD TO LIST PAYLOAD:", JSON.stringify(payload, null, 2));
 
-			const url = new URL(API_ROUTES_DAL.MASS_ADD_TO_LIST, envServices.API_GATEWAY);
+			const url = new URL(
+				API_ROUTES_DAL.MASS_ADD_TO_LIST,
+				envServices.API_GATEWAY,
+			);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -468,7 +468,10 @@ class DalService {
 
 			console.log("[API] Anonymized contacts with payload:", updatedPayload);
 
-			const url = new URL(API_ROUTES_DAL.MASS_ANONYMIZE, envServices.API_GATEWAY);
+			const url = new URL(
+				API_ROUTES_DAL.MASS_ANONYMIZE,
+				envServices.API_GATEWAY,
+			);
 			const res = await fetch(url, {
 				method: "POST",
 				headers: {

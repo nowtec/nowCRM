@@ -251,7 +251,10 @@ class BaseService<T, FormT> {
 	 * @returns {Promise<StandardResponse<null>>} - The standard response indicating success or failure.
 	 */
 	async delete(id: DocumentId, token: string): Promise<StandardResponse<null>> {
-		const url = new URL(`strapi/api/${this.endpoint}/${id}`, envServices.API_GATEWAY);
+		const url = new URL(
+			`strapi/api/${this.endpoint}/${id}`,
+			envServices.API_GATEWAY,
+		);
 		try {
 			const response = await fetch(url, {
 				method: "DELETE",
@@ -308,7 +311,10 @@ class BaseService<T, FormT> {
 		token: string,
 		falseData?: boolean,
 	): Promise<StandardResponse<T>> {
-		const url = new URL(`strapi/api/${this.endpoint}/${id}`, envServices.API_GATEWAY);
+		const url = new URL(
+			`strapi/api/${this.endpoint}/${id}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {

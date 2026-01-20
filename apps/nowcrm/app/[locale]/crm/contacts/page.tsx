@@ -54,7 +54,7 @@ export default async function Page(props: {
 		return <ErrorMessage response={response} />;
 	}
 	const { meta } = response;
-	console.log(session.jwt)
+	console.log(session.jwt);
 	return (
 		<div className="container">
 			<HelloMessage />
