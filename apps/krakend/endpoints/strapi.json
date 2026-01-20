@@ -7,7 +7,7 @@
     "backend": [
       {
         "url_pattern": "/api/{path}",
-        "host": ["http://strapi:1337"],
+        "host": [" env "KRAKEND_STRAPI_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -26,7 +26,7 @@
     "backend": [
       {
         "url_pattern": "/api/{path}",
-        "host": ["http://strapi:1337"],
+        "host": [" env "KRAKEND_STRAPI_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -45,7 +45,7 @@
     "backend": [
       {
         "url_pattern": "/api/{path}",
-        "host": ["http://strapi:1337"],
+        "host": [" env "KRAKEND_STRAPI_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -64,7 +64,7 @@
     "backend": [
       {
         "url_pattern": "/api/{path}",
-        "host": ["http://strapi:1337"],
+        "host": [" env "KRAKEND_STRAPI_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {

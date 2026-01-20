@@ -6,7 +6,7 @@
     "backend": [
       {
         "url_pattern": "/health-check",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -31,7 +31,7 @@
     "backend": [
       {
         "url_pattern": "/import-progress",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -56,7 +56,7 @@
     "backend": [
       {
         "url_pattern": "/upload-csv",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -81,7 +81,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/delete",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -106,7 +106,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/update",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -131,7 +131,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/export",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -156,7 +156,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/anonymize",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -181,7 +181,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/add-to-list",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -206,7 +206,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/add-to-organization",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -231,7 +231,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/add-to-journey",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -256,7 +256,7 @@
     "backend": [
       {
         "url_pattern": "/mass-actions/update-subscription",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -281,7 +281,7 @@
     "backend": [
       {
         "url_pattern": "/admin/queues/{path}",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -306,7 +306,7 @@
     "backend": [
       {
         "url_pattern": "/api/queue-data",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -331,7 +331,7 @@
     "backend": [
       {
         "url_pattern": "/api/{path}",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -356,7 +356,7 @@
     "backend": [
       {
         "url_pattern": "/api/{path}",
-        "host": ["http://nowcrm-dal:6001"],
+        "host": [" env "KRAKEND_DAL_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {

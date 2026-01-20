@@ -5,6 +5,8 @@ This document explains the KrakenD API Gateway configuration for NOWCRM and prov
 ## Table of Contents
 
 - [Overview](#overview)
+- [Configuration Approach](#configuration-approach)
+- [Building and Deployment](#building-and-deployment)
 - [Global Configuration](#global-configuration)
 - [Endpoint Configuration](#endpoint-configuration)
 - [Middleware & Extra Config](#middleware--extra-config)
@@ -12,13 +14,14 @@ This document explains the KrakenD API Gateway configuration for NOWCRM and prov
 - [Adding New Endpoints](#adding-new-endpoints)
 - [Extending Configuration](#extending-configuration)
 - [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
 KrakenD is a high-performance API Gateway that acts as a single entry point for all backend services in the NOWCRM architecture. It provides:
 
 - **Request routing** to multiple backend services
-- **Authentication** via CEL middleware
+- **Authentication** via custom auth plugin
 - **Rate limiting** to prevent abuse
 - **CORS** handling for cross-origin requests
 - **Response caching** to improve performance
@@ -37,6 +40,188 @@ KrakenD Gateway (Port 8080)
     └──→ Strapi CMS (Port 1337)
 ```
 
+## Configuration Approach
+
+### Flexible Configuration (Runtime Environment Variables)
+
+KrakenD uses **Flexible Configuration** with runtime environment variable substitution. This allows the same Docker image to work across different environments (Docker Compose, Kubernetes, etc.) without rebuilding.
+
+#### How It Works
+
+1. **Configuration Template**: `krakend.json` uses `{{ env "VARIABLE_NAME" }}` syntax for backend URLs
+2. **Runtime Substitution**: Environment variables are substituted when KrakenD starts
+3. **Single Image**: One Docker image works for all environments
+
+#### Configuration Syntax
+
+```json
+{
+  "backend": [
+    {
+      "host": ["{{ env \"KRAKEND_STRAPI_URL\" }}"]
+    }
+  ]
+}
+```
+
+The `{{ env "VAR_NAME" }}` syntax is evaluated at runtime, not build time.
+
+### Required Environment Variables
+
+| Variable | Description | Example (Docker Compose) | Example (Kubernetes) |
+|----------|-------------|-------------------------|---------------------|
+| `FC_ENABLE` | Enable Flexible Configuration | `1` | `1` |
+| `KRAKEND_STRAPI_URL` | Strapi CMS service URL | `http://strapi:1337` | `http://strapi-service.namespace.svc.cluster.local:1337` |
+| `KRAKEND_DAL_URL` | DAL (Data Access Layer) service URL | `http://dal:6001` | `http://dal-service.namespace.svc.cluster.local:6001` |
+| `KRAKEND_COMPOSER_URL` | Composer service URL | `http://composer:3020` | `http://composer-service.namespace.svc.cluster.local:3020` |
+| `KRAKEND_JOURNEYS_URL` | Journeys service URL | `http://journeys:3010` | `http://journeys-service.namespace.svc.cluster.local:3010` |
+
+**Note**: `FC_ENABLE=1` is automatically set in the Dockerfile, but must be set in runtime environments.
+
+## Building and Deployment
+
+### Dockerfile Structure
+
+The Dockerfile uses a multi-stage build:
+
+1. **Builder stage**: Compiles the Go auth plugin
+2. **Runtime stage**: Sets up KrakenD with Flexible Configuration enabled
+
+Key features:
+- Flexible Configuration enabled via `ENV FC_ENABLE=1`
+- Config file copied to `/etc/krakend/krakend.json`
+- Config validated during build with dummy env vars
+- Auth plugin copied to `/etc/krakend/plugins/`
+
+### Building the Image
+
+#### Local Build (Docker Compose)
+
+```bash
+# Build locally (no build args needed)
+docker compose -f docker-compose.dev.yaml build krakend
+```
+
+#### CI/CD Build (GitHub Actions)
+
+The GitHub Actions workflow builds the image automatically on PR merge:
+
+```yaml
+# .github/workflows/main.yaml
+build-and-push-krakend:
+  steps:
+    - name: Build and push Docker image for Krakend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./apps/krakend
+        file: ./apps/krakend/Dockerfile
+        push: true
+        tags: |
+          ghcr.io/nowtec/nowcrm/krakend:latest
+          ghcr.io/nowtec/nowcrm/krakend:${{ needs.create_release.outputs.tag_name }}
+```
+
+**No build arguments required** - the image uses runtime environment variables.
+
+### Docker Compose Deployment
+
+```yaml
+services:
+  krakend:
+    container_name: krakend-nowtec
+    image: krakend-nowtec  # or ghcr.io/nowtec/nowcrm/krakend:latest
+    build:
+      context: ./apps/krakend
+      dockerfile: Dockerfile
+    environment:
+      FC_ENABLE: 1
+      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}
+      KRAKEND_DAL_URL: ${KRAKEND_DAL_URL:-http://dal:6001}
+      KRAKEND_COMPOSER_URL: ${KRAKEND_COMPOSER_URL:-http://composer:3020}
+      KRAKEND_JOURNEYS_URL: ${KRAKEND_JOURNEYS_URL:-http://journeys:3010}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - strapi
+    networks:
+      - my_net
+```
+
+### Kubernetes Deployment
+
+#### Using Helm Chart
+
+```yaml
+# values.yaml or ArgoCD Application
+image:
+  repository: ghcr.io/nowtec/nowcrm/krakend
+  tag: "v0.0.93"
+
+env:
+  - name: FC_ENABLE
+    value: "1"
+  - name: KRAKEND_STRAPI_URL
+    value: "http://strapi-service.namespace.svc.cluster.local:1337"
+  - name: KRAKEND_DAL_URL
+    value: "http://dal-service.namespace.svc.cluster.local:6001"
+  - name: KRAKEND_COMPOSER_URL
+    value: "http://composer-service.namespace.svc.cluster.local:3020"
+  - name: KRAKEND_JOURNEYS_URL
+    value: "http://journeys-service.namespace.svc.cluster.local:3010"
+```
+
+#### Using Secrets/ConfigMaps
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: krakend-secrets
+type: Opaque
+stringData:
+  FC_ENABLE: "1"
+  KRAKEND_STRAPI_URL: "http://strapi-service.namespace.svc.cluster.local:1337"
+  KRAKEND_DAL_URL: "http://dal-service.namespace.svc.cluster.local:6001"
+  KRAKEND_COMPOSER_URL: "http://composer-service.namespace.svc.cluster.local:3020"
+  KRAKEND_JOURNEYS_URL: "http://journeys-service.namespace.svc.cluster.local:3010"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: krakend
+spec:
+  template:
+    spec:
+      containers:
+      - name: krakend
+        image: ghcr.io/nowtec/nowcrm/krakend:latest
+        envFrom:
+        - secretRef:
+            name: krakend-secrets
+```
+
+### Verifying Configuration
+
+After deployment, verify environment variables are set:
+
+```bash
+# In Docker container
+docker exec krakend-nowtec env | grep KRAKEND
+
+# In Kubernetes pod
+kubectl exec -it deployment/krakend -- env | grep KRAKEND
+```
+
+Expected output:
+```
+FC_ENABLE=1
+KRAKEND_STRAPI_URL=http://strapi:1337
+KRAKEND_DAL_URL=http://dal:6001
+KRAKEND_COMPOSER_URL=http://composer:3020
+KRAKEND_JOURNEYS_URL=http://journeys:3010
+```
+
 ## Global Configuration
 
 ### Schema & Version
@@ -52,12 +237,12 @@ KrakenD Gateway (Port 8080)
 ### Timeout Settings
 
 ```json
-"timeout": "3000ms"
+"timeout": "10000ms"
 ```
 
-- **Global timeout**: Maximum time KrakenD waits for backend responses (3 seconds)
+- **Global timeout**: Maximum time KrakenD waits for backend responses (10 seconds)
 - Applies to all endpoints unless overridden per endpoint
-- Format: `{number}{unit}` (e.g., `3000ms`, `5s`, `1m`)
+- Format: `{number}{unit}` (e.g., `10000ms`, `5s`, `1m`)
 
 ### Cache Configuration
 
@@ -81,12 +266,12 @@ KrakenD Gateway (Port 8080)
 ### Debug Features
 
 ```json
-"debug_endpoint": true,
-"echo_endpoint": true
+"debug_endpoint": false,
+"echo_endpoint": false
 ```
 
-- **Debug endpoint**: Enables `/__debug/` endpoint for troubleshooting
-- **Echo endpoint**: Enables `/__echo/` endpoint to echo requests (useful for testing)
+- **Debug endpoint**: Enables `/__debug/` endpoint for troubleshooting (disabled by default)
+- **Echo endpoint**: Enables `/__echo/` endpoint to echo requests (disabled by default)
 
 ## Endpoint Configuration
 
@@ -102,7 +287,7 @@ Each endpoint defines how KrakenD routes requests to backend services.
   "backend": [
     {
       "url_pattern": "/backend/path",
-      "host": ["http://service:port"],
+      "host": ["{{ env \"KRAKEND_COMPOSER_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -123,7 +308,7 @@ Each endpoint defines how KrakenD routes requests to backend services.
 
 - **`backend`**: Array of backend services to call
   - **`url_pattern`**: Path to forward to backend (can include `{param}`)
-  - **`host`**: Array of backend service URLs (supports load balancing)
+  - **`host`**: Array of backend service URLs using `{{ env "VAR_NAME" }}` syntax
   - **`encoding`**: Expected response format from backend
 
 ### Current Endpoint Categories
@@ -131,9 +316,9 @@ Each endpoint defines how KrakenD routes requests to backend services.
 #### Health Check Endpoints
 
 ```json
-"/health-check/composer"  → http://composer:3020/health-check
-"/health-check/journeys"  → http://journeys:3010/health-check
-"/health-check/dal"       → http://nowcrm-dal:6001/health-check
+"/composer/health-check"  → {{ env "KRAKEND_COMPOSER_URL" }}/health-check
+"/journeys/health-check"  → {{ env "KRAKEND_JOURNEYS_URL" }}/health-check
+"/dal/health-check"       → {{ env "KRAKEND_DAL_URL" }}/health-check
 ```
 
 #### Composer Service Endpoints
@@ -143,69 +328,62 @@ Each endpoint defines how KrakenD routes requests to backend services.
 - `/composer/regenerate` - Regenerate content
 - `/composer/quick-write` - Quick write feature
 - `/composer/structured-response` - Structured AI responses
+- `/composer/send-to-channels` - Send content to channels
 
 #### Channel Management Endpoints
 
-- `/send-to-channels` - Send content to channels
-- `/send-to-channels/health-check` - Channel service health
-- `/send-to-channels/get-callback-{provider}` - Get OAuth callback URL
-- `/send-to-channels/callback/{provider}` - Handle OAuth callbacks (GET/POST)
+- `/composer/send-to-channels` - Send content to channels
+- `/composer/send-to-channels/health-check` - Channel service health
+- `/composer/send-to-channels/get-callback/{provider}` - Get OAuth callback URL
+- `/composer/send-to-channels/callback/{provider}` - Handle OAuth callbacks (GET/POST)
 
 #### Webhook Endpoints
 
-- `/webhook/composer` - Composer webhook handler
-- `/webhooks/journeys/trigger` - Trigger journey webhook
+- `/composer/webhook` - Composer webhook handler
+- `/journeys/webhooks/trigger` - Trigger journey webhook
 
 #### Queue Management Endpoints
 
-- `/admin/queues/composer/{path}` - Composer queue admin (GET)
-- `/admin/queues/api/composer/{path}` - Composer queue API (GET/POST)
-- `/admin/queues/dal/{path}` - DAL queue admin (GET)
-- `/api/dal/queue/{path}` - DAL queue API (GET/POST)
+- `/composer/admin/queues/{path}` - Composer queue admin (GET)
+- `/composer/admin/queues/api/{path}` - Composer queue API (GET/POST)
+- `/dal/admin/queues/{path}` - DAL queue admin (GET)
+- `/dal/api/queue/{path}` - DAL queue API (GET/POST)
 
 #### DAL (Data Access Layer) Endpoints
 
-- `/dal/upload` - File upload endpoint
-- `/mass-actions/*` - Bulk operations:
-  - `/mass-actions/delete` - Bulk delete
-  - `/mass-actions/update` - Bulk update
-  - `/mass-actions/export` - Bulk export
-  - `/mass-actions/anonymize` - Bulk anonymization
-  - `/mass-actions/add-to-list` - Add to list
-  - `/mass-actions/add-to-organization` - Add to organization
-  - `/mass-actions/add-to-journey` - Add to journey
-  - `/mass-actions/update-subscription` - Update subscriptions
+- `/dal/upload-csv` - CSV upload endpoint
+- `/dal/import-progress` - Import progress tracking
+- `/dal/mass-actions/*` - Bulk operations:
+  - `/dal/mass-actions/delete` - Bulk delete
+  - `/dal/mass-actions/update` - Bulk update
+  - `/dal/mass-actions/export` - Bulk export
+  - `/dal/mass-actions/anonymize` - Bulk anonymization
+  - `/dal/mass-actions/add-to-list` - Add to list
+  - `/dal/mass-actions/add-to-organization` - Add to organization
+  - `/dal/mass-actions/add-to-journey` - Add to journey
+  - `/dal/mass-actions/update-subscription` - Update subscriptions
 
 #### Strapi CMS Endpoints
 
-- `/api/{path}` - Proxy all Strapi API routes (GET/POST/PUT/DELETE)
-- Routes to `http://strapi:1337/api/{path}`
+- `/strapi/api/{path}` - Proxy all Strapi API routes (GET/POST/PUT/DELETE)
+- Routes to `{{ env "KRAKEND_STRAPI_URL" }}/api/{path}`
 
 ## Middleware & Extra Config
 
 ### Rate Limiting
 
-```json
-"github.com/devopsfaith/krakend-ratelimit/juju/router": {
-  "maxRate": 1000,
-  "clientMaxRate": 100,
-  "strategy": "ip"
-}
-```
-
-- **`maxRate`**: Global rate limit (1000 requests per second)
-- **`clientMaxRate`**: Per-client rate limit (100 requests per second)
-- **`strategy`**: Rate limiting strategy (`ip` = by IP address)
+Rate limiting is configured globally and can be overridden per endpoint.
 
 ### CORS Configuration
 
 ```json
-"github.com/devopsfaith/krakend-cors": {
+"security/cors": {
   "allow_origins": ["*"],
   "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   "allow_headers": ["Content-Type", "Authorization"],
   "expose_headers": ["Content-Length"],
-  "max_age": "12h"
+  "max_age": "12h",
+  "allow_credentials": false
 }
 ```
 
@@ -215,43 +393,55 @@ Each endpoint defines how KrakenD routes requests to backend services.
 - **`expose_headers`**: Headers exposed to client
 - **`max_age`**: Preflight cache duration (12 hours)
 
-### CEL Middleware (Authentication)
+### Authentication Plugin
+
+KrakenD uses a custom authentication plugin that validates tokens via Strapi:
 
 ```json
-"middleware/cel": {
-  "pre": [
-    {
-      "expression": "request.headers['Authorization'].size() > 0",
-      "error": "missing authorization header"
-    },
-    {
-      "expression": "auth_response.status == 200",
-      "error": "invalid token",
-      "auth_call": {
-        "method": "GET",
-        "url": "http://strapi:1337/api/auth/me",
-        "headers": {
-          "Authorization": "{{ .Request.Headers.Authorization }}"
-        },
-        "cache_ttl": "600s"
-      }
-    }
-  ]
+"plugin/http-server": {
+  "name": ["auth-plugin"],
+  "auth-plugin": {
+    "auth_url": "{{ env \"KRAKEND_STRAPI_URL\" }}/api/token-verify",
+    "auth_header_name": "Authorization",
+    "timeout": "5s",
+    "cache_ttl": "600s",
+    "excluded_paths": [
+      "/composer/health-check",
+      "/journeys/health-check",
+      "/dal/health-check"
+    ]
+  }
 }
 ```
 
 #### How It Works
 
-1. **First check**: Validates Authorization header exists
-2. **Second check**: Calls Strapi `/api/auth/me` to validate token
-3. **Caching**: Successful auth responses are cached for 10 minutes (600s)
-4. **Cache key**: Based on Authorization header value
+1. **Request arrives** with Authorization header
+2. **Check excluded paths** - health checks bypass auth
+3. **Validate token** - Calls Strapi `/api/token-verify` endpoint
+4. **Cache result** - Successful validations cached for 10 minutes (600s)
+5. **Allow or deny** - Request proceeds or returns 401
 
-#### CEL Expression Language
+#### Excluded Paths
 
-- **`request.headers['Authorization'].size() > 0`**: Checks header exists
-- **`auth_response.status == 200`**: Validates auth response is successful
-- **`{{ .Request.Headers.Authorization }}`**: Template variable for token
+Health check endpoints are excluded from authentication:
+- `/composer/health-check`
+- `/journeys/health-check`
+- `/dal/health-check`
+
+### Request Validation (CEL)
+
+Some endpoints use CEL (Common Expression Language) for request validation:
+
+```json
+"extra_config": {
+  "validation/cel": [
+    {
+      "check_expr": "req_headers['Authorization'] != ''"
+    }
+  ]
+}
+```
 
 ## Authentication & Caching
 
@@ -260,17 +450,17 @@ Each endpoint defines how KrakenD routes requests to backend services.
 ```
 Request with Authorization header
     ↓
-CEL Middleware checks header exists
+Check if path is excluded (health checks)
     ↓
-Check cache for token (keyed by Authorization header)
+If not excluded → Check cache for token validation
     ↓
 If cached and valid → Use cached response
     ↓
-If not cached → Call http://strapi:1337/api/auth/me
+If not cached → Call {{ env "KRAKEND_STRAPI_URL" }}/api/token-verify
     ↓
 Cache successful response (600s TTL)
     ↓
-Continue to endpoint or return error
+Continue to endpoint or return 401
 ```
 
 ### Cache Configuration
@@ -282,10 +472,10 @@ Continue to endpoint or return error
 
 ### Adjusting Cache Duration
 
-To change auth cache duration, modify `cache_ttl` in the `auth_call`:
+To change auth cache duration, modify `cache_ttl` in the auth plugin config:
 
 ```json
-"auth_call": {
+"auth-plugin": {
   "cache_ttl": "300s"  // 5 minutes
   // or
   "cache_ttl": "1800s" // 30 minutes
@@ -302,10 +492,10 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
 ### Step-by-Step Guide
 
 1. **Identify the backend service**:
-   - Composer: `http://composer:3020`
-   - Journeys: `http://journeys:3010`
-   - DAL: `http://nowcrm-dal:6001`
-   - Strapi: `http://strapi:1337`
+   - Composer: Use `{{ env "KRAKEND_COMPOSER_URL" }}`
+   - Journeys: Use `{{ env "KRAKEND_JOURNEYS_URL" }}`
+   - DAL: Use `{{ env "KRAKEND_DAL_URL" }}`
+   - Strapi: Use `{{ env "KRAKEND_STRAPI_URL" }}`
 
 2. **Add endpoint configuration**:
 
@@ -317,7 +507,7 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
   "backend": [
     {
       "url_pattern": "/backend/path",
-      "host": ["http://service:port"],
+      "host": ["{{ env \"KRAKEND_COMPOSER_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -327,7 +517,22 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
 3. **Place in appropriate section**:
    - Group related endpoints together
    - Maintain consistent naming conventions
-   - Add comments if needed (though JSON doesn't support comments)
+   - Use the `endpoints/` directory structure if using merge script
+
+### Using Endpoint Files
+
+Endpoints can be organized in separate files in the `endpoints/` directory:
+
+- `endpoints/composer.json` - Composer service endpoints
+- `endpoints/journeys.json` - Journeys service endpoints
+- `endpoints/dal.json` - DAL service endpoints
+- `endpoints/strapi.json` - Strapi CMS endpoints
+
+Merge them into `krakend.json` using:
+
+```bash
+./merge-endpoints.sh
+```
 
 ### Example: Adding a New Composer Endpoint
 
@@ -336,10 +541,18 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
   "endpoint": "/composer/new-feature",
   "method": "POST",
   "output_encoding": "json",
+  "input_headers": ["Authorization", "Content-Type"],
+  "extra_config": {
+    "validation/cel": [
+      {
+        "check_expr": "req_headers['Authorization'] != ''"
+      }
+    ]
+  },
   "backend": [
     {
       "url_pattern": "/composer/new-feature",
-      "host": ["http://composer:3020"],
+      "host": ["{{ env \"KRAKEND_COMPOSER_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -356,7 +569,7 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
   "backend": [
     {
       "url_pattern": "/api/users/{userId}/posts",
-      "host": ["http://strapi:1337"],
+      "host": ["{{ env \"KRAKEND_STRAPI_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -374,7 +587,7 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
     {
       "url_pattern": "/api/data",
       "host": [
-        "http://strapi:1337",
+        "{{ env \"KRAKEND_STRAPI_URL\" }}",
         "http://strapi-replica:1337"
       ],
       "encoding": "json"
@@ -396,7 +609,7 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
   "backend": [
     {
       "url_pattern": "/slow/operation",
-      "host": ["http://service:port"],
+      "host": ["{{ env \"KRAKEND_COMPOSER_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -418,33 +631,7 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
   "backend": [
     {
       "url_pattern": "/data",
-      "host": ["http://service:port"],
-      "encoding": "json"
-    }
-  ]
-}
-```
-
-### Adding Request/Response Transformation
-
-```json
-{
-  "endpoint": "/transformed/endpoint",
-  "method": "POST",
-  "output_encoding": "json",
-  "extra_config": {
-    "modifier/martian": {
-      "header.Modifier": {
-        "scope": ["request", "response"],
-        "name": "X-Custom-Header",
-        "value": "custom-value"
-      }
-    }
-  },
-  "backend": [
-    {
-      "url_pattern": "/endpoint",
-      "host": ["http://service:port"],
+      "host": ["{{ env \"KRAKEND_STRAPI_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -453,48 +640,13 @@ To change auth cache duration, modify `cache_ttl` in the `auth_call`:
 
 ### Excluding Endpoints from Authentication
 
-To exclude an endpoint from auth checks, add it to a separate endpoint group or use endpoint-specific CEL configuration:
+Add the path to the `excluded_paths` array in the auth plugin configuration:
 
 ```json
-{
-  "endpoint": "/public/endpoint",
-  "method": "GET",
-  "output_encoding": "json",
-  "extra_config": {
-    "middleware/cel": {
-      "skip": true
-    }
-  },
-  "backend": [
-    {
-      "url_pattern": "/public/endpoint",
-      "host": ["http://service:port"],
-      "encoding": "json"
-    }
-  ]
-}
-```
-
-### Adding Custom Rate Limits Per Endpoint
-
-```json
-{
-  "endpoint": "/sensitive/endpoint",
-  "method": "POST",
-  "output_encoding": "json",
-  "extra_config": {
-    "github.com/devopsfaith/krakend-ratelimit/juju/router": {
-      "maxRate": 10,
-      "clientMaxRate": 5,
-      "strategy": "ip"
-    }
-  },
-  "backend": [
-    {
-      "url_pattern": "/sensitive/endpoint",
-      "host": ["http://service:port"],
-      "encoding": "json"
-    }
+"auth-plugin": {
+  "excluded_paths": [
+    "/composer/health-check",
+    "/public/endpoint"  // Add new excluded path here
   ]
 }
 ```
@@ -507,23 +659,21 @@ To exclude an endpoint from auth checks, add it to a separate endpoint group or 
   "method": "POST",
   "output_encoding": "json",
   "extra_config": {
-    "middleware/cel": {
-      "pre": [
-        {
-          "expression": "request.body.email.size() > 0",
-          "error": "email is required"
-        },
-        {
-          "expression": "'@' in request.body.email",
-          "error": "invalid email format"
-        }
-      ]
-    }
+    "validation/cel": [
+      {
+        "check_expr": "req_headers['Authorization'] != ''",
+        "error": "Authorization header required"
+      },
+      {
+        "check_expr": "req_body.email.size() > 0",
+        "error": "email is required"
+      }
+    ]
   },
   "backend": [
     {
       "url_pattern": "/endpoint",
-      "host": ["http://service:port"],
+      "host": ["{{ env \"KRAKEND_COMPOSER_URL\" }}"],
       "encoding": "json"
     }
   ]
@@ -536,14 +686,16 @@ To exclude an endpoint from auth checks, add it to a separate endpoint group or 
 
 - Group related endpoints together
 - Use consistent naming conventions
-- Document complex endpoints with comments in separate docs
+- Organize endpoints in separate files when using merge script
+- Document complex endpoints
 
 ### 2. Security
 
-- Always use authentication for sensitive endpoints
+- Always use authentication for sensitive endpoints (except health checks)
 - Set appropriate rate limits
 - Validate input with CEL expressions when needed
 - Use HTTPS in production (configured at infrastructure level)
+- Keep auth cache TTL reasonable (5-15 minutes)
 
 ### 3. Performance
 
@@ -551,63 +703,128 @@ To exclude an endpoint from auth checks, add it to a separate endpoint group or 
 - Set appropriate cache TTLs
 - Use connection pooling (handled by KrakenD)
 - Monitor timeout values
+- Use health check endpoints for monitoring
 
-### 4. Error Handling
+### 4. Environment Variables
 
-- Provide meaningful error messages in CEL expressions
-- Use appropriate HTTP status codes
-- Log errors for debugging (configured in KrakenD runtime)
+- Always use `{{ env "VAR_NAME" }}` syntax for backend URLs
+- Never hardcode service URLs in configuration
+- Set `FC_ENABLE=1` in runtime environment
+- Use appropriate service names for each environment
 
 ### 5. Testing
 
-- Use `/__echo/` endpoint to test request routing
-- Use `/__debug/` endpoint to inspect request/response
 - Test with different Authorization tokens
 - Verify cache behavior with repeated requests
+- Test health check endpoints (should work without auth)
+- Verify environment variable substitution works correctly
 
 ### 6. Monitoring
 
 - Monitor rate limit violations
 - Track authentication failures
-- Monitor backend service health
+- Monitor backend service health via health check endpoints
 - Track cache hit rates
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Authentication fails on every request**
-   - Check Strapi service is running
-   - Verify Authorization header format
-   - Check cache TTL configuration
+#### 1. Environment Variables Not Set
 
-2. **Rate limit errors**
-   - Adjust `maxRate` or `clientMaxRate`
-   - Check if IP-based strategy is appropriate
-   - Consider per-endpoint rate limits
+**Symptoms**: KrakenD fails to start or cannot connect to backends
 
-3. **Timeout errors**
-   - Increase global or endpoint-specific timeout
-   - Check backend service performance
-   - Verify network connectivity
+**Solution**:
+```bash
+# Check environment variables
+docker exec krakend-nowtec env | grep KRAKEND
+# or
+kubectl exec deployment/krakend -- env | grep KRAKEND
 
-4. **CORS errors**
-   - Verify `allow_origins` configuration
-   - Check `allow_headers` includes required headers
-   - Ensure `allow_methods` includes request method
+# Verify FC_ENABLE is set
+echo $FC_ENABLE  # Should output: 1
+```
+
+#### 2. Backend Service Connection Errors
+
+**Symptoms**: 502 Bad Gateway or connection refused errors
+
+**Solution**:
+```bash
+# Test connectivity from KrakenD container
+docker exec krakend-nowtec curl http://strapi:1337/health-check
+# or
+kubectl exec deployment/krakend -- curl http://strapi-service:1337/health-check
+
+# Verify DNS resolution
+docker exec krakend-nowtec nslookup strapi
+# or
+kubectl exec deployment/krakend -- nslookup strapi-service.namespace.svc.cluster.local
+```
+
+#### 3. Authentication Failures
+
+**Symptoms**: All requests return 401 Unauthorized
+
+**Solution**:
+- Check Strapi service is running and accessible
+- Verify Authorization header format: `Bearer <token>`
+- Check auth plugin configuration
+- Verify `auth_url` uses correct environment variable: `{{ env "KRAKEND_STRAPI_URL" }}/api/token-verify`
+- Check KrakenD logs for auth plugin errors
+
+#### 4. Configuration File Not Found
+
+**Symptoms**: `open krakend.json: permission denied` or `file not found`
+
+**Solution**:
+- Verify config file is at `/etc/krakend/krakend.json`
+- Check file permissions (should be 644)
+- Verify Dockerfile copied file correctly
+
+#### 5. Flexible Configuration Not Working
+
+**Symptoms**: Backend URLs show as literal `{{ env "VAR_NAME" }}` instead of actual URLs
+
+**Solution**:
+- Verify `FC_ENABLE=1` is set in environment
+- Check environment variables are actually set (not just declared)
+- Restart KrakenD after setting environment variables
 
 ### Debugging Commands
 
 ```bash
-# Check KrakenD configuration syntax
-krakend check -c krakend.json
+# Check KrakenD configuration syntax (requires env vars)
+docker exec krakend-nowtec \
+  KRAKEND_STRAPI_URL=http://strapi:1337 \
+  KRAKEND_DAL_URL=http://dal:6001 \
+  KRAKEND_COMPOSER_URL=http://composer:3020 \
+  KRAKEND_JOURNEYS_URL=http://journeys:3010 \
+  krakend check -c /etc/krakend/krakend.json
+
+# View KrakenD logs
+docker logs krakend-nowtec
+# or
+kubectl logs -f deployment/krakend
 
 # Test endpoint routing
-curl -X GET http://localhost:8080/__echo/your/endpoint
+curl -X GET http://localhost:8080/composer/health-check
 
-# Debug request
-curl -X GET http://localhost:8080/__debug/your/endpoint
+# Test with authentication
+curl -X GET http://localhost:8080/composer/create-composition \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
+
+### Verifying Environment Variable Substitution
+
+To verify that environment variables are being substituted correctly, check the parsed configuration:
+
+```bash
+# In container, check if config is parsed correctly
+docker exec krakend-nowtec cat /tmp/KrakenD_parsed_config_*.json | grep -A 2 "host"
+```
+
+You should see actual URLs (e.g., `http://strapi:1337`) instead of `{{ env "KRAKEND_STRAPI_URL" }}`.
 
 ## References
 
@@ -615,6 +832,7 @@ curl -X GET http://localhost:8080/__debug/your/endpoint
 - [KrakenD CEL Documentation](https://www.krakend.io/docs/endpoints/common-expression-language-cel/)
 - [KrakenD Caching](https://www.krakend.io/docs/backends/caching/)
 - [KrakenD Rate Limiting](https://www.krakend.io/docs/throttling/rate-limit/)
+- [KrakenD Flexible Configuration](https://www.krakend.io/docs/configuration/flexible-config/)
 
 ## Configuration Schema
 
