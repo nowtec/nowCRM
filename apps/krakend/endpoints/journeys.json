@@ -6,7 +6,7 @@
     "backend": [
       {
         "url_pattern": "/health-check",
-        "host": ["http://journeys:3010"],
+        "host": [" env "KRAKEND_JOURNEYS_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {
@@ -23,7 +23,7 @@
     "backend": [
       {
         "url_pattern": "/webhooks/trigger",
-        "host": ["http://journeys:3010"],
+        "host": [" env "KRAKEND_JOURNEYS_URL" "],
         "encoding": "json",
         "extra_config": {
           "backend/http": {

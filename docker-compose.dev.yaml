@@ -277,6 +277,13 @@ services:
     build:
       context: ./apps/krakend
       dockerfile: Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      FC_ENABLE: 1
+      KRAKEND_COMPOSER_URL: ${KRAKEND_COMPOSER_URL:-http://composer:3020}
+      KRAKEND_JOURNEYS_URL: ${KRAKEND_JOURNEYS_URL:-http://journeys:3010}
+      KRAKEND_DAL_URL: ${KRAKEND_DAL_URL:-http://dal:6001}
+      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}    
     restart: unless-stopped
     ports:
       - "8080:8080"

@@ -15,7 +15,7 @@
         {
           "url_pattern": "/health-check",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -45,7 +45,7 @@
         {
           "url_pattern": "/composer/create-composition",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -75,7 +75,7 @@
         {
           "url_pattern": "/composer/create-reference",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -105,7 +105,7 @@
         {
           "url_pattern": "/composer/regenerate",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -135,7 +135,7 @@
         {
           "url_pattern": "/composer/quick-write",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -165,7 +165,7 @@
         {
           "url_pattern": "/composer/structured-response",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -195,7 +195,7 @@
         {
           "url_pattern": "/send-to-channels",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -214,7 +214,7 @@
         {
           "url_pattern": "/send-to-channels/health-check",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -243,7 +243,7 @@
         {
           "url_pattern": "/send-to-channels/get-callback/{provider}",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -262,7 +262,7 @@
         {
           "url_pattern": "/send-to-channels/callback/{provider}",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -281,7 +281,7 @@
         {
           "url_pattern": "/send-to-channels/callback/{provider}",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -300,7 +300,7 @@
         {
           "url_pattern": "/webhook",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -329,7 +329,7 @@
         {
           "url_pattern": "/admin/queues/{path}",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -358,7 +358,7 @@
         {
           "url_pattern": "/admin/queues/api/{path}",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -388,7 +388,7 @@
         {
           "url_pattern": "/admin/queues/api/{path}",
           "host": [
-            "http://composer:3020"
+            "{{ env "KRAKEND_COMPOSER_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -407,7 +407,7 @@
         {
           "url_pattern": "/health-check",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -436,7 +436,7 @@
         {
           "url_pattern": "/import-progress",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -466,7 +466,7 @@
         {
           "url_pattern": "/upload-csv",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -496,7 +496,7 @@
         {
           "url_pattern": "/mass-actions/delete",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -526,7 +526,7 @@
         {
           "url_pattern": "/mass-actions/update",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -556,7 +556,7 @@
         {
           "url_pattern": "/mass-actions/export",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -586,7 +586,7 @@
         {
           "url_pattern": "/mass-actions/anonymize",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -616,7 +616,7 @@
         {
           "url_pattern": "/mass-actions/add-to-list",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -646,7 +646,7 @@
         {
           "url_pattern": "/mass-actions/add-to-organization",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -676,7 +676,7 @@
         {
           "url_pattern": "/mass-actions/add-to-journey",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -706,7 +706,7 @@
         {
           "url_pattern": "/mass-actions/update-subscription",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -735,7 +735,7 @@
         {
           "url_pattern": "/admin/queues/{path}",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -764,7 +764,7 @@
         {
           "url_pattern": "/api/queue-data",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -793,7 +793,7 @@
         {
           "url_pattern": "/api/{path}",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -823,7 +823,7 @@
         {
           "url_pattern": "/api/{path}",
           "host": [
-            "http://nowcrm-dal:6001"
+            "{{ env "KRAKEND_DAL_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -842,7 +842,7 @@
         {
           "url_pattern": "/health-check",
           "host": [
-            "http://journeys:3010"
+            "{{ env "KRAKEND_JOURNEYS_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -861,7 +861,7 @@
         {
           "url_pattern": "/webhooks/trigger",
           "host": [
-            "http://journeys:3010"
+            "{{ env "KRAKEND_JOURNEYS_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -883,7 +883,7 @@
         {
           "url_pattern": "/api/{path}",
           "host": [
-            "http://strapi:1337"
+            "{{ env "KRAKEND_STRAPI_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -908,7 +908,7 @@
         {
           "url_pattern": "/api/{path}",
           "host": [
-            "http://strapi:1337"
+            "{{ env "KRAKEND_STRAPI_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -933,7 +933,7 @@
         {
           "url_pattern": "/api/{path}",
           "host": [
-            "http://strapi:1337"
+            "{{ env "KRAKEND_STRAPI_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -958,7 +958,7 @@
         {
           "url_pattern": "/api/{path}",
           "host": [
-            "http://strapi:1337"
+            "{{ env "KRAKEND_STRAPI_URL" }}"
           ],
           "encoding": "json",
           "extra_config": {
@@ -983,7 +983,7 @@
         "auth-plugin"
       ],
       "auth-plugin": {
-        "auth_url": "http://strapi:1337/api/token-verify",
+        "auth_url": "{{ env "KRAKEND_STRAPI_URL" }}/api/token-verify",
         "auth_header_name": "Authorization",
         "timeout": "5s",
         "cache_ttl": "600s",
