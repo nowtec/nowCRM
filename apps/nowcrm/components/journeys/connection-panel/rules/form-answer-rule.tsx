@@ -92,9 +92,9 @@ export function FormAnswerRule({
 					}
 					disabled={!formId}
 					fetchFilters={{ form: { documentId: { $eq: formId } } }}
-					extractAdditionalFields={["type","name"]}
+					extractAdditionalFields={["type", "name"]}
 					labelBuilder={(item: FormEntityItem) => item.label}
-					onValueChange={(value : any) => {
+					onValueChange={(value: any) => {
 						updateCondition(condition.id, {
 							additional_data: {
 								formAnswer: value,
