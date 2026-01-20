@@ -14,7 +14,10 @@ export async function runHealthCheck(): Promise<StandardResponse<null>> {
 		};
 	}
 	try {
-		const url = new URL('/composer/send-to-channels/health-check',env.API_GATEWAY)
+		const url = new URL(
+			"/composer/send-to-channels/health-check",
+			env.API_GATEWAY,
+		);
 		await fetch(url, {
 			method: "GET",
 			headers: {

@@ -18,7 +18,7 @@ export const env = cleanEnv(process.env, {
 	}),
 
 	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080/") }),
-	
+
 	COMPOSER_STRAPI_API_TOKEN: str({ devDefault: testOnly("") }),
 
 	COMPOSER_REDIS_PORT: port({ devDefault: testOnly(6379) }),

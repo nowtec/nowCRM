@@ -16,7 +16,10 @@ export async function refreshAccessTwitter(): Promise<
 		};
 	}
 	try {
-		const url = new URL('/composer/send-to-channels/get-callback/twitter',env.API_GATEWAY)
+		const url = new URL(
+			"/composer/send-to-channels/get-callback/twitter",
+			env.API_GATEWAY,
+		);
 		const rez = await fetch(url, {
 			method: "GET",
 			headers: {
