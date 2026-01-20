@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { env } from "@/common/utils/env-config";
 import { logger } from "@/logger";
 import { parseCSV } from "../common/helpers/parse-csv";
+import { resolveDocumentId } from "../common/helpers/resolve-document-id";
 import { contactsQueue } from "./contacts/contacts-queue";
 import { createList } from "./contacts/processors/contacts/list";
 import { loadRelationDictionaries } from "./contacts/processors/helpers/cache";
@@ -49,8 +50,15 @@ const processCsvJob = async (job: any) => {
 	let listId: number | undefined;
 	if (type === "contacts") {
 		if (listMode === "existing" && existingListId) {
-			listId = existingListId as number;
-			logger.info(`Using existing contact list (id: ${listId})`);
+			if (typeof existingListId === "number") {
+				listId = existingListId;
+			} else if (typeof existingListId === "string") {
+				try {
+					listId = await resolveDocumentId("lists", existingListId);
+				} catch {
+					logger.error("Error while processing list id");
+				}
+			}
 		} else {
 			try {
 				const { list } = await createList({}, [], filename);

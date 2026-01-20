@@ -29,8 +29,10 @@ import { updateOrganization } from "@/lib/actions/organizations/update-organizat
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	email: z
-		.union([z.string().email("Invalid email address"), z.literal("")])
-		.optional(),
+		.preprocess(
+			v => (v === "" || v == null ? undefined : v),
+			z.string().email().optional(),
+		),
 	contact_person: z.string().optional(),
 	description: z.string().optional(),
 });
@@ -104,7 +106,11 @@ export function EditDialogOrganizationGeneral({
 								<FormItem className="flex flex-col">
 									<FormLabel>Email</FormLabel>
 									<FormControl>
-										<Input {...field} placeholder="Email Address" />
+										<Input
+											{...field}
+											value={field.value ?? ""}
+											placeholder="Email Address"
+										/>
 									</FormControl>
 									<FormMessage />
 								</FormItem>

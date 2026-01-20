@@ -41,7 +41,7 @@ router.post(
 					req.body.deduplicateByRequired || "false",
 				);
 				const listMode = req.body.listMode || "new";
-				const listId = req.body.listId ? Number(req.body.listId) : null;
+				const listId = req.body.listId?.trim() || null;
 
 				const jobData = {
 					csv: csvContent,
