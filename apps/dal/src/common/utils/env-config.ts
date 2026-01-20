@@ -40,10 +40,7 @@ export const env = cleanEnv(process.env, {
 	DAL_BASIC_AUTH_PASSWORD: str({ devDefault: testOnly("admin") }),
 	DAL_SMTP_FROM: str({ devDefault: testOnly("") }),
 	STRAPI_URL: str({ devDefault: testOnly("http://localhost:1337/api/") }),
-	COMPOSER_URL: str({ devDefault: testOnly("http://localhost:3020/") }),
-	RABBITMQ_URL: str({
-		devDefault: testOnly("amqp://guest:guest@localhost:5672"),
-	}),
+	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080/") }),
 });
 
 // Construct the Authorization header correctly

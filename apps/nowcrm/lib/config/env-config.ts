@@ -8,11 +8,7 @@ const processEnv = {
 	AUTH_SECRET: process.env.AUTH_SECRET || "",
 	AUTH_URL: process.env.AUTH_URL || "",
 	AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST || false,
-	STRAPI_URL: process.env.STRAPI_URL || "",
 	CRM_STRAPI_API_TOKEN: process.env.CRM_STRAPI_API_TOKEN || "",
-	COMPOSER_URL: process.env.COMPOSER_URL || "",
-	DAL_URL: process.env.DAL_URL || "",
-	JOURNEYS_URL: process.env.JOURNEYS_URL || "",
 	API_GATEWAY: process.env.API_GATEWAY || "",
 	CRM_TOTP_ENCRYPTION_KEY: process.env.CRM_TOTP_ENCRYPTION_KEY || "",
 	NT_STACK_VERSION: process.env.NT_STACK_VERSION || "",
@@ -43,18 +39,6 @@ export const env = cleanEnv(processEnv, {
 	CRM_STRAPI_API_TOKEN: NotEmptyStringValidator(),
 	CRM_TOTP_ENCRYPTION_KEY: NotEmptyStringValidator(),
 	NT_STACK_VERSION: NotEmptyStringValidator(),
-	STRAPI_URL: URLValidator({
-		devDefault: testOnly("http://localhost:1337/api/"),
-	}),
-	COMPOSER_URL: URLValidator({
-		devDefault: testOnly("http://localhost:3020/"),
-	}),
-	DAL_URL: URLValidator({
-		devDefault: testOnly("http://localhost:6001/api/"),
-	}),
-	JOURNEYS_URL: URLValidator({
-		devDefault: testOnly("http://localhost:3010/"),
-	}),
 	API_GATEWAY: URLValidator({
 		devDefault: testOnly("http://localhost:8080"),
 	}),

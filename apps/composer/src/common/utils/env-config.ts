@@ -17,8 +17,8 @@ export const env = cleanEnv(process.env, {
 		devDefault: testOnly("http://localhost:3000/crm/admin-panel/channels"),
 	}),
 
-	COMPOSER_URL: str({ devDefault: testOnly("http://localhost:3020/") }),
-	STRAPI_URL: str({ devDefault: testOnly("http://localhost:1337/api/") }),
+	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080/") }),
+	
 	COMPOSER_STRAPI_API_TOKEN: str({ devDefault: testOnly("") }),
 
 	COMPOSER_REDIS_PORT: port({ devDefault: testOnly(6379) }),
