@@ -1,0 +1,36 @@
+[
+  {
+    "endpoint": "/journeys/health-check",
+    "method": "GET",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/health-check",
+        "host": ["http://journeys:3010"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/journeys/webhooks/trigger",
+    "method": "POST",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/webhooks/trigger",
+        "host": ["http://journeys:3010"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  }
+]

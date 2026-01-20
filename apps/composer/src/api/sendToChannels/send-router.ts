@@ -7,37 +7,16 @@ import {
 } from "@nowcrm/services/server";
 import express, { type Router } from "express";
 import { TwitterApi } from "twitter-api-v2";
-import { z } from "zod";
-import { createApiResponse } from "@/api-docs/open-api-response-builders";
 import { CALLBACK_URL_TWITTER, env } from "@/common/utils/env-config";
 import { logger } from "@/server";
 import { getLinkedInAccessToken } from "./channelFunctions/linkedIn/callback";
 import { sendController } from "./send-controller";
-import { sendToChannelsSchema } from "./send-model";
 
 export const sendToChannelsRegistry = new OpenAPIRegistry();
 export const sendToChannelsRouter: Router = express.Router();
 
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
-
-sendToChannelsRegistry.register("SendToChannelsSchema", sendToChannelsSchema);
-
-sendToChannelsRegistry.registerPath({
-	method: "post",
-	path: "/send-to-channels",
-	tags: ["Composer"],
-	request: {
-		body: {
-			content: {
-				"application/json": {
-					schema: sendToChannelsSchema,
-				},
-			},
-		},
-	},
-	responses: createApiResponse(z.null(), "Success", 200),
-});
 
 sendToChannelsRouter.post("/", (req, res, next) => {
 	try {
@@ -222,6 +201,25 @@ sendToChannelsRouter.get("/get-callback-twitter", async (req, res, next) => {
 sendToChannelsRouter.get("/get-callback-linkedin", async (req, res, next) => {
 	try {
 		return sendController.getRefreshUrlLinkedIn(req, res, next);
+	} catch (error) {
+		console.log(error);
+		res.status(400).send({ error: error });
+	}
+});
+
+sendToChannelsRouter.get("/get-callback/:provider", async (req, res, next) => {
+	try {
+		const { provider } = req.params;
+		switch (provider) {
+			case "linkedin":
+				return sendController.getRefreshUrlLinkedIn(req, res, next);
+			case "twitter":
+				return sendController.getRefreshUrlTwitter(req, res, next);
+			case "unipile":
+				return sendController.getRefreshUrlUnipile(req, res, next);
+			default:
+				res.status(400).send({ error: `Unknown provider: ${provider}` });
+		}
 	} catch (error) {
 		console.log(error);
 		res.status(400).send({ error: error });

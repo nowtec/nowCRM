@@ -18,7 +18,10 @@ class ListsService extends BaseService<List, Form_List> {
 		id: DocumentId,
 		token: string,
 	): Promise<StandardResponse<{ count: number }>> {
-		const url = `${envServices.STRAPI_URL}${this.endpoint}/${id}/${API_ROUTES_STRAPI.LISTS_COUNT_CONTACTS}`;
+		const url = new URL(
+			`strapi/api/${this.endpoint}/${id}/${API_ROUTES_STRAPI.LISTS_COUNT_CONTACTS}`,
+			envServices.API_GATEWAY,
+		);
 		try {
 			const response = await fetch(url, {
 				headers: this.getHeaders(false, token),
@@ -35,7 +38,10 @@ class ListsService extends BaseService<List, Form_List> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		try {
-			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.LISTS_DUPLICATE}`;
+			const url = new URL(
+				`strapi/api/${API_ROUTES_STRAPI.LISTS_DUPLICATE}`,
+				envServices.API_GATEWAY,
+			);
 
 			const response = await fetch(url, {
 				method: "POST",

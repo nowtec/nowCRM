@@ -104,11 +104,7 @@ services:
       CRM_BASE_URL: ${CRM_BASE_URL}
       CRM_STRAPI_API_TOKEN: ${CRM_STRAPI_API_TOKEN}
       NODE_ENV: ${NODE_ENV}
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      COMPOSER_URL: ${COMPOSER_URL}
-      STRAPI_URL: ${STRAPI_URL}
-      DAL_URL: ${DAL_URL}
-      JOURNEYS_URL: ${JOURNEYS_URL}
+      API_GATEWAY: ${API_GATEWAY}
       CRM_TOTP_ENCRYPTION_KEY: ${CRM_TOTP_ENCRYPTION_KEY}
       twoFA_ENABLED: ${twoFA_ENABLED}
       TEST_RUN: ${TEST_RUN}
@@ -146,11 +142,8 @@ services:
       JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
       JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
       NODE_ENV: ${NODE_ENV}
-      JOURNEYS_URL: ${JOURNEYS_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      COMPOSER_URL: ${COMPOSER_URL}
-      STRAPI_URL: ${STRAPI_URL}
-      DAL_URL: ${DAL_URL}
+      API_GATEWAY: ${API_GATEWAY}
       RABBITMQ_PREFETCH_COUNT: ${RABBITMQ_PREFETCH_COUNT}
       RABBITMQ_RECONNECT_DELAY_MS: ${RABBITMQ_RECONNECT_DELAY_MS}
       RABBITMQ_MAX_RECONNECT_ATTEMPTS: ${RABBITMQ_MAX_RECONNECT_ATTEMPTS}
@@ -191,10 +184,7 @@ services:
       NODE_ENV: ${NODE_ENV}
       CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      JOURNEYS_URL: ${JOURNEYS_URL}
-      COMPOSER_URL: ${COMPOSER_URL}
-      STRAPI_URL: ${STRAPI_URL}
-      DAL_URL: ${DAL_URL}
+      API_GATEWAY: ${API_GATEWAY}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -243,10 +233,8 @@ services:
       DAL_SMTP_PASS: ${DAL_SMTP_PASS}
       DAL_SMTP_FROM: ${DAL_SMTP_FROM}
       NODE_ENV: ${NODE_ENV}
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      COMPOSER_URL: ${COMPOSER_URL}
       STRAPI_URL: ${STRAPI_URL}
-      DAL_URL: ${DAL_URL}
+      API_GATEWAY: ${API_GATEWAY}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -282,6 +270,21 @@ services:
       start_period: 5s
     networks:
       - my_net
+
+  krakend:
+    container_name: krakend-nowtec
+    image: krakend-nowtec
+    build:
+      context: ./apps/krakend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - strapi
+    networks:
+      - my_net
+
 
   mailpit:
     container_name: mailpit

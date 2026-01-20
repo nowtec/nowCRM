@@ -1,0 +1,337 @@
+[
+  {
+    "endpoint": "/composer/health-check",
+    "method": "GET",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/health-check",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/create-composition",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/composer/create-composition",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/create-reference",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/composer/create-reference",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/regenerate",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/composer/regenerate",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/quick-write",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/composer/quick-write",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/structured-response",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/composer/structured-response",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/send-to-channels",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/send-to-channels",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/send-to-channels/health-check",
+    "method": "GET",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/send-to-channels/health-check",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/send-to-channels/get-callback/{provider}",
+    "method": "GET",
+    "output_encoding": "json",
+    "input_headers": ["Authorization"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/send-to-channels/get-callback/{provider}",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/send-to-channels/callback/{provider}",
+    "method": "GET",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/send-to-channels/callback/{provider}",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/send-to-channels/callback/{provider}",
+    "method": "POST",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/send-to-channels/callback/{provider}",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/webhook",
+    "method": "POST",
+    "output_encoding": "json",
+    "backend": [
+      {
+        "url_pattern": "/webhook",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/admin/queues/{path}",
+    "method": "GET",
+    "output_encoding": "json",
+    "input_headers": ["Authorization"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/admin/queues/{path}",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/admin/queues/api/{path}",
+    "method": "GET",
+    "output_encoding": "json",
+    "input_headers": ["Authorization"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/admin/queues/api/{path}",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/composer/admin/queues/api/{path}",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": ["Authorization", "Content-Type"],
+    "extra_config": {
+      "validation/cel": [
+        {
+          "check_expr": "req_headers['Authorization'] != ''"
+        }
+      ]
+    },
+    "backend": [
+      {
+        "url_pattern": "/admin/queues/api/{path}",
+        "host": ["http://composer:3020"],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  }
+]

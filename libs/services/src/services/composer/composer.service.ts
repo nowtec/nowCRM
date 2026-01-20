@@ -37,15 +37,15 @@ class ComposerService {
 				JSON.stringify(payload, null, 2),
 			);
 
-			const res = await fetch(
-				//send to channels hadnle both standard and mass actions
-				`${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.SEND_TO_CHANNELS}`,
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(payload),
-				},
+			const url = new URL(
+				API_ROUTES_COMPOSER.SEND_TO_CHANNELS,
+				envServices.API_GATEWAY,
 			);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+			});
 
 			const raw = await res.text();
 			if (!res.ok) {
@@ -89,7 +89,7 @@ class ComposerService {
 		},
 	): Promise<StandardResponse<null>> {
 		try {
-			const base = envServices.COMPOSER_URL;
+			const base = envServices.API_GATEWAY;
 			const url = new URL(API_ROUTES_COMPOSER.SEND_TO_CHANNELS, base);
 
 			if (journeys_data?.stepId) {
@@ -149,7 +149,7 @@ class ComposerService {
 		data: Partial<createComposition>,
 	): Promise<StandardResponse<DocumentId>> {
 		try {
-			const base = envServices.COMPOSER_URL;
+			const base = envServices.API_GATEWAY;
 			const url = new URL(API_ROUTES_COMPOSER.CREATE_COMPOSITION, base);
 
 			const response = await fetch(url, {
@@ -197,14 +197,15 @@ class ComposerService {
 				JSON.stringify(payload, null, 2),
 			);
 
-			const res = await fetch(
-				`${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.SEND_TO_CHANNELS}`,
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(payload),
-				},
+			const url = new URL(
+				API_ROUTES_COMPOSER.SEND_TO_CHANNELS,
+				envServices.API_GATEWAY,
 			);
+			const res = await fetch(url, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(payload),
+			});
 
 			const raw = await res.text();
 			if (!res.ok) {
@@ -242,7 +243,10 @@ class ComposerService {
 		data: StructuredResponseModel,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.COMPOSER_STRUCTURED_RESPONSE}`;
+			const url = new URL(
+				API_ROUTES_COMPOSER.COMPOSER_STRUCTURED_RESPONSE,
+				envServices.API_GATEWAY,
+			);
 			const response = await fetch(url, {
 				method: "POST",
 				headers: {

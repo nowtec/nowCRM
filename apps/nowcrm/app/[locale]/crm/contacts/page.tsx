@@ -27,7 +27,6 @@ export default async function Page(props: {
 	const finalFilters = {};
 
 	const session = await auth();
-
 	// Default visible fields - columns that are shown by default (used for initial fetch)
 	const DEFAULT_VISIBLE_FIELDS = [
 		"id",

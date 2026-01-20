@@ -17,9 +17,10 @@ export async function AddNewIdentityUnipile(
 		};
 	}
 	try {
-		const url = reconnect_account
-			? `${env.COMPOSER_URL}send-to-channels/get-callback-unipile?name=${name}&recconect=${reconnect_account}`
-			: `${env.COMPOSER_URL}send-to-channels/get-callback-unipile?name=${name}`;
+		const route = reconnect_account
+			? `/composer/send-to-channels/get-callback/unipile?name=${name}&recconect=${reconnect_account}`
+			: `/composer/send-to-channels/get-callback/unipile?name=${name}`;
+		const url = new URL(route, env.API_GATEWAY);
 		const rez = await fetch(url, {
 			method: "GET",
 			headers: {

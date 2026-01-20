@@ -25,7 +25,10 @@ class CompositionItemsService extends BaseService<
 		compositionItemId: number,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.UPLOAD}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.UPLOAD}`,
+			envServices.API_GATEWAY,
+		);
 
 		const formData = new FormData();
 		for (let i = 0; i < files.length; i++) {

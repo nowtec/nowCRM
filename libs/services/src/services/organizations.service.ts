@@ -22,7 +22,10 @@ class OrganizationsService extends BaseService<
 		token: string,
 	): Promise<StandardResponse<null>> {
 		try {
-			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.ORGANIZATIONS_DUPLICATE}`;
+			const url = new URL(
+				`strapi/api/${API_ROUTES_STRAPI.ORGANIZATIONS_DUPLICATE}`,
+				envServices.API_GATEWAY,
+			);
 
 			const response = await fetch(url, {
 				method: "POST",

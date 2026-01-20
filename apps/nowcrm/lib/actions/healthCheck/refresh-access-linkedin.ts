@@ -16,7 +16,10 @@ export async function refreshAccessLinkedin(): Promise<
 		};
 	}
 	try {
-		const url = `${env.COMPOSER_URL}send-to-channels/get-callback-linkedin`;
+		const url = new URL(
+			"/composer/send-to-channels/get-callback/linkedin",
+			env.API_GATEWAY,
+		);
 		const rez = await fetch(url, {
 			method: "GET",
 			headers: {

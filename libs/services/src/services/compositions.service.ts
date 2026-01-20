@@ -27,7 +27,10 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		data: ReferenceComposition,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.CREATE_REFERENCE}`;
+			const url = new URL(
+				API_ROUTES_COMPOSER.CREATE_REFERENCE,
+				envServices.API_GATEWAY,
+			);
 			const response = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -55,7 +58,10 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		data: QuickWriteModel,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.COMPOSER_QUICK_WRITE}`;
+			const url = new URL(
+				API_ROUTES_COMPOSER.COMPOSER_QUICK_WRITE,
+				envServices.API_GATEWAY,
+			);
 			const response = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -82,7 +88,10 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		data: createAdditionalComposition,
 	): Promise<StandardResponse<string>> {
 		try {
-			const url = `${envServices.COMPOSER_URL}${API_ROUTES_COMPOSER.COMPOSER_REGENERATE}`;
+			const url = new URL(
+				API_ROUTES_COMPOSER.COMPOSER_REGENERATE,
+				envServices.API_GATEWAY,
+			);
 			const rez = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -110,7 +119,10 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		token: string,
 	): Promise<StandardResponse<null>> {
 		try {
-			const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.COMPOSITION_DUPLICATE}`;
+			const url = new URL(
+				`strapi/api/${API_ROUTES_STRAPI.COMPOSITION_DUPLICATE}`,
+				envServices.API_GATEWAY,
+			);
 
 			const response = await fetch(url, {
 				method: "POST",
@@ -130,12 +142,13 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 		jobsPerPage = 20,
 	): Promise<StandardResponse<JobCompositionRecord[]>> {
 		try {
-			const host = envServices.COMPOSER_URL.replace(/\/+$/, "");
+			const host = envServices.API_GATEWAY.replace(/\/+$/, "");
 
-			const listUrl =
-				`${host}/admin/queues/api/queues` +
-				`?activeQueue=massSendQueue&status=latest` +
-				`&page=${page}&jobsPerPage=${jobsPerPage}`;
+			const listUrl = new URL("/composer/admin/queues/api/queues", host);
+			listUrl.searchParams.set("activeQueue", "massSendQueue");
+			listUrl.searchParams.set("status", "latest");
+			listUrl.searchParams.set("page", page.toString());
+			listUrl.searchParams.set("jobsPerPage", jobsPerPage.toString());
 
 			const listRes = await fetch(listUrl, {
 				cache: "no-store",
@@ -159,10 +172,13 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 			}
 
 			const jobsRaw = compQueue.jobs;
-			if (!Array.isArray(jobsRaw)) throw new Error("‘jobs’ isn’t an array");
+			if (!Array.isArray(jobsRaw)) throw new Error("'jobs' isn't an array");
 			const result: JobCompositionRecord[] = [];
 			for (const job of jobsRaw) {
-				const logsUrl = `${host}/admin/queues/api/queues/${compQueue.name}/${job.id}/logs`;
+				const logsUrl = new URL(
+					`/composer/admin/queues/api/queues/${compQueue.name}/${job.id}/logs`,
+					host,
+				);
 				let logsArray: any[] = [];
 				try {
 					const logsRes = await fetch(logsUrl, {

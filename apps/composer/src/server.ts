@@ -16,7 +16,6 @@ import { snsWebhookRouter } from "@/api/ses-events/sns-webhook-router";
 import { composerRouter } from "./api/composer/composer-router";
 import { queueRouter } from "./api/queue/queue-router";
 import { sendToChannelsRouter } from "./api/sendToChannels/send-router";
-import { openAPIRouter } from "./api-docs/open-api-router";
 import { initRabbitWorker } from "./scheduler/rabit-worker";
 
 const __dirname = path.resolve();
@@ -48,9 +47,6 @@ app.use("/composer", composerRouter);
 app.use("/send-to-channels", sendToChannelsRouter);
 app.use("/webhook", snsWebhookRouter);
 app.use("/admin/queues/api", queueRouter);
-
-// Swagger UI
-app.use(openAPIRouter);
 
 // Error handlers
 app.use(errorHandler());

@@ -1,4 +1,6 @@
+import qs from "qs";
 import { API_ROUTES_STRAPI } from "../api-routes/api-routes-strapi";
+import type { StrapiQuery } from "../client";
 import { envServices } from "../env-config";
 import { handleError, handleResponse, type StandardResponse } from "../server";
 import type { Asset } from "../types/common/asset";
@@ -9,13 +11,34 @@ class UsersService extends BaseService<User, Form_User> {
 	public constructor() {
 		super(API_ROUTES_STRAPI.USERS);
 	}
+	// overriding find method because it return [] instead of data
+	override async find(
+		token: string,
+		options?: StrapiQuery<User>,
+		fetchOptions?: RequestInit & { next?: any },
+	): Promise<StandardResponse<User[]>> {
+		const query = qs.stringify(options, { encodeValuesOnly: true });
+		const url = new URL(`${this.endpoint}?${query}`, envServices.STRAPI_URL);
+		try {
+			const response = await fetch(url, {
+				...fetchOptions,
+				headers: this.getHeaders(false, token),
+			});
+			return await handleResponse<User[]>(response);
+		} catch (error: any) {
+			return handleError<User[]>(error);
+		}
+	}
 
 	async uploadProfilePicture(
 		files: any,
 		userId: number,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.UPLOAD}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.UPLOAD}`,
+			envServices.API_GATEWAY,
+		);
 		const formData = new FormData();
 		for (let i = 0; i < files.length; i++) {
 			formData.append("files", files[i]);
@@ -49,7 +72,10 @@ class UsersService extends BaseService<User, Form_User> {
 	): Promise<User> {
 		// Returning the updated Strapi User object
 		// Use the base path from the constructor + /:id for the specific user
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.USERS}/${userId}`; // e.g., http://host/api/users/123
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.USERS}/${userId}`,
+			envServices.API_GATEWAY,
+		); // e.g., http://host/api/users/123
 
 		// Ensure we only proceed if there's data to update
 		if (Object.keys(data).length === 0) {
@@ -101,7 +127,10 @@ class UsersService extends BaseService<User, Form_User> {
 		email: string,
 		token: string,
 	): Promise<StandardResponse<null>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.FORGOT_PASSWORD}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.FORGOT_PASSWORD}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {
@@ -121,7 +150,10 @@ class UsersService extends BaseService<User, Form_User> {
 		passwordConfirmation: string,
 		token: string,
 	): Promise<StandardResponse<strapi_user>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.RESET_PASSWORD}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.RESET_PASSWORD}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {
@@ -145,7 +177,10 @@ class UsersService extends BaseService<User, Form_User> {
 		password: string,
 		token: string,
 	): Promise<User | null> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.AUTH_LOGIN}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.AUTH_LOGIN}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {
@@ -174,7 +209,10 @@ class UsersService extends BaseService<User, Form_User> {
 	}
 
 	async getById(userId: number, token: string): Promise<User | null> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.USERS}/${userId}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.USERS}/${userId}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {
@@ -200,7 +238,10 @@ class UsersService extends BaseService<User, Form_User> {
 		userData: Partial<Form_User>,
 		token: string,
 	): Promise<StandardResponse<null>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.REGISTER}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.REGISTER}`,
+			envServices.API_GATEWAY,
+		);
 		console.log(userData);
 		try {
 			const response = await fetch(url, {
@@ -220,7 +261,10 @@ class UsersService extends BaseService<User, Form_User> {
 		password: string;
 		token: string;
 	}): Promise<StandardResponse<strapi_user>> {
-		const url = `${envServices.STRAPI_URL}${API_ROUTES_STRAPI.AUTH_LOGIN}`;
+		const url = new URL(
+			`strapi/api/${API_ROUTES_STRAPI.AUTH_LOGIN}`,
+			envServices.API_GATEWAY,
+		);
 
 		try {
 			const response = await fetch(url, {

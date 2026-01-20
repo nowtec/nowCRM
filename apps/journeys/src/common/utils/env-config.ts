@@ -43,8 +43,7 @@ export const env = cleanEnv(process.env, {
 	CIRCUIT_BREAKER_FAILURE_THRESHOLD: num({ devDefault: testOnly(5) }),
 	CIRCUIT_BREAKER_RESET_TIMEOUT_MS: num({ devDefault: testOnly(60000) }),
 	CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS: num({ devDefault: testOnly(3) }),
-	COMPOSER_URL: str({ devDefault: testOnly("http://localhost:3020") }),
-	STRAPI_URL: str({ devDefault: testOnly("http://localhost:1337/api/") }),
+	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080") }),
 });
 
 // Construct the Authorization header correctly
