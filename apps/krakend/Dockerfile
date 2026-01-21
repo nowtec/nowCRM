@@ -9,7 +9,20 @@ FROM krakend:2.12
 # Enable KrakenD Flexible Configuration for runtime environment variable substitution
 ENV FC_ENABLE=1
 
-COPY krakend.json /etc/krakend/krakend.json
+# Install jq and bash for endpoint generation scripts
+RUN apk update && apk add --no-cache jq bash
+
+# Copy files needed for endpoint generation (maintaining directory structure)
+COPY ./scripts/ /tmp/krakend/scripts/
+COPY ./endpoints/ /tmp/krakend/endpoints/
+COPY ./krakend.json /tmp/krakend/krakend.json
+RUN chmod +x /tmp/krakend/scripts/*.sh
+
+# Generate Strapi endpoints and merge into krakend.json
+WORKDIR /tmp/krakend
+RUN ./scripts/generate-strapi-endpoints.sh && \
+    ./scripts/merge-endpoints.sh && \
+    cp krakend.json /etc/krakend/krakend.json
 
 # Ensure config file is readable
 RUN chmod 644 /etc/krakend/krakend.json
