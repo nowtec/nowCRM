@@ -1,0 +1,32 @@
+[
+    {
+    "endpoint": "/strapi/api/lists/{id}/active-contacts-count",
+    "method": "GET",
+    "output_encoding": "json",
+    "input_headers": [
+      "Authorization",
+      "Content-Type",
+      "Content-Lenght"
+    ],
+    "input_query_strings": [
+      "*"
+    ],
+    "backend": [
+      {
+        "url_pattern": "/api/lists/{id}/active-contacts-count",
+        "host": [
+          "{{ env "KRAKEND_STRAPI_URL" }}"
+        ],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "headers_to_pass": [
+              "Authorization"
+            ], 
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  }
+]
