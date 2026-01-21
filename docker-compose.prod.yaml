@@ -91,10 +91,7 @@ services:
       CRM_STRAPI_API_TOKEN: ${CRM_STRAPI_API_TOKEN}
       NODE_ENV: production
       RABBITMQ_URL: ${RABBITMQ_URL}
-      COMPOSER_URL: http://composer:3020
       STRAPI_URL: http://strapi:1337
-      DAL_URL: http://dal:6001
-      JOURNEYS_URL: http://journeys:3010
       CRM_TOTP_ENCRYPTION_KEY: ${CRM_TOTP_ENCRYPTION_KEY}
       twoFA_ENABLED: ${twoFA_ENABLED}
       TEST_RUN: ${TEST_RUN}
@@ -126,11 +123,7 @@ services:
       JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
       JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
       NODE_ENV: production
-      JOURNEYS_URL: http://journeys:3010
       RABBITMQ_URL: ${RABBITMQ_URL}
-      COMPOSER_URL: http://composer:3020
-      STRAPI_URL: http://strapi:1337
-      DAL_URL: http://dal:6001
       RABBITMQ_PREFETCH_COUNT: ${RABBITMQ_PREFETCH_COUNT}
       RABBITMQ_RECONNECT_DELAY_MS: ${RABBITMQ_RECONNECT_DELAY_MS}
       RABBITMQ_MAX_RECONNECT_ATTEMPTS: ${RABBITMQ_MAX_RECONNECT_ATTEMPTS}
@@ -166,10 +159,6 @@ services:
       NODE_ENV: production
       CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
       RABBITMQ_URL: ${RABBITMQ_URL}
-      JOURNEYS_URL: http://journeys:3010
-      COMPOSER_URL: http://composer:3020
-      STRAPI_URL: http://strapi:1337
-      DAL_URL: http://dal:6001
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -214,9 +203,7 @@ services:
       DAL_SMTP_FROM: ${DAL_SMTP_FROM}
       NODE_ENV: production
       RABBITMQ_URL: ${RABBITMQ_URL}
-      COMPOSER_URL: http://composer:3020
       STRAPI_URL: http://strapi:1337
-      DAL_URL: http://dal:6001
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -225,6 +212,23 @@ services:
     networks:
       - my_net
 
+  krakend:
+    container_name: krakend-prod
+    image: ghcr.io/nowtec/nowcrm/dal:${VERSION:-latest}
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      FC_ENABLE: 1
+      KRAKEND_COMPOSER_URL: ${KRAKEND_COMPOSER_URL:-http://composer:3020}
+      KRAKEND_JOURNEYS_URL: ${KRAKEND_JOURNEYS_URL:-http://journeys:3010}
+      KRAKEND_DAL_URL: ${KRAKEND_DAL_URL:-http://dal:6001}
+      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}    
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - strapi
+    networks:
+      - my_net
   rabbitmq:
     container_name: rabbitmq-prod
     image: rabbitmq:4.1.2-management

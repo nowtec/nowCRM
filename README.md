@@ -59,11 +59,37 @@ nowCRM relies on the following core services:
 
 | Service | Description |
 |----------|-------------|
+| **KrakenD API Gateway** | High-performance API gateway providing a single entry point for all backend services, authentication, rate limiting, and request routing. |
 | **Strapi 5** | Headless CMS used as the universal data backend, authentication layer, and admin panel. |
 | **Composer** | Handles content generation, channel dispatch, and AWS SES event ingestion. |
 | **Journeys** | Manages automated multi-step marketing journeys. |
 | **DAL (Data Access Layer)** | Orchestrates heavy asynchronous or bulk operations. |
 | **nowCRM (Frontend)** | The Next.js 15 web interface connecting users to all backend services. |
+
+### API Gateway Architecture
+
+The KrakenD API Gateway acts as a unified entry point for all backend service requests:
+
+```
+Client Request
+    ↓
+KrakenD Gateway (Port 8080)
+    ↓
+    ├──→ Composer Service (Port 3020)
+    ├──→ Journeys Service (Port 3010)
+    ├──→ DAL Service (Port 6001)
+    └──→ Strapi CMS (Port 1337)
+```
+
+**Key Features:**
+- **Single Entry Point**: All API requests route through the gateway
+- **Authentication**: Token validation via Strapi before forwarding requests
+- **Rate Limiting**: Prevents abuse and ensures fair resource usage
+- **CORS Handling**: Manages cross-origin requests
+- **Request Routing**: Intelligently routes requests to appropriate backend services
+- **Health Checks**: Monitors backend service availability
+
+For detailed API Gateway configuration, see [apps/krakend/README.md](./apps/krakend/README.md).
 
 ---
 
@@ -218,6 +244,8 @@ cp .env.sample .env
 - `COMPOSER_OPENAI_API_KEY`, `COMPOSER_ANTHROPIC_KEY` - AI service API keys
 - `COMPOSER_SMTP_*`, `DAL_SMTP_*` - SMTP credentials for email sending
 - `SSL_EMAIL` - Email address for Let's Encrypt SSL certificate generation
+- `KRAKEND_*_URL` - API Gateway backend service URLs (e.g., `KRAKEND_STRAPI_URL`, `KRAKEND_COMPOSER_URL`, `KRAKEND_JOURNEYS_URL`, `KRAKEND_DAL_URL`)
+- `API_GATEWAY` - API Gateway base URL (e.g., `https://api.{CUSTOMER_DOMAIN}`)
 
 ### 4. Verify Required Files
 
@@ -225,6 +253,7 @@ Ensure the following files are present:
 - `docker-compose.prod.yaml` - Production compose configuration
 - `caddy/Caddyfile` - Caddy reverse proxy configuration
 - `rabbitmq/rabbitmq_delayed_message_exchange-4.1.0.ez` - RabbitMQ plugin
+- `apps/krakend/krakend.json` - API Gateway configuration
 
 ### 5. Pull Required Images
 
@@ -236,11 +265,12 @@ docker pull ghcr.io/nowtec/nowcrm/nowcrm:latest
 docker pull ghcr.io/nowtec/nowcrm/journeys:latest
 docker pull ghcr.io/nowtec/nowcrm/composer:latest
 docker pull ghcr.io/nowtec/nowcrm/dal:latest
+docker pull ghcr.io/nowtec/nowcrm/krakend:latest
 ```
 
 Or specify a version with the `VERSION` environment variable:
 
-c```bash
+```bash
 VERSION=v0.4.7 docker compose -f docker-compose.prod.yaml pull
 ```
 
@@ -272,11 +302,14 @@ Once running, your services will be accessible at:
 
 - **CRM**: `https://crm.{CUSTOMER_DOMAIN}`
 - **Strapi Admin**: `https://admin.{CUSTOMER_DOMAIN}`
-- **Strapi API**: `https://api.{CUSTOMER_DOMAIN}`
-- **Journeys**: `https://journeys.{CUSTOMER_DOMAIN}`
-- **Composer**: `https://composer.{CUSTOMER_DOMAIN}`
-- **DAL**: `https://dal.{CUSTOMER_DOMAIN}`
+- **API Gateway**: `https://api.{CUSTOMER_DOMAIN}` (KrakenD - routes to all backend services)
+- **Strapi API**: `https://api.{CUSTOMER_DOMAIN}/strapi/api/*` (via API Gateway)
+- **Journeys**: `https://api.{CUSTOMER_DOMAIN}/journeys/*` (via API Gateway)
+- **Composer**: `https://api.{CUSTOMER_DOMAIN}/composer/*` (via API Gateway)
+- **DAL**: `https://api.{CUSTOMER_DOMAIN}/dal/*` (via API Gateway)
 - **RabbitMQ Management**: `https://rabbitmq.{CUSTOMER_DOMAIN}`
+
+**Note**: In production, backend services are accessed through the API Gateway rather than directly. The gateway handles authentication, rate limiting, and request routing automatically.
 
 ### 9. Post-Deployment Setup
 
@@ -324,6 +357,59 @@ docker compose -f docker-compose.prod.yaml up -d
 - Verify PostgreSQL container is healthy: `docker compose -f docker-compose.prod.yaml ps postgres`
 - Check database credentials in `.env`
 - Review PostgreSQL logs: `docker compose -f docker-compose.prod.yaml logs postgres`
+
+---
+
+## 🌐 API Gateway (KrakenD)
+
+The KrakenD API Gateway provides a unified entry point for all backend service requests, handling authentication, rate limiting, CORS, and request routing.
+
+### Key Features
+
+- **Single Entry Point**: All API requests route through port 8080
+- **Authentication**: Token validation via Strapi before forwarding requests
+- **Rate Limiting**: Prevents abuse and ensures fair resource usage
+- **CORS Handling**: Manages cross-origin requests automatically
+- **Request Routing**: Intelligently routes requests to appropriate backend services
+- **Health Checks**: Monitors backend service availability
+
+### API Gateway Endpoints
+
+All backend services are accessible through the API Gateway:
+
+- **Composer**: `/composer/*` → Routes to Composer service
+- **Journeys**: `/journeys/*` → Routes to Journeys service
+- **DAL**: `/dal/*` → Routes to DAL service
+- **Strapi**: `/strapi/api/*` → Routes to Strapi CMS API
+
+### Environment Variables
+
+```bash
+# API Gateway Configuration
+FC_ENABLE=1  # Enable Flexible Configuration (required)
+KRAKEND_STRAPI_URL=http://strapi:1337  # Strapi service URL
+KRAKEND_COMPOSER_URL=http://composer:3020  # Composer service URL
+KRAKEND_JOURNEYS_URL=http://journeys:3010  # Journeys service URL
+KRAKEND_DAL_URL=http://dal:6001  # DAL service URL
+```
+
+### Running Locally
+
+The API Gateway is included in the Docker Compose setup:
+
+```bash
+# Start all services including API Gateway
+make up
+
+# Or start individually
+docker compose -f docker-compose.dev.yaml up krakend
+```
+
+The gateway will be available at `http://localhost:8080`.
+
+### Configuration
+
+For detailed configuration options, endpoint management, and advanced features, see [apps/krakend/README.md](./apps/krakend/README.md).
 
 ---
 
@@ -444,10 +530,12 @@ pnpm build
 
 ## 🧠 Developer Tips
 
-- Always use environment variable prefixes (`COMPOSER_`, `DAL_`, `STRAPI_`, etc.)
+- Always use environment variable prefixes (`COMPOSER_`, `DAL_`, `STRAPI_`, `KRAKEND_`, etc.)
 - Avoid hardcoding API URLs; read from `.env`
+- When using the API Gateway, configure `API_GATEWAY` environment variable instead of direct service URLs
 - Monitor Redis queues actively during development
 - Keep your `.npmrc` configured for private package registry access
+- For API Gateway configuration details, see [apps/krakend/README.md](./apps/krakend/README.md)
 
 ---
 
@@ -506,9 +594,15 @@ Verify the following domains are accessible:
 #### 4.2 Service Health Check
 For each service, verify:
 1. Check service logs for:
+   - [ ] **API Gateway (KrakenD)** - no crashes or critical errors
    - [ ] **DAL service** - no crashes or critical errors
    - [ ] **Journeys service** - no crashes or critical errors
    - [ ] **Composer service** - no crashes or critical errors
+
+2. Verify API Gateway health endpoints:
+   - [ ] `/composer/health-check` - accessible via API Gateway
+   - [ ] `/journeys/health-check` - accessible via API Gateway
+   - [ ] `/dal/health-check` - accessible via API Gateway
 
 ### 5. nowCRM Functional Testing
 
@@ -707,6 +801,26 @@ The main `.env` file contains backend configurations, secrets, and deployment se
 
 ### Service-Specific Environment Configurations
 
+#### KrakenD API Gateway Environment Variables
+```
+# Flexible Configuration (required)
+FC_ENABLE=1  # Must be set to enable environment variable substitution
+
+# Backend Service URLs (use Docker service names in Docker Compose)
+KRAKEND_STRAPI_URL=http://strapi:1337
+KRAKEND_COMPOSER_URL=http://composer:3020
+KRAKEND_JOURNEYS_URL=http://journeys:3010
+KRAKEND_DAL_URL=http://dal:6001
+
+# For Kubernetes deployments, use full service URLs:
+# KRAKEND_STRAPI_URL=http://strapi-service.namespace.svc.cluster.local:1337
+# KRAKEND_COMPOSER_URL=http://composer-service.namespace.svc.cluster.local:3020
+# KRAKEND_JOURNEYS_URL=http://journeys-service.namespace.svc.cluster.local:3010
+# KRAKEND_DAL_URL=http://dal-service.namespace.svc.cluster.local:6001
+```
+
+**Note**: The API Gateway uses Flexible Configuration to substitute these environment variables at runtime. The `FC_ENABLE=1` flag must be set for this to work.
+
 #### DAL (Data Access Layer) Environment Variables
 ```
 # Environment Configuration
@@ -752,6 +866,9 @@ DAL_SMTP_FROM=""
 DAL_BASIC_AUTH_USERNAME="admin"
 DAL_BASIC_AUTH_PASSWORD="admin"
 
+# API Gateway Configuration (optional)
+API_GATEWAY="http://localhost:8080"  # When set, service expects requests via API Gateway
+
 # Shared URLs
 STRAPI_URL="http://localhost:1337/api/"
 COMPOSER_URL="http://localhost:3020/"
@@ -764,13 +881,14 @@ NODE_ENV='development' # Options: 'development', 'production', 'test'
 
 CRM_BASE_URL="http://localhost:3000"
 
+# API Gateway Configuration (when using API Gateway)
+API_GATEWAY="http://localhost:8080"  # KrakenD API Gateway URL
+
+# Direct Service URLs (for development without API Gateway)
 CRM_STRAPI_API_URL="http://localhost:1337/api/"
 CRM_STRAPI_API_TOKEN=""
 DAL_URL='http://localhost:6001/api/'
-
 COMPOSER_URL="http://localhost:3020/"
-
-# API URLs
 STRAPI_URL="http://localhost:1337/api/"
 JOURNEYS_URL="http://localhost:3010/"
 
@@ -794,6 +912,8 @@ S3_PUBLIC_URL_BASE=""
 
 ```
 
+**Note**: When `API_GATEWAY` is set, the frontend will route API requests through the gateway. Otherwise, it will use direct service URLs.
+
 #### Composer Service Environment Variables
 ```
 # Environment Configuration
@@ -810,6 +930,9 @@ COMPOSER_CRM_REDIRECT_HEALTH_CHECK="http://localhost:3000/crm/admin-panel/channe
 COMPOSER_STRAPI_API_TOKEN=""
 STRAPI_URL="http://localhost:1337/api/"
 COMPOSER_URL="http://localhost:3020/"
+
+# API Gateway Configuration (optional)
+API_GATEWAY="http://localhost:8080"  # When set, service expects requests via API Gateway
 
 # Redis Configuration
 COMPOSER_REDIS_PORT="6379"
@@ -848,6 +971,9 @@ JOURNEYS_MINUTE_TO_LAUNCH="5"
 JOURNEYS_STRAPI_API_TOKEN=""
 STRAPI_URL="http://localhost:1337/api/"
 COMPOSER_URL="http://localhost:3020/"
+
+# API Gateway Configuration (optional)
+API_GATEWAY="http://localhost:8080"  # When set, service expects requests via API Gateway
 
 # Job Configuration
 JOURNEYS_CHECK_TIME="1440" # This variable helps journeys to understand when to close processed journey job and open new 1 for checking default is 1 day
