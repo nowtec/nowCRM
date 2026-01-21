@@ -45,13 +45,13 @@ export async function handleResponse<T>(
 	const success = response.ok;
 	try {
 		const json: any = await response.json();
-		
+
 		// Check for error_backend_status key
 		if (json.error_backend_status) {
 			const errorBackend = json.error_backend_status;
 			let errorMessage = "An error occurred";
-			let errorStatus = errorBackend.http_status_code || status;
-			
+			const errorStatus = errorBackend.http_status_code || status;
+
 			// Try to parse the http_body if it's a JSON string
 			if (errorBackend.http_body) {
 				try {
@@ -64,7 +64,7 @@ export async function handleResponse<T>(
 					errorMessage = errorBackend.http_body || errorMessage;
 				}
 			}
-			
+
 			return {
 				data: null,
 				status: errorStatus,
@@ -72,7 +72,7 @@ export async function handleResponse<T>(
 				errorMessage,
 			};
 		}
-		
+
 		let data: T | null = null;
 		let meta: any;
 		let errorMessage: any;
