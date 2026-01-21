@@ -98,7 +98,8 @@ async function postWithRetry<T>(
 				msg.includes("EPIPE") ||
 				msg.includes("ETIMEDOUT") ||
 				msg.includes("socket hang up") ||
-				msg.includes("network timeout");
+				msg.includes("network timeout") ||
+				msg.toLowerCase().includes("fetch failed");
 			if (!retriable || i === attempts) throw err;
 			await sleep(jitter(delay));
 			delay *= 2;
@@ -283,15 +284,31 @@ export const startContactsWorkers = () => {
 					logger.warn(`[${workerId}] No new contacts to bulk-create; skipping`);
 				}
 
-				const BULK_SIZE = 100;
+				const DAL_BATCH_SIZE = 1000;
+				const STRAPI_BATCH_SIZE = 100;
 				const createdIds: CreatedPair[] = [];
 				let successCount = 0;
 
-				for (let offset = 0; offset < toCreate.length; offset += BULK_SIZE) {
-					const batch = toCreate.slice(offset, offset + BULK_SIZE);
-					const batchNum = Math.floor(offset / BULK_SIZE) + 1;
+				for (
+				let offset = 0;
+				offset < toCreate.length;
+				offset += DAL_BATCH_SIZE
+			) {
+				const dalBatch = toCreate.slice(offset, offset + DAL_BATCH_SIZE);
+				const dalBatchNum = Math.floor(offset / DAL_BATCH_SIZE) + 1;
+				logger.info(
+					`[${workerId}] DAL create batch #${dalBatchNum} (${dalBatch.length})`,
+				);
+
+				for (
+					let inner = 0;
+					inner < dalBatch.length;
+					inner += STRAPI_BATCH_SIZE
+				) {
+					const batch = dalBatch.slice(inner, inner + STRAPI_BATCH_SIZE);
+					const batchNum = Math.floor(inner / STRAPI_BATCH_SIZE) + 1;
 					logger.info(
-						`[${workerId}] Bulk-create batch #${batchNum} (${batch.length})`,
+						`[${workerId}] Bulk-create batch #${dalBatchNum}.${batchNum} (${batch.length})`,
 					);
 
 					const batchStart = Date.now();
@@ -351,13 +368,13 @@ export const startContactsWorkers = () => {
 						recordResponseTime(dur, true);
 						onHttpError();
 						logger.error(
-							`[${workerId}] Bulk-create failed at batch #${batchNum}: ${err.message}`,
+							`[${workerId}] Bulk-create failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
 						);
-						throw err;
 					}
 
 					await sleep(jitter(BATCH_COOLDOWN_BASE));
 				}
+			}
 
 				const total = Date.now() - jobStart;
 				logger.info(
@@ -389,15 +406,31 @@ export const startContactsWorkers = () => {
 							...c,
 						}));
 
-					const UPDATED_BATCH = 100;
+					const UPDATED_DAL_BATCH = 1000;
+					const UPDATED_STRAPI_BATCH = 100;
 					let updatedCount = 0;
 
-					for (let off = 0; off < toUpdate.length; off += UPDATED_BATCH) {
-						const batch = toUpdate.slice(off, off + UPDATED_BATCH);
-						const batchNum = Math.floor(off / UPDATED_BATCH) + 1;
+					for (
+						let off = 0;
+						off < toUpdate.length;
+						off += UPDATED_DAL_BATCH
+					) {
+						const dalBatch = toUpdate.slice(off, off + UPDATED_DAL_BATCH);
+						const dalBatchNum = Math.floor(off / UPDATED_DAL_BATCH) + 1;
 						logger.info(
-							`[${workerId}] Bulk-update batch #${batchNum} (${batch.length})`,
+							`[${workerId}] DAL update batch #${dalBatchNum} (${dalBatch.length})`,
 						);
+
+						for (
+							let inner = 0;
+							inner < dalBatch.length;
+							inner += UPDATED_STRAPI_BATCH
+						) {
+							const batch = dalBatch.slice(inner, inner + UPDATED_STRAPI_BATCH);
+							const batchNum = Math.floor(inner / UPDATED_STRAPI_BATCH) + 1;
+							logger.info(
+								`[${workerId}] Bulk-update batch #${dalBatchNum}.${batchNum} (${batch.length})`,
+							);
 
 						const start = Date.now();
 						try {
@@ -426,12 +459,13 @@ export const startContactsWorkers = () => {
 						} catch (err: any) {
 							recordResponseTime(Date.now() - start, true);
 							logger.error(
-								`[${workerId}] Bulk-update failed at batch #${batchNum}: ${err.message}`,
+								`[${workerId}] Bulk-update failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
 							);
-							throw err;
+						
 						}
 						await sleep(jitter(BATCH_COOLDOWN_BASE));
 					}
+				}
 
 					logger.info(
 						`[${workerId}] Updated total ${updatedCount} existing contacts`,
