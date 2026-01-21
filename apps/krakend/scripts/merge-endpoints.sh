@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Script to merge all endpoint JSON files into krakend.json
 #

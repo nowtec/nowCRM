@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Script to generate KrakenD endpoint configurations for Strapi collections
 # 
