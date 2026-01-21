@@ -317,9 +317,6 @@ export default function ContactsTableClient({
 			onSearchChange={handleSearchChange}
 			onSortingChange={handleSortingChange}
 			onPaginationChange={handlePaginationChange}
-			filtersActive={
-				Boolean(searchTerm) || (filters && Object.keys(filters).length > 0)
-			}
 			onFiltersApplied={handleFiltersApplied}
 			isLoading={isLoading}
 		/>

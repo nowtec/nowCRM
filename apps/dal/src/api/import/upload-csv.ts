@@ -1,4 +1,4 @@
-import { API_ROUTES_DAL } from "@nowcrm/services";
+import { API_ROUTES_DAL_REAL } from "@nowcrm/services";
 import express, { type Request, type Response } from "express";
 import multer from "multer";
 import { csvContactsQueue } from "../../jobs_pipeline/csv-import/contacts/csv-contacts-queue";
@@ -12,7 +12,7 @@ interface MulterRequest extends Request {
 }
 
 router.post(
-	`/${API_ROUTES_DAL.UPLOAD}`,
+	`/${API_ROUTES_DAL_REAL.UPLOAD}`,
 	upload.single("file"),
 	async (req: MulterRequest, res: Response): Promise<void> => {
 		if (!req.file) {
@@ -41,7 +41,7 @@ router.post(
 					req.body.deduplicateByRequired || "false",
 				);
 				const listMode = req.body.listMode || "new";
-				const listId = req.body.listId ? Number(req.body.listId) : null;
+				const listId = req.body.listId?.trim() || null;
 
 				const jobData = {
 					csv: csvContent,

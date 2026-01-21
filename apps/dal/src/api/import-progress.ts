@@ -1,4 +1,4 @@
-import { API_ROUTES_DAL } from "@nowcrm/services";
+import { API_ROUTES_DAL_REAL } from "@nowcrm/services";
 import express from "express";
 import Redis from "ioredis";
 import { env } from "@/common/utils/env-config";
@@ -6,7 +6,7 @@ import { env } from "@/common/utils/env-config";
 const redis = new Redis({ host: env.DAL_REDIS_HOST, port: env.DAL_REDIS_PORT });
 const router = express.Router();
 
-router.get(`/${API_ROUTES_DAL.PROGRESS}`, async (_req, res) => {
+router.get(`/${API_ROUTES_DAL_REAL.PROGRESS}`, async (_req, res) => {
 	try {
 		const keys = await redis.keys("progress:*:total");
 

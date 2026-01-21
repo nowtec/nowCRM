@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-01-14T10:36:04.135Z"
+    "x-generation-date": "2026-01-21T12:22:20.196Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -38480,7 +38480,7 @@
                 ],
                 "example": "string or id"
               },
-              "users_permissions_user": {
+              "user": {
                 "oneOf": [
                   {
                     "type": "integer"
@@ -43188,7 +43188,7 @@
               }
             }
           },
-          "users_permissions_user": {
+          "user": {
             "type": "object",
             "properties": {
               "id": {
@@ -43633,7 +43633,7 @@
                     }
                   }
                 },
-                "users_permissions_user": {
+                "user": {
                   "type": "object",
                   "properties": {
                     "id": {
@@ -160576,9 +160576,9 @@
               },
               "due_date": {
                 "type": "string",
-                "format": "date"
+                "format": "date-time"
               },
-              "users_permissions_user": {
+              "assigned_to": {
                 "oneOf": [
                   {
                     "type": "integer"
@@ -160685,9 +160685,9 @@
           },
           "due_date": {
             "type": "string",
-            "format": "date"
+            "format": "date-time"
           },
-          "users_permissions_user": {
+          "assigned_to": {
             "type": "object",
             "properties": {
               "id": {
@@ -165761,9 +165761,9 @@
                 },
                 "due_date": {
                   "type": "string",
-                  "format": "date"
+                  "format": "date-time"
                 },
-                "users_permissions_user": {
+                "assigned_to": {
                   "type": "object",
                   "properties": {
                     "id": {

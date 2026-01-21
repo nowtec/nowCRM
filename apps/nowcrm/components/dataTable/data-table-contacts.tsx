@@ -74,8 +74,6 @@ interface DataTableProps<TData, TValue> {
 	) => void;
 	// new: parent handles refetching when search changes
 	onSearchChange?: (term: string) => void;
-	// new: parent tells us if filters are active to show the dot
-	filtersActive?: boolean;
 	// optional: parent wants to intercept filters submission directly
 	onFiltersApplied?: (payload: { uiFilters: any; strapiFilters: any }) => void;
 	onSortingChange?: (sortBy: string, sortOrder: "asc" | "desc") => void;
@@ -123,7 +121,6 @@ export default function DataTable<TData, TValue>({
 	sorting,
 	onVisibleColumnsChange,
 	onSearchChange,
-	filtersActive,
 	onFiltersApplied,
 	onSortingChange,
 	onPaginationChange,
@@ -173,32 +170,14 @@ export default function DataTable<TData, TValue>({
 		[sortingState, onSortingChange],
 	);
 
-	const LS_FILTERS_KEY = React.useMemo(
-		() => `datatable.filters.${table_name}`,
-		[table_name],
-	);
-
-	const [advancedFiltersState, setAdvancedFiltersState] = React.useState(() => {
-		try {
-			const stored = localStorage.getItem(LS_FILTERS_KEY);
-			return stored ? JSON.parse(stored) : null;
-		} catch {
-			return null;
-		}
-	});
-
 	const handleFiltersApplied = React.useCallback(
 		(payload: { uiFilters: any; strapiFilters: any }) => {
-			setAdvancedFiltersState(payload);
-			try {
-				localStorage.setItem(LS_FILTERS_KEY, JSON.stringify(payload));
-			} catch {}
 			onFiltersApplied?.(payload);
 			// Reset to first page when filters change
 			updateUrl({ page: 1 });
 			setUiPagination((p) => ({ ...p, pageIndex: 0 }));
 		},
-		[onFiltersApplied, LS_FILTERS_KEY, updateUrl],
+		[onFiltersApplied, updateUrl],
 	);
 
 	// Initialize sorting state from server props
@@ -365,9 +344,6 @@ export default function DataTable<TData, TValue>({
 							<AdvancedFiltersComponent
 								onSubmitComplete={handleFiltersApplied}
 							/>
-							{(filtersActive || advancedFiltersState) && (
-								<span className="-top-1 -right-1 absolute h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
-							)}
 						</div>
 					)}
 					<DataTableViewOptions
