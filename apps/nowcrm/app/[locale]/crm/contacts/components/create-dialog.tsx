@@ -103,12 +103,13 @@ export default function CreateContactDialog({
 				setExistingContact(null);
 			}
 		}
-
+		if (!values.email) delete values.email;
 		const res = await createContact({
 			...values,
 			publishedAt: new Date(),
 			language: values.language as LanguageKeys,
 		});
+		console.log(res)
 		if (!res.success) {
 			toast.error(
 				`${t("Contacts.createContact.toast.error")} ${res.errorMessage}`,
