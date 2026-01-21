@@ -290,91 +290,91 @@ export const startContactsWorkers = () => {
 				let successCount = 0;
 
 				for (
-				let offset = 0;
-				offset < toCreate.length;
-				offset += DAL_BATCH_SIZE
-			) {
-				const dalBatch = toCreate.slice(offset, offset + DAL_BATCH_SIZE);
-				const dalBatchNum = Math.floor(offset / DAL_BATCH_SIZE) + 1;
-				logger.info(
-					`[${workerId}] DAL create batch #${dalBatchNum} (${dalBatch.length})`,
-				);
-
-				for (
-					let inner = 0;
-					inner < dalBatch.length;
-					inner += STRAPI_BATCH_SIZE
+					let offset = 0;
+					offset < toCreate.length;
+					offset += DAL_BATCH_SIZE
 				) {
-					const batch = dalBatch.slice(inner, inner + STRAPI_BATCH_SIZE);
-					const batchNum = Math.floor(inner / STRAPI_BATCH_SIZE) + 1;
+					const dalBatch = toCreate.slice(offset, offset + DAL_BATCH_SIZE);
+					const dalBatchNum = Math.floor(offset / DAL_BATCH_SIZE) + 1;
 					logger.info(
-						`[${workerId}] Bulk-create batch #${dalBatchNum}.${batchNum} (${batch.length})`,
+						`[${workerId}] DAL create batch #${dalBatchNum} (${dalBatch.length})`,
 					);
 
-					const batchStart = Date.now();
-					try {
-						const body = await postWithRetry<{
-							success: boolean;
-							count: number;
-							ids?: Array<{ id: number; documentId: string }>;
-							message?: string;
-						}>(
-							"contacts/bulk-create",
-							{ data: batch },
-							{
-								Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
-								"Content-Type": "application/json",
-							},
+					for (
+						let inner = 0;
+						inner < dalBatch.length;
+						inner += STRAPI_BATCH_SIZE
+					) {
+						const batch = dalBatch.slice(inner, inner + STRAPI_BATCH_SIZE);
+						const batchNum = Math.floor(inner / STRAPI_BATCH_SIZE) + 1;
+						logger.info(
+							`[${workerId}] Bulk-create batch #${dalBatchNum}.${batchNum} (${batch.length})`,
 						);
 
-						if (!body.success) {
-							throw new Error(
-								`Strapi bulk-create failed: ${body.message || "unknown error"}`,
+						const batchStart = Date.now();
+						try {
+							const body = await postWithRetry<{
+								success: boolean;
+								count: number;
+								ids?: Array<{ id: number; documentId: string }>;
+								message?: string;
+							}>(
+								"contacts/bulk-create",
+								{ data: batch },
+								{
+									Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
+									"Content-Type": "application/json",
+								},
 							);
-						}
 
-						const docs = Array.isArray(body.ids) ? body.ids : [];
-						const cacheMap = relationCache.contacts || new Map<string, any>();
+							if (!body.success) {
+								throw new Error(
+									`Strapi bulk-create failed: ${body.message || "unknown error"}`,
+								);
+							}
 
-						for (let i = 0; i < docs.length && i < batch.length; i++) {
-							const email = (batch[i].email || "").trim();
-							const d = docs[i];
-							if (email && !cacheMap.has(email)) {
-								cacheMap.set(email, {
+							const docs = Array.isArray(body.ids) ? body.ids : [];
+							const cacheMap = relationCache.contacts || new Map<string, any>();
+
+							for (let i = 0; i < docs.length && i < batch.length; i++) {
+								const email = (batch[i].email || "").trim();
+								const d = docs[i];
+								if (email && !cacheMap.has(email)) {
+									cacheMap.set(email, {
+										id: d.id,
+										documentId: d.documentId,
+									});
+								}
+							}
+
+							relationCache.contacts = cacheMap;
+
+							for (const d of docs) {
+								createdIds.push({
 									id: d.id,
 									documentId: d.documentId,
 								});
+								successCount++;
 							}
+
+							const dur = Date.now() - batchStart;
+							recordResponseTime(dur, false);
+							onHttpSuccess();
+							logger.info(
+								`[${workerId}] → created ${docs.length} items, time=${dur}ms`,
+							);
+						} catch (err: any) {
+							const dur = Date.now() - batchStart;
+							recordResponseTime(dur, true);
+							onHttpError();
+							logger.error(
+								`[${workerId}] Bulk-create failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
+							);
 						}
 
-						relationCache.contacts = cacheMap;
-
-						for (const d of docs) {
-							createdIds.push({
-								id: d.id,
-								documentId: d.documentId,
-							});
-							successCount++;
-						}
-
-						const dur = Date.now() - batchStart;
-						recordResponseTime(dur, false);
-						onHttpSuccess();
-						logger.info(
-							`[${workerId}] → created ${docs.length} items, time=${dur}ms`,
-						);
-					} catch (err: any) {
-						const dur = Date.now() - batchStart;
-						recordResponseTime(dur, true);
-						onHttpError();
-						logger.error(
-							`[${workerId}] Bulk-create failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
-						);
+						await sleep(jitter(BATCH_COOLDOWN_BASE));
 					}
-
-					await sleep(jitter(BATCH_COOLDOWN_BASE));
 				}
-			}
 
 				const total = Date.now() - jobStart;
 				logger.info(
@@ -410,11 +410,7 @@ export const startContactsWorkers = () => {
 					const UPDATED_STRAPI_BATCH = 100;
 					let updatedCount = 0;
 
-					for (
-						let off = 0;
-						off < toUpdate.length;
-						off += UPDATED_DAL_BATCH
-					) {
+					for (let off = 0; off < toUpdate.length; off += UPDATED_DAL_BATCH) {
 						const dalBatch = toUpdate.slice(off, off + UPDATED_DAL_BATCH);
 						const dalBatchNum = Math.floor(off / UPDATED_DAL_BATCH) + 1;
 						logger.info(
@@ -432,40 +428,39 @@ export const startContactsWorkers = () => {
 								`[${workerId}] Bulk-update batch #${dalBatchNum}.${batchNum} (${batch.length})`,
 							);
 
-						const start = Date.now();
-						try {
-							const body = await postWithRetry<{
-								success: boolean;
-								count: number;
-								message?: string;
-							}>(
-								"contacts/bulk-update",
-								{ data: batch },
-								{
-									Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
-									"Content-Type": "application/json",
-								},
-							);
+							const start = Date.now();
+							try {
+								const body = await postWithRetry<{
+									success: boolean;
+									count: number;
+									message?: string;
+								}>(
+									"contacts/bulk-update",
+									{ data: batch },
+									{
+										Authorization: `Bearer ${env.DAL_STRAPI_API_TOKEN}`,
+										"Content-Type": "application/json",
+									},
+								);
 
-							if (!body.success) {
-								throw new Error(`Strapi bulk-update failed: ${body.message}`);
+								if (!body.success) {
+									throw new Error(`Strapi bulk-update failed: ${body.message}`);
+								}
+
+								updatedCount += body.count;
+								recordResponseTime(Date.now() - start, false);
+								logger.info(
+									`[${workerId}] → updated ${body.count} items, time=${Date.now() - start}ms`,
+								);
+							} catch (err: any) {
+								recordResponseTime(Date.now() - start, true);
+								logger.error(
+									`[${workerId}] Bulk-update failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
+								);
 							}
-
-							updatedCount += body.count;
-							recordResponseTime(Date.now() - start, false);
-							logger.info(
-								`[${workerId}] → updated ${body.count} items, time=${Date.now() - start}ms`,
-							);
-						} catch (err: any) {
-							recordResponseTime(Date.now() - start, true);
-							logger.error(
-								`[${workerId}] Bulk-update failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
-							);
-						
+							await sleep(jitter(BATCH_COOLDOWN_BASE));
 						}
-						await sleep(jitter(BATCH_COOLDOWN_BASE));
 					}
-				}
 
 					logger.info(
 						`[${workerId}] Updated total ${updatedCount} existing contacts`,

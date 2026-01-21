@@ -28,11 +28,10 @@ import { updateOrganization } from "@/lib/actions/organizations/update-organizat
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),
-	email: z
-		.preprocess(
-			v => (v === "" || v == null ? undefined : v),
-			z.string().email().optional(),
-		),
+	email: z.preprocess(
+		(v) => (v === "" || v == null ? undefined : v),
+		z.string().email().optional(),
+	),
 	contact_person: z.string().optional(),
 	description: z.string().optional(),
 });
