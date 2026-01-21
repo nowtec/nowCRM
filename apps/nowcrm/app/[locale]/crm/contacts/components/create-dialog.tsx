@@ -109,7 +109,7 @@ export default function CreateContactDialog({
 			publishedAt: new Date(),
 			language: values.language as LanguageKeys,
 		});
-		console.log(res)
+		console.log(res);
 		if (!res.success) {
 			toast.error(
 				`${t("Contacts.createContact.toast.error")} ${res.errorMessage}`,
