@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.krakend.io/schema/v2.12/krakend.json",
   "version": 3,
-  "timeout": "10000ms",
+  "timeout": "30s",
   "cache_ttl": "300s",
   "output_encoding": "json",
   "debug_endpoint": false,
@@ -19,7 +19,7 @@
       "auth-plugin": {
         "auth_url": "{{ env "KRAKEND_STRAPI_URL" }}/api/token-verify",
         "auth_header_name": "Authorization",
-        "timeout": "5s",
+        "timeout": "30s",
         "cache_ttl": "600s",
         "excluded_paths": [
           "/health-check/composer",
