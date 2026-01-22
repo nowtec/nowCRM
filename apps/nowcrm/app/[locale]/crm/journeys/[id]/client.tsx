@@ -502,6 +502,11 @@ export default function JourneyClient({
 						mainValue = condition.value;
 					}
 
+					// Extract form_id if available (for form-answer conditions)
+					const formId =
+						condition.additional_data?.form?.value ??
+						condition.additional_data?.form;
+
 					if (condition.additionalCondition) {
 						const [addField, addOperator, addValue] =
 							condition.additionalCondition.split("/");
@@ -519,8 +524,40 @@ export default function JourneyClient({
 							addValue,
 							1,
 						);
+
+						// If form_id exists, add it as a third filter
+						if (formId) {
+							const third = formatSingleCondition(
+								"[surveys][form_id]",
+								"$eq",
+								formId,
+								2,
+							);
+							return `${first}&${second}&${third}`;
+						}
+
 						return `${first}&${second}`;
 					}
+
+					// If form_id exists but no additionalCondition, add it as second filter
+					if (formId) {
+						const first = formatSingleCondition(
+							mainField,
+							mainOperator,
+							mainValue,
+							0,
+							conditionField,
+							conditionOperator,
+						);
+						const second = formatSingleCondition(
+							"[surveys][form_id]",
+							"$eq",
+							formId,
+							1,
+						);
+						return `${first}&${second}`;
+					}
+
 					return `filters${mainField}${conditionField ? `${conditionField}[${conditionOperator}]` : `[${mainOperator}]`}=${mainValue}`;
 				}
 
