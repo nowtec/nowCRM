@@ -184,6 +184,7 @@ services:
       NODE_ENV: ${NODE_ENV}
       CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
       RABBITMQ_URL: ${RABBITMQ_URL}
+      STRAPI_URL: ${STRAPI_URL}
       API_GATEWAY: ${API_GATEWAY}
     depends_on:
       rabbitmq:
