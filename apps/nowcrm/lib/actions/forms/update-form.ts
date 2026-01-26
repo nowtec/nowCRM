@@ -113,11 +113,19 @@ export async function uploadCoverOrLogo(
 	if (!formIdRaw) {
 		throw new Error("uploadImage: missing formId in formData");
 	}
-	const formId = String(formIdRaw) as DocumentId;
+
+	const formIdOrSlug = String(formIdRaw) as DocumentId;
+
+	const formResponse = await getFormBySlugOrId(formIdOrSlug, false);
+	if (!formResponse.data || formResponse.data.length === 0) {
+		throw new Error("Form not found while uploading cover or logo");
+	}
+
+	const numericFormId = formResponse.data[0].id;
 
 	const result = await formsService.uploadCoverOrLogo(
 		files,
-		formId,
+		numericFormId,
 		targetField,
 		session.jwt,
 	);

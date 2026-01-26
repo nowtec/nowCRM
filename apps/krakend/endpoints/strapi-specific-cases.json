@@ -6,7 +6,7 @@
     "input_headers": [
       "Authorization",
       "Content-Type",
-      "Content-Lenght"
+      "Content-Length"
     ],
     "input_query_strings": [
       "*"
@@ -14,6 +14,126 @@
     "backend": [
       {
         "url_pattern": "/api/lists/{id}/active-contacts-count",
+        "host": [
+          "{{ env "KRAKEND_STRAPI_URL" }}"
+        ],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "headers_to_pass": [
+              "Authorization"
+            ], 
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+    {
+    "endpoint": "/strapi/api/upload",
+    "method": "POST",
+    "output_encoding": "json",
+    "input_headers": [
+      "Authorization",
+      "Content-Type",
+      "Content-Length"
+    ],
+    "input_query_strings": [
+      "*"
+    ],
+    "backend": [
+      {
+        "url_pattern": "/api/upload",
+        "host": [
+          "{{ env "KRAKEND_STRAPI_URL" }}"
+        ],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "headers_to_pass": [
+              "Authorization"
+            ], 
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+   {
+    "endpoint": "/strapi/api/upload/files/{fileName}",
+    "method": "GET",
+    "output_encoding": "json",
+    "input_headers": [
+      "Authorization",
+      "Content-Type",
+      "Content-Lenght"
+    ],
+    "input_query_strings": [
+      "*"
+    ],
+    "backend": [
+      {
+        "url_pattern": "/api/lists/upload/files/{fileName}",
+        "host": [
+          "{{ env "KRAKEND_STRAPI_URL" }}"
+        ],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "headers_to_pass": [
+              "Authorization"
+            ], 
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+   {
+    "endpoint": "/strapi/api/upload/files/{fileName}",
+    "method": "PUT",
+    "output_encoding": "json",
+    "input_headers": [
+      "Authorization",
+      "Content-Type",
+      "Content-Lenght"
+    ],
+    "input_query_strings": [
+      "*"
+    ],
+    "backend": [
+      {
+        "url_pattern": "/api/upload/files/{fileName}",
+        "host": [
+          "{{ env "KRAKEND_STRAPI_URL" }}"
+        ],
+        "encoding": "json",
+        "extra_config": {
+          "backend/http": {
+            "headers_to_pass": [
+              "Authorization"
+            ], 
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+   {
+    "endpoint": "/strapi/api/upload/files/{fileName}",
+    "method": "DELETE",
+    "output_encoding": "json",
+    "input_headers": [
+      "Authorization",
+      "Content-Type",
+      "Content-Lenght"
+    ],
+    "input_query_strings": [
+      "*"
+    ],
+    "backend": [
+      {
+        "url_pattern": "/api/upload/files/{fileName}",
         "host": [
           "{{ env "KRAKEND_STRAPI_URL" }}"
         ],

@@ -103,6 +103,7 @@ export function LinkedinInvitesChannelContent({
 			composition: z
 				.object({ value: z.string(), label: z.string() })
 				.optional(),
+			contact: z.object({ value: z.string(), label: z.string() }).optional(),
 			linkedin_url: z.string().optional(),
 			list: z
 				.object({
@@ -183,6 +184,7 @@ export function LinkedinInvitesChannelContent({
 		context: { defaultThrottle },
 		defaultValues: {
 			composition: undefined,
+			contact: undefined,
 			linkedin_url: "",
 			list: undefined,
 			organization: undefined,
@@ -192,6 +194,25 @@ export function LinkedinInvitesChannelContent({
 			identity: undefined,
 		},
 	});
+
+	const selectedContact = form.watch("contact");
+	const linkedinUrlInput = form.watch("linkedin_url");
+
+	React.useEffect(() => {
+		if (linkedinUrlInput && selectedContact) {
+			form.setValue("contact", undefined);
+			form.clearErrors("contact");
+		}
+	}, [linkedinUrlInput, selectedContact, form]);
+
+	React.useEffect(() => {
+		if (selectedContact) {
+			form.setValue("linkedin_url", "");
+			form.clearErrors(["contact", "linkedin_url"]);
+		} else {
+			form.clearErrors("contact");
+		}
+	}, [selectedContact, form]);
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		let submissionData: sendToChannelsData | undefined;
@@ -307,14 +328,14 @@ export function LinkedinInvitesChannelContent({
 			};
 		} else {
 			if (activeTab === "contact") {
-				if (!values.linkedin_url) {
-					toast.error("LinkedIn URL is required");
+				if (!values.contact && !values.linkedin_url) {
+					toast.error("Contact or LinkedIn URL is required");
 					return;
 				}
 				submissionData = {
 					composition_id: compId,
 					channels: [CommunicationChannel.LINKEDIN_INVTITATIONS.toLowerCase()],
-					to: values.linkedin_url,
+					to: values.contact ? values.contact.value : values.linkedin_url!,
 					type: "contact",
 					throttle: throttlePerMin,
 					interval: intervalMs,
@@ -427,6 +448,21 @@ export function LinkedinInvitesChannelContent({
 						</TabsList>
 
 						<TabsContent value="contact" className="pt-4">
+							<AsyncSelectField
+								name="contact"
+								label="Select contact"
+								serviceName="contactsService"
+								form={form}
+								useFormClear={true}
+								filterKey={["first_name", "last_name"]}
+								labelBuilder={(item: any) =>
+									`${item.first_name} ${item.last_name}`
+								}
+							/>
+							<FormDescription className="mt-1 mb-4">
+								Search by name. If not found, enter LinkedIn URL manually below.
+							</FormDescription>
+
 							<FormField
 								control={form.control}
 								name="linkedin_url"
