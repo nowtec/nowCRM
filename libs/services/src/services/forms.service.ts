@@ -60,7 +60,7 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 
 	async uploadCoverOrLogo(
 		files: any,
-		formId: DocumentId,
+		formId: DocumentId | number,
 		targetField: string,
 		token: string,
 	): Promise<StandardResponse<Asset[]>> {
