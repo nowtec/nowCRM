@@ -187,6 +187,7 @@
     "endpoint": "/composer/send-to-channels/get-callback/{provider}",
     "method": "GET",
     "output_encoding": "json",
+    "input_query_strings": ["*"],
     "input_headers": ["Authorization"],
     "extra_config": {
       "validation/cel": [
@@ -198,6 +199,7 @@
     "backend": [
       {
         "url_pattern": "/send-to-channels/get-callback/{provider}",
+        "input_query_strings": ["*"],
         "host": ["{{ env "KRAKEND_COMPOSER_URL" }}"],
         "encoding": "json",
         "extra_config": {
