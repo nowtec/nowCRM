@@ -53,7 +53,7 @@ function normalizeWebhookEvent(ev: any): StringEvent | undefined {
 function readWebhookAttributeValue(data: any, attribute?: string | null) {
 	if (!attribute) return undefined;
 	const entry = data?.entry ?? {};
-	// Handle nested attribute paths like "action_type.name"
+	// Handle nested attribute paths like "action_type.documentId"
 	if (attribute.includes(".")) {
 		const parts = attribute.split(".");
 		let current: any = entry;
