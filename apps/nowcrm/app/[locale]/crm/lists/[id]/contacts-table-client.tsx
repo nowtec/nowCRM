@@ -89,7 +89,7 @@ export default function ContactsTableClient({
 						{ subscriptions: { channel: { name: { $containsi: term } } } },
 						{
 							actions: {
-								action_normalized_type: { name: { $containsi: term } },
+								action_type: { name: { $containsi: term } },
 							},
 						},
 					];

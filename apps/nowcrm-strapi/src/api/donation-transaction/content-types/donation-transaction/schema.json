@@ -52,6 +52,9 @@
     },
     "purpose": {
       "type": "text"
+    },
+    "donation_transaction_status": {
+      "type": "string"
     }
   }
 }

@@ -75,7 +75,7 @@ export const contactsFilterConfig: FilterConfig = {
 		donation_transactions_status: "text",
 
 		// Actions
-		action_normalized_type: "relation",
+		action_type: "relation",
 		action_source: "text",
 		action_value: "text",
 		action_external_id: "text",
@@ -348,10 +348,10 @@ export const contactsFilterConfig: FilterConfig = {
 			type: "text",
 			label: "Donation Transactions Status",
 		},
-		action_normalized_type: {
-			name: "action_normalized_type",
+		action_type: {
+			name: "action_type",
 			type: "relation",
-			label: "Action Normalized Type",
+			label: "Action Type",
 			serviceName: "actionTypeService",
 		},
 		action_source: {
@@ -498,7 +498,7 @@ export const contactsFilterConfig: FilterConfig = {
 		actions: {
 			label: "Actions",
 			fields: [
-				"action_normalized_type",
+				"action_type",
 				"action_source",
 				"action_value",
 				"action_external_id",
@@ -603,9 +603,9 @@ export const contactsFilterConfig: FilterConfig = {
 			labelKey: "AdvancedFilters.fields.event_channel",
 			filterKey: "name",
 		},
-		action_normalized_type: {
+		action_type: {
 			serviceName: "actionTypeService",
-			labelKey: "AdvancedFilters.fields.action_normalized_type",
+			labelKey: "AdvancedFilters.fields.action_type",
 		},
 		tags: {
 			labelKey: "AdvancedFilters.fields.tags",

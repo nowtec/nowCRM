@@ -57,11 +57,11 @@ export const FIELD_TYPES: Record<
 	donation_transactions_from: "date",
 	donation_transactions_amount: "number",
 	donation_transactions_campaign_name: "text",
-	donation_transactions_status: "text",
+	donation_transactions2_status: "text",
 	donation_subscriptions_from: "date",
 	donation_subscriptions_amount: "number",
 	donation_subscriptions_interval: "text",
-	action_normalized_type: "relation",
+	action_type: "relation",
 	action_source: "text",
 	action_value: "text",
 	action_external_id: "text",
@@ -169,9 +169,9 @@ export const RELATION_META: Record<
 		labelKey: "AdvancedFilters.fields.event_channel",
 		filterKey: "name",
 	},
-	action_normalized_type: {
+	action_type: {
 		serviceName: "actionTypeService",
-		labelKey: "AdvancedFilters.fields.action_normalized_type",
+		labelKey: "AdvancedFilters.fields.action_type",
 	},
 	tags: {
 		labelKey: "AdvancedFilters.fields.tags",
@@ -273,7 +273,7 @@ export const FILTER_CATEGORIES = {
 	actions: {
 		label: "Actions",
 		fields: [
-			"action_normalized_type",
+			"action_type",
 			"action_source",
 			"action_value",
 			"action_external_id",

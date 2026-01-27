@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-01-26T14:04:02.694Z"
+    "x-generation-date": "2026-01-27T15:12:24.870Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -30080,6 +30080,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -34741,6 +34744,9 @@
                                         "type": "string"
                                       },
                                       "purpose": {
+                                        "type": "string"
+                                      },
+                                      "donation_transaction_status": {
                                         "type": "string"
                                       },
                                       "createdAt": {
@@ -40160,6 +40166,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -45308,6 +45317,9 @@
                                           "type": "string"
                                         },
                                         "purpose": {
+                                          "type": "string"
+                                        },
+                                        "donation_transaction_status": {
                                           "type": "string"
                                         },
                                         "createdAt": {
@@ -53682,6 +53694,9 @@
                               "purpose": {
                                 "type": "string"
                               },
+                              "donation_transaction_status": {
+                                "type": "string"
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
@@ -58448,6 +58463,9 @@
                                     "type": "string"
                                   },
                                   "purpose": {
+                                    "type": "string"
+                                  },
+                                  "donation_transaction_status": {
                                     "type": "string"
                                   },
                                   "createdAt": {
@@ -63417,6 +63435,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -66514,6 +66535,9 @@
                                           "type": "string"
                                         },
                                         "purpose": {
+                                          "type": "string"
+                                        },
+                                        "donation_transaction_status": {
                                           "type": "string"
                                         },
                                         "createdAt": {
@@ -72519,6 +72543,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -77983,6 +78010,9 @@
                                     "type": "string"
                                   },
                                   "purpose": {
+                                    "type": "string"
+                                  },
+                                  "donation_transaction_status": {
                                     "type": "string"
                                   },
                                   "createdAt": {
@@ -85036,6 +85066,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -88208,6 +88241,9 @@
               "purpose": {
                 "type": "string"
               },
+              "donation_transaction_status": {
+                "type": "string"
+              },
               "locale": {
                 "type": "string"
               },
@@ -89873,6 +89909,9 @@
                                     "type": "string"
                                   },
                                   "purpose": {
+                                    "type": "string"
+                                  },
+                                  "donation_transaction_status": {
                                     "type": "string"
                                   },
                                   "createdAt": {
@@ -92941,6 +92980,9 @@
           "purpose": {
             "type": "string"
           },
+          "donation_transaction_status": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -94752,6 +94794,9 @@
                                     "type": "string"
                                   },
                                   "purpose": {
+                                    "type": "string"
+                                  },
+                                  "donation_transaction_status": {
                                     "type": "string"
                                   },
                                   "createdAt": {
@@ -105946,6 +105991,9 @@
                               "purpose": {
                                 "type": "string"
                               },
+                              "donation_transaction_status": {
+                                "type": "string"
+                              },
                               "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
@@ -108466,6 +108514,9 @@
                                     "type": "string"
                                   },
                                   "purpose": {
+                                    "type": "string"
+                                  },
+                                  "donation_transaction_status": {
                                     "type": "string"
                                   },
                                   "createdAt": {
@@ -113395,6 +113446,9 @@
                                     "purpose": {
                                       "type": "string"
                                     },
+                                    "donation_transaction_status": {
+                                      "type": "string"
+                                    },
                                     "createdAt": {
                                       "type": "string",
                                       "format": "date-time"
@@ -118307,6 +118361,9 @@
                                     "purpose": {
                                       "type": "string"
                                     },
+                                    "donation_transaction_status": {
+                                      "type": "string"
+                                    },
                                     "createdAt": {
                                       "type": "string",
                                       "format": "date-time"
@@ -123164,6 +123221,9 @@
                                         "purpose": {
                                           "type": "string"
                                         },
+                                        "donation_transaction_status": {
+                                          "type": "string"
+                                        },
                                         "createdAt": {
                                           "type": "string",
                                           "format": "date-time"
@@ -127994,6 +128054,9 @@
                                               "type": "string"
                                             },
                                             "purpose": {
+                                              "type": "string"
+                                            },
+                                            "donation_transaction_status": {
                                               "type": "string"
                                             },
                                             "createdAt": {
@@ -133212,6 +133275,9 @@
                                       "type": "string"
                                     },
                                     "purpose": {
+                                      "type": "string"
+                                    },
+                                    "donation_transaction_status": {
                                       "type": "string"
                                     },
                                     "createdAt": {
@@ -138602,6 +138668,9 @@
                                       "type": "string"
                                     },
                                     "purpose": {
+                                      "type": "string"
+                                    },
+                                    "donation_transaction_status": {
                                       "type": "string"
                                     },
                                     "createdAt": {
@@ -146766,6 +146835,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -152064,6 +152136,9 @@
                                   "purpose": {
                                     "type": "string"
                                   },
+                                  "donation_transaction_status": {
+                                    "type": "string"
+                                  },
                                   "createdAt": {
                                     "type": "string",
                                     "format": "date-time"
@@ -157235,6 +157310,9 @@
                                         "type": "string"
                                       },
                                       "purpose": {
+                                        "type": "string"
+                                      },
+                                      "donation_transaction_status": {
                                         "type": "string"
                                       },
                                       "createdAt": {
@@ -162880,6 +162958,9 @@
                                     "type": "string"
                                   },
                                   "purpose": {
+                                    "type": "string"
+                                  },
+                                  "donation_transaction_status": {
                                     "type": "string"
                                   },
                                   "createdAt": {
