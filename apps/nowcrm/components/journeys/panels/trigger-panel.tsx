@@ -615,7 +615,7 @@ export function TriggerPanel({
 																handleConfigChange({
 																	attribute: {
 																		label: val.label,
-																		attribute_name: "action_type.name",
+																		attribute_name: "action_type.documentId",
 																		value: val.value,
 																	},
 																})
