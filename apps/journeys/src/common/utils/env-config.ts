@@ -30,6 +30,7 @@ export const env = cleanEnv(process.env, {
 	RABBITMQ_URL: str({
 		devDefault: testOnly("amqp://guest:guest@localhost:5672"),
 	}),
+	STRAPI_URL: str({ devDefault: testOnly("http://localhost:1337") }),
 	RABBITMQ_PREFETCH_COUNT: num({ devDefault: testOnly(10) }),
 	RABBITMQ_RECONNECT_DELAY_MS: num({ devDefault: testOnly(5000) }),
 	RABBITMQ_MAX_RECONNECT_ATTEMPTS: num({ devDefault: testOnly(10) }),
