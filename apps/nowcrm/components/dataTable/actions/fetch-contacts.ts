@@ -39,7 +39,7 @@ export async function fetchContactsAction({
 			{ last_name: { $containsi: search } },
 			{ contact_types: { name: { $eq: search } } },
 			{ subscriptions: { channel: { name: { $eq: search } } } },
-			{ actions: { action_normalized_type: { name: { $eq: search } } } },
+			{ actions: { action_type: { name: { $eq: search } } } },
 		],
 	};
 

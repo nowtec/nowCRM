@@ -111,6 +111,7 @@ const FilterField = <
 						(fieldType === "date" ? (
 							<DateTimePicker
 								granularity="day"
+								displayFormat={{ hour24: "PPP", hour12: "PPP" }}
 								value={value ? new Date(value) : undefined}
 								onChange={(date) =>
 									onValueChange(date ? format(date, "yyyy-MM-dd") : "")
