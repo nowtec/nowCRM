@@ -49,7 +49,8 @@ const FIELD_ALIASES: Record<string, string> = {
 	donation_transactions_from: "donation_transactions.createdAt",
 	donation_transactions_amount: "donation_transactions.amount",
 	donation_transactions_campaign_name: "donation_transactions.campaign_name",
-	donation_transactions_status: "donation_transactions.donation_transaction_status",
+	donation_transactions_status:
+		"donation_transactions.donation_transaction_status",
 	action_type: "actions.action_type.name",
 	action_source: "actions.source",
 	action_value: "actions.value",
