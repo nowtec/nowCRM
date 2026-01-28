@@ -104,6 +104,10 @@ const isRelArray = (v: any) =>
 	Array.isArray(v) &&
 	v.length > 0 &&
 	v.every((x) => x && typeof x === "object" && "value" in x);
+const DATE_EQ_FIELDS = new Set([
+	"donation_subscriptions_from",
+	"donation_transactions_from",
+]);
 
 /* Build a single Strapi condition object for a field */
 function buildFieldCondition(key: string, rawValue: any, operator?: string) {
@@ -115,6 +119,23 @@ function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 		const aliased = FIELD_ALIASES[key] || key;
 		setNested(cond, aliased, { [op]: true });
 		return cond;
+	}
+
+	// Date-only equality on specific fields (ignore hours)
+	if (DATE_EQ_FIELDS.has(key) && (op === "$eq" || op === "$eqi")) {
+		const date = rawValue instanceof Date ? rawValue : new Date(rawValue);
+		if (!Number.isNaN(date.getTime())) {
+			const start = new Date(date.getTime());
+			start.setUTCHours(0, 0, 0, 0);
+			const end = new Date(start.getTime());
+			end.setUTCDate(end.getUTCDate() + 1);
+			const aliased = FIELD_ALIASES[key] || key;
+			setNested(cond, aliased, {
+				$gte: start.toISOString(),
+				$lt: end.toISOString(),
+			});
+			return cond;
+		}
 	}
 
 	// relation single
