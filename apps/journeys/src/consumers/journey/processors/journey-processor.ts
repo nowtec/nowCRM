@@ -1,5 +1,9 @@
 import type { DocumentId } from "@nowcrm/services";
-import { journeyStepsService, journeysService } from "@nowcrm/services/server";
+import {
+	journeyPassedStepService,
+	journeyStepsService,
+	journeysService,
+} from "@nowcrm/services/server";
 import { env } from "@/common/utils/env-config";
 import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
@@ -126,9 +130,33 @@ export async function processJourneyMessage({
 					step.documentId,
 					contact.documentId,
 				);
-				if (!check.data) {
+				const passedStep = await journeyPassedStepService.find(
+					env.JOURNEYS_STRAPI_API_TOKEN,
+					{
+						filters: {
+							journey_step: { documentId: { $eq: step.documentId } },
+							contact: { documentId: { $eq: contact.documentId } },
+							journey: { documentId: { $eq: journeyId } },
+							composition: {
+								documentId: { $eq: step.composition?.documentId || undefined },
+							},
+							channel: {
+								documentId: { $eq: step.channel?.documentId || undefined },
+							},
+						},
+					},
+				);
+				if (!check.success || !check.data) {
 					throw new Error(check.errorMessage);
 				}
+				if (!passedStep.success || !passedStep.data) {
+					throw new Error(passedStep.errorMessage);
+				}
+				if (passedStep.data.length > 0) {
+					// Contact is checking rules, skip creating job
+					return null;
+				}
+
 				if (check.data.find) {
 					// Contact already processed this step, move to next step
 					await passContactToNextStep(
