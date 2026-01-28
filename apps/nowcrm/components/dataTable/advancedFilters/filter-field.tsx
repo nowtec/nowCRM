@@ -79,20 +79,6 @@ const FilterField = <
 	const fieldConfig = config.FIELD_CONFIGS?.[baseFieldName];
 	const hasOperator = fieldConfig?.hasOperator !== false; // Default to true if not specified
 	const relationPath = `groups.${groupIndex}.filters.${fieldName}` as any;
-	const parsedDateValue = (() => {
-		if (!value) return undefined;
-		if (value instanceof Date) return value;
-		if (typeof value === "string") {
-			const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-			if (match) {
-				const [, y, m, d] = match;
-				return new Date(Number(y), Number(m) - 1, Number(d));
-			}
-			const parsed = new Date(value);
-			return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-		}
-		return undefined;
-	})();
 
 	return (
 		<div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
@@ -126,7 +112,7 @@ const FilterField = <
 							<DateTimePicker
 								granularity="day"
 								displayFormat={{ hour24: "PPP", hour12: "PPP" }}
-								value={parsedDateValue}
+								value={value ? new Date(value) : undefined}
 								onChange={(date) =>
 									onValueChange(date ? format(date, "yyyy-MM-dd") : "")
 								}
