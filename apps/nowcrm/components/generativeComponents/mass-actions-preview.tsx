@@ -155,7 +155,6 @@ export default function MassActionPreview({
 							total: previewData.length,
 						}}
 						hiddenSearch={true}
-						hiddenExport={true}
 						hiddenCreate={true}
 						showStatusModal={false}
 					/>

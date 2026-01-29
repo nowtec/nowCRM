@@ -24,14 +24,12 @@ interface DataTableViewOptionsProps<TData> {
 	table: Table<TData>;
 	table_name: string;
 	step_id: DocumentId;
-	onDownloadCSV: () => void;
 	showStatusModal: boolean;
 	refreshData: () => void;
 	createDialog?: React.ComponentType<{
 		step_id: DocumentId;
 		refreshData: () => void;
 	}>;
-	hiddenExport?: boolean;
 	hiddenCreate?: boolean;
 }
 
