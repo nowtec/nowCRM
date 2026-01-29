@@ -6,11 +6,15 @@ export async function applyRule(
 	contactId: DocumentId,
 ): Promise<boolean> {
 	const base = env.STRAPI_URL;
-	const url = new URL(
-		`/api/contacts/?${rule.ready_condition}&[filters][documentId]=${contactId}`,
-		base,
-	);
-
+	let url: URL;
+	if (rule.ready_condition.startsWith("/api")) {
+		url = new URL(rule.ready_condition.replace("CONTACT_ID", contactId), base);
+	} else {
+		url = new URL(
+			`/api/contacts/?${rule.ready_condition}&[filters][documentId]=${contactId}`,
+			base,
+		);
+	}
 	const response = await fetch(url, { headers: AUTH_HEADER });
 	if (!response.ok) {
 		throw new Error(`Failed to apply rule: ${response.statusText}`);
