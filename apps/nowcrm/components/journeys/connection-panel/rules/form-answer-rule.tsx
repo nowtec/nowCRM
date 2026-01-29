@@ -100,6 +100,10 @@ export function FormAnswerRule({
 								formAnswer: value,
 								conditionOperator: "$eq",
 								conditionField: "[question]",
+								generate_separate_url: {
+									url_base: "survey-items",
+									contact_field: "[survey][contact][documentId]",
+								},
 							},
 							conditionOperator: "$eq",
 							conditionField: "[question]",
@@ -155,7 +159,7 @@ export function FormAnswerRule({
 						value={condition.additionalCondition?.split("/")[2]}
 						onValueChange={(value) => {
 							updateCondition(condition.id, {
-								additionalCondition: `[surveys][survey_items][answer]/${conditionValue}/${value}`,
+								additionalCondition: `[answer]/${conditionValue}/${value}`,
 							});
 						}}
 					>
@@ -173,7 +177,7 @@ export function FormAnswerRule({
 						value={condition.additionalCondition?.split("/")[2] ?? ""}
 						onChange={(e) => {
 							updateCondition(condition.id, {
-								additionalCondition: `[surveys][survey_items][answer]/${conditionValue}/${e.target.value}`,
+								additionalCondition: `[answer]/${conditionValue}/${e.target.value}`,
 							});
 						}}
 					/>
