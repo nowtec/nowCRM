@@ -428,6 +428,7 @@ const AdvancedFilters = forwardRef<
 														FILTER_CATEGORIES,
 														RELATION_META,
 													}}
+													canRemove={groups.length > 1}
 												/>
 												{/* Logic connector between groups */}
 												{index < groups.length - 1 && (

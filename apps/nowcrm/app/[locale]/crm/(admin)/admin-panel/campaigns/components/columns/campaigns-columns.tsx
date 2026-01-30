@@ -84,9 +84,6 @@ export const columns: ColumnDef<Campaign>[] = [
 	{
 		accessorKey: "campaign_category.name",
 		header: ({ column }) => <SortableHeader column={column} label="Category" />,
-		cell: ({ row }) => {
-			return row.original.campaign_category || "-";
-		},
 	},
 	{
 		id: "edit",

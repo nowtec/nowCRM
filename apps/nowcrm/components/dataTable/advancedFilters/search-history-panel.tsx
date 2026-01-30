@@ -180,7 +180,9 @@ export function SearchHistoryPanel({
 			const formattedValues = value.map((v) => {
 				if (typeof v === "object" && v !== null) {
 					// For relation objects, try to get name or id
-					return v.name || v.title || v.id || JSON.stringify(v);
+					return (
+						v.label || v.value || v.name || v.title || v.id || JSON.stringify(v)
+					);
 				}
 				return String(v);
 			});
@@ -191,7 +193,14 @@ export function SearchHistoryPanel({
 
 		// Handle objects (for relations)
 		if (typeof value === "object" && value !== null) {
-			return value.name || value.title || value.id || JSON.stringify(value);
+			return (
+				value.label ||
+				value.value ||
+				value.name ||
+				value.title ||
+				value.id ||
+				JSON.stringify(value)
+			);
 		}
 
 		// Handle dates
@@ -268,13 +277,13 @@ export function SearchHistoryPanel({
 				const fieldLabel = fieldConfig?.label || fieldName;
 
 				const operatorText: Record<string, string> = {
-					$eq: "=",
-					$eqi: "=",
-					$ne: "≠",
-					$lt: "<",
-					$lte: "≤",
-					$gt: ">",
-					$gte: "≥",
+					$eq: "equals",
+					$eqi: "equals",
+					$ne: "not equals",
+					$lt: "less than",
+					$lte: "less than or equal to",
+					$gt: "greater than",
+					$gte: "greater than or equal to",
 					$contains: "contains",
 					$containsi: "contains",
 					$notContainsi: "does not contain",

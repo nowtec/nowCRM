@@ -234,15 +234,8 @@ export default function ContactsTableClient({
 		[updateUrl, fetchData],
 	);
 
-	const handleFiltersApplied = React.useCallback(
-		({
-			strapiFilters,
-			query,
-		}: {
-			uiFilters: any;
-			strapiFilters: any;
-			query?: string;
-		}) => {
+	const handleFilterSubmit = React.useCallback(
+		(strapiFilters: any, query?: string) => {
 			console.log("[v0] Filters applied:", strapiFilters);
 
 			// Merge advanced filters with serverFilters instead of replacing
@@ -269,23 +262,20 @@ export default function ContactsTableClient({
 		[updateUrl, fetchData, searchTerm, combineWithSearch, serverFilters],
 	);
 
-	// Memoize with STABLE function reference - never recreate
-	const advancedFiltersComponent = React.useMemo(
-		() => {
-			const FilterComponent = (props: any) => (
+	const advancedFiltersComponent = React.useMemo(() => {
+		return function ListContactsAdvancedFilters() {
+			return (
 				<AdvancedFilters
-					{...props}
-					currentSearchTerm={searchTerm}
-					historyType="contacts"
-					onSubmitComplete={handleFiltersApplied}
+					session={session}
+					entityType="contacts"
+					currentSearch={searchTerm}
+					onSubmitComplete={handleFilterSubmit}
 					isLoading={isLoading}
 					key="advanced-filters-singleton" // Force single instance
 				/>
 			);
-			return FilterComponent;
-		},
-		[], // EMPTY - never recreate the component function
-	);
+		};
+	}, [session, searchTerm, handleFilterSubmit, isLoading]);
 
 	return (
 		<DataTable
@@ -317,7 +307,6 @@ export default function ContactsTableClient({
 			onSearchChange={handleSearchChange}
 			onSortingChange={handleSortingChange}
 			onPaginationChange={handlePaginationChange}
-			onFiltersApplied={handleFiltersApplied}
 			isLoading={isLoading}
 		/>
 	);
