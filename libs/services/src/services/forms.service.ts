@@ -130,6 +130,43 @@ class FormsService extends BaseService<FormEntity, Form_FormEntity> {
 			return handleError(error);
 		}
 	}
+
+	async exportResults(
+		formId: DocumentId,
+		token: string,
+	): Promise<StandardResponse<string>> {
+		try {
+			const url = new URL(
+				`strapi/api/${API_ROUTES_STRAPI.FORM_EXPORT_RESULTS}`,
+				envServices.API_GATEWAY,
+			);
+			url.searchParams.set("formId", String(formId));
+
+			const response = await fetch(url, {
+				method: "POST",
+				headers: this.getHeaders(false, token),
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				return {
+					data: null,
+					status: response.status,
+					success: false,
+					errorMessage: errorText || "Failed to export form results",
+				};
+			}
+
+			const csv = await response.text();
+			return {
+				data: csv,
+				status: response.status,
+				success: true,
+			};
+		} catch (error: any) {
+			return handleError(error);
+		}
+	}
 }
 
 export const formsService = new FormsService();

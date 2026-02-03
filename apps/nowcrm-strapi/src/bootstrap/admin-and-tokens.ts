@@ -216,6 +216,7 @@ export async function createCrmToken(strapi: Core.Strapi): Promise<void> {
 
       "api::form.form.duplicate",
       "api::form.form.formSubmit",
+      "api::form.form.exportResults",
       "api::form.form.find",
       "api::form.form.findOne",
       "api::form.form.create",
@@ -365,6 +366,7 @@ export async function createApiTokenTest(strapi: Core.Strapi): Promise<void> {
           "plugin::users-permissions.permissions.getPermissions",
           "api::form.form.duplicate",
           "api::form.form.formSubmit",
+          "api::form.form.exportResults",
           "api::form.form.find",
           "api::form.form.findOne",
           "api::form.form.create",

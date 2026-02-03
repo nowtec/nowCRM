@@ -51,7 +51,6 @@ import { updateSearchHistoryTemplate } from "@/lib/actions/search_history/update
 
 interface SearchHistoryPanelProps {
 	entityType: SearchHistoryType;
-	onApplySearch: (filters: any, search?: string) => void;
 	onLoadFilters?: (filterValues: any) => void;
 }
 
@@ -59,7 +58,6 @@ const PAGE_SIZE = 10;
 
 export function SearchHistoryPanel({
 	entityType,
-	onApplySearch,
 	onLoadFilters,
 }: SearchHistoryPanelProps) {
 	const [saved, setSaved] = React.useState<SearchHistoryTemplate[]>([]);
@@ -342,33 +340,10 @@ export function SearchHistoryPanel({
 		}
 
 		const uiFilters = stored?.ui;
-		const strapiFilters = stored?.strapiFilters || {};
-
-		// Parse query - it can be stored as JSON string or plain string
-		let query = "";
-		try {
-			if (typeof search.query === "string") {
-				// Try parsing as JSON first
-				const parsed = JSON.parse(search.query);
-				query = typeof parsed === "string" ? parsed : "";
-			} else if (search.query) {
-				query = String(search.query);
-			}
-		} catch {
-			// If parsing fails, use as plain string
-			query = typeof search.query === "string" ? search.query : "";
-		}
 
 		// First, load the UI form values into the form if callback is provided
 		if (onLoadFilters && uiFilters) {
 			onLoadFilters(uiFilters);
-			// Use a longer delay to ensure form is fully loaded and state is updated
-			setTimeout(() => {
-				onApplySearch(strapiFilters, query);
-			}, 200);
-		} else {
-			// If no form loading callback, apply filters immediately
-			onApplySearch(strapiFilters, query);
 		}
 	}
 

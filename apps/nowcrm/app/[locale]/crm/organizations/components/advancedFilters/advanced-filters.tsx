@@ -353,25 +353,12 @@ const AdvancedFilters = forwardRef<
 											// Update active filters count
 											setTimeout(() => {
 												setActiveFiltersCount(calculateActiveFilters());
-											}, 50);
-										}
-									}}
-									onApplySearch={(filters, search) => {
-										// When applying a saved search, update search term first if provided
-										// This updates the state
-										if (search !== undefined && onSearchChange) {
-											onSearchChange(search, filters);
-										}
-										// Then apply filters to parent - pass search along so fetchData can use it
-										// This triggers the fetch with both filters and search
-										if (onSubmitComplete) {
-											onSubmitComplete(filters, search);
-										}
-										// Keep dialog open so user can see the loaded filters
-									}}
-								/>
-							</div>
-						)}
+										}, 50);
+									}
+								}}
+							/>
+						</div>
+					)}
 
 						{/* Filters Content */}
 						<div className="flex-1 overflow-y-auto px-6 pb-6">

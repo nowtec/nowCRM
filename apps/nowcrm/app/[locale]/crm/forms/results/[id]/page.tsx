@@ -8,6 +8,7 @@ import {
 	columns,
 	renderSubComponent,
 } from "../components/columns/survey-columns";
+import ExportResultsButton from "../components/export-results-button";
 import MassActionsSurveys from "../components/massActions/mass-actions-surveys";
 
 export default async function Page(props: {
@@ -65,6 +66,7 @@ export default async function Page(props: {
 				session={session as Session}
 				sorting={{ sortBy, sortOrder }}
 				renderSubComponent={renderSubComponent}
+				createDialog={ExportResultsButton}
 				hiddenCreate={true}
 			/>
 		</div>
