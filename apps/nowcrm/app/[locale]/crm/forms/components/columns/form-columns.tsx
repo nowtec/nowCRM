@@ -1,10 +1,10 @@
 "use client";
 import type { FormEntity } from "@nowcrm/services";
 import type { ColumnDef } from "@tanstack/react-table";
+import { saveAs } from "file-saver";
 import { Copy, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { saveAs } from "file-saver";
 import toast from "react-hot-toast";
 import { SortableHeader } from "@/components/dataTable/sortable-header";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,9 @@ const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
 						onClick={async () => {
 							const res = await exportFormResults(form.documentId);
 							if (!res.success || !res.data) {
-								toast.error(res.errorMessage || "Failed to export form results.");
+								toast.error(
+									res.errorMessage || "Failed to export form results.",
+								);
 								return;
 							}
 							const filename = `form_${form.documentId}_results.csv`;

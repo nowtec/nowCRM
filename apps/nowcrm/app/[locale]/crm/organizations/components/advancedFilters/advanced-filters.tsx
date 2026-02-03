@@ -353,12 +353,12 @@ const AdvancedFilters = forwardRef<
 											// Update active filters count
 											setTimeout(() => {
 												setActiveFiltersCount(calculateActiveFilters());
-										}, 50);
-									}
-								}}
-							/>
-						</div>
-					)}
+											}, 50);
+										}
+									}}
+								/>
+							</div>
+						)}
 
 						{/* Filters Content */}
 						<div className="flex-1 overflow-y-auto px-6 pb-6">
