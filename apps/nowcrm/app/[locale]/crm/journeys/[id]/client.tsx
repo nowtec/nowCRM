@@ -479,18 +479,29 @@ export default function JourneyClient({
 						conditionField?: string,
 						conditionOperator?: string,
 					): string => {
-						return `filters[$and][${index}]${field}${conditionField ? `${conditionField}[${conditionOperator}]` : `[${operator}]`}=${value}`;
+						return `filters[$and][${index}]${field}${
+							conditionField
+								? `${conditionField}[${conditionOperator}]`
+								: `[${operator}]`
+						}=${value}`;
 					};
-					const mainField = condition.type;
+
+					const mainField = condition.additional_data?.generate_separate_url
+						?.url_base
+						? ""
+						: condition.type;
+
 					const conditionOperator = condition.conditionOperator;
 					const conditionField = condition.conditionField;
 					const mainOperator = condition.operator;
+
 					let mainValue: string;
+
 					if (typeof condition.value === "string") {
 						try {
 							const parsed = JSON.parse(condition.value);
-							mainValue = parsed?.value ?? condition.value; // fallback if no `.value` inside
-						} catch (_e) {
+							mainValue = parsed?.value ?? condition.value;
+						} catch {
 							mainValue = condition.value;
 						}
 					} else if (
@@ -499,66 +510,87 @@ export default function JourneyClient({
 					) {
 						mainValue = condition.value.value ?? condition.value;
 					} else {
-						mainValue = condition.value;
+						mainValue = String(condition.value);
 					}
 
-					// Extract form_id if available (for form-answer conditions)
 					const formId =
 						condition.additional_data?.form?.value ??
 						condition.additional_data?.form;
 
+					let index = 0;
+					const parts: string[] = [];
+
+					const pushCondition = (
+						field: string,
+						operator: string,
+						value: string,
+						condField?: string,
+						condOperator?: string,
+					) => {
+						parts.push(
+							formatSingleCondition(
+								field,
+								operator,
+								value,
+								index,
+								condField,
+								condOperator,
+							),
+						);
+						index++;
+					};
+
 					if (condition.additionalCondition) {
 						const [addField, addOperator, addValue] =
 							condition.additionalCondition.split("/");
-						const first = formatSingleCondition(
+
+						pushCondition(
 							mainField,
 							mainOperator,
 							mainValue,
-							0,
 							conditionField,
 							conditionOperator,
 						);
-						const second = formatSingleCondition(
-							addField,
-							addOperator,
-							addValue,
-							1,
-						);
 
-						// If form_id exists, add it as a third filter
+						pushCondition(addField, addOperator, addValue);
+
 						if (formId) {
-							const third = formatSingleCondition(
-								"[surveys][form_id]",
-								"$eq",
-								formId,
-								2,
-							);
-							return `${first}&${second}&${third}`;
+							pushCondition("[survey][form_id]", "$eq", formId);
 						}
-
-						return `${first}&${second}`;
-					}
-
-					// If form_id exists but no additionalCondition, add it as second filter
-					if (formId) {
-						const first = formatSingleCondition(
+					} else {
+						pushCondition(
 							mainField,
 							mainOperator,
 							mainValue,
-							0,
 							conditionField,
 							conditionOperator,
 						);
-						const second = formatSingleCondition(
-							"[surveys][form_id]",
-							"$eq",
-							formId,
-							1,
-						);
-						return `${first}&${second}`;
+
+						if (formId) {
+							pushCondition("[survey][form_id]", "$eq", formId);
+						}
 					}
 
-					return `filters${mainField}${conditionField ? `${conditionField}[${conditionOperator}]` : `[${mainOperator}]`}=${mainValue}`;
+					if (condition.additional_data?.generate_separate_url?.contact_field) {
+						const contactField =
+							condition.additional_data.generate_separate_url.contact_field;
+
+						pushCondition(contactField, "$eq", "CONTACT_ID");
+					}
+
+					const query = parts.length
+						? parts.join("&")
+						: `filters${mainField}${
+								conditionField
+									? `${conditionField}[${conditionOperator}]`
+									: `[${mainOperator}]`
+							}=${mainValue}`;
+
+					if (condition.additional_data?.generate_separate_url?.url_base) {
+						return `api/${condition.additional_data.generate_separate_url.url_base}?${query}`;
+					}
+
+					return query;
 				}
 
 				// Format conditions for the backend
