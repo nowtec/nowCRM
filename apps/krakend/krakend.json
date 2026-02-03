@@ -22,9 +22,7 @@
         "timeout": "30s",
         "cache_ttl": "600s",
         "excluded_paths": [
-          "/health-check/composer",
-          "/health-check/journeys",
-          "/health-check/dal"
+          "/composer/send-to-channels/callback/{provider}"
         ]
       }
     },

@@ -199,7 +199,6 @@
     "backend": [
       {
         "url_pattern": "/send-to-channels/get-callback/{provider}",
-        "input_query_strings": ["*"],
         "host": ["{{ env "KRAKEND_COMPOSER_URL" }}"],
         "encoding": "json",
         "extra_config": {
