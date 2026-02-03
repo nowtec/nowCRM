@@ -51,7 +51,6 @@ import { updateSearchHistoryTemplate } from "@/lib/actions/search_history/update
 
 interface SearchHistoryPanelProps {
 	entityType: SearchHistoryType;
-	onApplySearch: (filters: any, search?: string) => void;
 	onLoadFilters?: (filterValues: any) => void;
 }
 
@@ -59,7 +58,6 @@ const PAGE_SIZE = 10;
 
 export function SearchHistoryPanel({
 	entityType,
-	onApplySearch,
 	onLoadFilters,
 }: SearchHistoryPanelProps) {
 	const [saved, setSaved] = React.useState<SearchHistoryTemplate[]>([]);
@@ -180,7 +178,9 @@ export function SearchHistoryPanel({
 			const formattedValues = value.map((v) => {
 				if (typeof v === "object" && v !== null) {
 					// For relation objects, try to get name or id
-					return v.name || v.title || v.id || JSON.stringify(v);
+					return (
+						v.label || v.value || v.name || v.title || v.id || JSON.stringify(v)
+					);
 				}
 				return String(v);
 			});
@@ -191,7 +191,14 @@ export function SearchHistoryPanel({
 
 		// Handle objects (for relations)
 		if (typeof value === "object" && value !== null) {
-			return value.name || value.title || value.id || JSON.stringify(value);
+			return (
+				value.label ||
+				value.value ||
+				value.name ||
+				value.title ||
+				value.id ||
+				JSON.stringify(value)
+			);
 		}
 
 		// Handle dates
@@ -268,13 +275,13 @@ export function SearchHistoryPanel({
 				const fieldLabel = fieldConfig?.label || fieldName;
 
 				const operatorText: Record<string, string> = {
-					$eq: "=",
-					$eqi: "=",
-					$ne: "≠",
-					$lt: "<",
-					$lte: "≤",
-					$gt: ">",
-					$gte: "≥",
+					$eq: "equals",
+					$eqi: "equals",
+					$ne: "not equals",
+					$lt: "less than",
+					$lte: "less than or equal to",
+					$gt: "greater than",
+					$gte: "greater than or equal to",
 					$contains: "contains",
 					$containsi: "contains",
 					$notContainsi: "does not contain",
@@ -333,33 +340,10 @@ export function SearchHistoryPanel({
 		}
 
 		const uiFilters = stored?.ui;
-		const strapiFilters = stored?.strapiFilters || {};
-
-		// Parse query - it can be stored as JSON string or plain string
-		let query = "";
-		try {
-			if (typeof search.query === "string") {
-				// Try parsing as JSON first
-				const parsed = JSON.parse(search.query);
-				query = typeof parsed === "string" ? parsed : "";
-			} else if (search.query) {
-				query = String(search.query);
-			}
-		} catch {
-			// If parsing fails, use as plain string
-			query = typeof search.query === "string" ? search.query : "";
-		}
 
 		// First, load the UI form values into the form if callback is provided
 		if (onLoadFilters && uiFilters) {
 			onLoadFilters(uiFilters);
-			// Use a longer delay to ensure form is fully loaded and state is updated
-			setTimeout(() => {
-				onApplySearch(strapiFilters, query);
-			}, 200);
-		} else {
-			// If no form loading callback, apply filters immediately
-			onApplySearch(strapiFilters, query);
 		}
 	}
 

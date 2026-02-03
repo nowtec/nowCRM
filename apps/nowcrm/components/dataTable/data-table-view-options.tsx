@@ -22,11 +22,9 @@ import { cn } from "@/lib/utils";
 interface DataTableViewOptionsProps<TData> {
 	table: Table<TData>;
 	table_name: string;
-	onDownloadCSV: () => void;
 	showStatusModal: boolean;
 	createDialog?: React.ComponentType<any>;
 	createDialogProps?: Record<string, any>;
-	hiddenExport?: boolean;
 	hiddenCreate?: boolean;
 }
 

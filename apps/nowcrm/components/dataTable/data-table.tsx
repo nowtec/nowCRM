@@ -13,7 +13,6 @@ import {
 	useReactTable,
 	type VisibilityState,
 } from "@tanstack/react-table";
-import { saveAs } from "file-saver";
 import { debounce } from "lodash";
 import { Search, SearchIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -57,7 +56,6 @@ interface DataTableProps<TData, TValue> {
 	renderSubComponent?: (props: { row: RowType<TData> }) => React.ReactNode;
 
 	hiddenSearch?: boolean;
-	hiddenExport?: boolean;
 	hiddenCreate?: boolean;
 	showStatusModal?: boolean;
 	sorting?: { sortBy: string; sortOrder: "asc" | "desc" };
@@ -65,27 +63,6 @@ interface DataTableProps<TData, TValue> {
 		ids: string[],
 		opts?: { page: number; pageSize: number },
 	) => void;
-}
-
-function downloadCSV(data: any[], filename: string) {
-	const csvRows: string[] = [];
-	const headers = Object.keys(data[0]);
-	csvRows.push(headers.join(","));
-
-	for (const row of data) {
-		const values = headers.map((header) => {
-			let value = `${JSON.stringify(row[header])}`;
-			value = value.replace(/"/g, '""');
-			if (value.includes(",") || value.includes("\n")) {
-				value = `"${value}"`;
-			}
-			return value;
-		});
-		csvRows.push(values.join(","));
-	}
-
-	const csvData = new Blob([csvRows.join("\n")], { type: "text/csv" });
-	saveAs(csvData, filename);
 }
 
 function hasActiveFilters(params: URLSearchParams): boolean {
@@ -105,7 +82,6 @@ export default function DataTable<TData, TValue>({
 	createDialog,
 	renderSubComponent,
 	hiddenSearch,
-	hiddenExport,
 	hiddenCreate,
 	showStatusModal = false,
 	sorting,
@@ -202,13 +178,6 @@ export default function DataTable<TData, TValue>({
 	const [rowSelection, setRowSelection] = React.useState({});
 
 	const [expanded, setExpanded] = React.useState<ExpandedState>({});
-
-	const handleDownloadCSV = () => {
-		const filteredData = table
-			.getFilteredRowModel()
-			.rows.map((row) => row.original);
-		downloadCSV(filteredData, `${table_name}.csv`);
-	};
 
 	const filteredColumns = React.useMemo(() => {
 		return columns.filter((column) => {
@@ -336,9 +305,7 @@ export default function DataTable<TData, TValue>({
 					<DataTableViewOptions
 						table_name={table_name}
 						table={table}
-						onDownloadCSV={handleDownloadCSV}
 						createDialog={createDialog}
-						hiddenExport={hiddenExport}
 						hiddenCreate={hiddenCreate}
 						showStatusModal={showStatusModal}
 					/>

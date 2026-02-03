@@ -44,7 +44,6 @@ export default async function Page(props: {
 			session={session as Session}
 			createDialog={createListDialog}
 			hiddenSearch={true}
-			hiddenExport={true}
 		/>
 	);
 }

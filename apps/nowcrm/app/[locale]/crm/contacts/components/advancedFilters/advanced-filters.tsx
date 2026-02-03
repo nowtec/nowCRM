@@ -351,19 +351,6 @@ const AdvancedFilters = forwardRef<
 										}, 50);
 									}
 								}}
-								onApplySearch={(filters, search) => {
-									// When applying a saved search, update search term first if provided
-									// This updates the state
-									if (search !== undefined && onSearchChange) {
-										onSearchChange(search, filters);
-									}
-									// Then apply filters to parent - pass search along so fetchData can use it
-									// This triggers the fetch with both filters and search
-									if (onSubmitComplete) {
-										onSubmitComplete(filters, search);
-									}
-									// Keep dialog open so user can see the loaded filters
-								}}
 							/>
 						</div>
 					)}
@@ -419,6 +406,7 @@ const AdvancedFilters = forwardRef<
 													RELATION_META,
 													FIELD_CONFIGS,
 												}}
+												canRemove={groups.length > 1}
 											/>
 											{/* Logic connector between groups */}
 											{index < groups.length - 1 && (

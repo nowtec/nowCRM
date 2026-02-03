@@ -1,6 +1,7 @@
 "use client";
 import type { FormEntity } from "@nowcrm/services";
 import type { ColumnDef } from "@tanstack/react-table";
+import { saveAs } from "file-saver";
 import { Copy, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { activateForm } from "@/lib/actions/forms/activate-form";
+import { exportFormResults } from "@/lib/actions/forms/export-form-results";
 import { RouteConfig } from "@/lib/config/routes-config";
 import { formatDateTimeStrapi } from "@/lib/strapi-date";
 import { shareForm } from "./share-form";
@@ -41,6 +43,25 @@ const ViewActions: React.FC<{ form: FormEntity }> = ({ form }) => {
 					<Link href={`${RouteConfig.forms.results(form.documentId)}`}>
 						<DropdownMenuItem>View results</DropdownMenuItem>
 					</Link>
+					<DropdownMenuItem
+						onClick={async () => {
+							const res = await exportFormResults(form.documentId);
+							if (!res.success || !res.data) {
+								toast.error(
+									res.errorMessage || "Failed to export form results.",
+								);
+								return;
+							}
+							const filename = `form_${form.documentId}_results.csv`;
+							const blob = new Blob([res.data], {
+								type: "text/csv;charset=utf-8;",
+							});
+							saveAs(blob, filename);
+							toast.success("Form results exported");
+						}}
+					>
+						Export results
+					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						onClick={async () => {

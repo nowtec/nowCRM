@@ -162,6 +162,17 @@ async function ensureSubscription({
 	}
 }
 
+function escapeCsvValue(value: unknown): string {
+	if (value === null || value === undefined) return "";
+	const text = String(value);
+	return `"${text.replace(/"/g, '""')}"`;
+}
+
+function buildCsv(headers: string[], rows: string[][]): string {
+	const headerLine = headers.map(escapeCsvValue).join(",");
+	const body = rows.map((row) => row.map(escapeCsvValue).join(",")).join("\r\n");
+	return `${headerLine}\r\n${body}`;
+}
 
 export default factories.createCoreController('api::form.form', ({ strapi }) => ({
 async duplicate(ctx) {
@@ -240,6 +251,158 @@ async duplicate(ctx) {
           error: err?.message || String(err),
         },
         500
+      );
+    }
+  },
+
+  async exportResults(ctx) {
+    const formId =
+      ctx?.query?.formId ||
+      ctx?.query?.id ||
+      ctx?.params?.id;
+    const user = ctx.state.user;
+
+    if (!formId) {
+      console.warn('[exportResults] missing formId', {
+        query: ctx?.query,
+        params: ctx?.params,
+      });
+      return ctx.badRequest('Missing form ID');
+    }
+    if (!user) {
+      console.warn('[exportResults] unauthenticated request', {
+        formId,
+      });
+      return ctx.unauthorized('User not authenticated');
+    }
+
+    try {
+      const populate = {
+        form_items: {
+          fields: ['label', 'name', 'rank', 'hidden'] as const,
+        },
+      } as any;
+
+      let form: any = await strapi.documents('api::form.form').findOne({
+        documentId: String(formId),
+        populate,
+      });
+
+      if (!form) {
+        const numericId = Number(formId);
+        if (!Number.isNaN(numericId)) {
+          console.log('[exportResults] lookup by numeric id', { id: numericId });
+          form = await strapi.db.query('api::form.form').findOne({
+            where: { id: numericId },
+            populate,
+          });
+        }
+      }
+
+      if (!form) {
+        console.warn('[exportResults] form not found', {
+          formId,
+        });
+        return ctx.notFound('Form not found');
+      }
+
+      const formItems = Array.isArray(form.form_items) ? form.form_items : [];
+      const sortedItems = [...formItems].sort((a, b) => {
+        const ra = Number(a?.rank ?? 0);
+        const rb = Number(b?.rank ?? 0);
+        if (Number.isNaN(ra) && Number.isNaN(rb)) return 0;
+        if (Number.isNaN(ra)) return 1;
+        if (Number.isNaN(rb)) return -1;
+        return ra - rb;
+      });
+      const headers = [
+        'contact_id',
+        ...sortedItems.map((item) =>
+          (item?.label || item?.name || `field_${item?.id || ''}`).trim(),
+        ),
+      ];
+
+      const surveyFormId = String(form?.documentId || formId);
+      const where = { form_id: surveyFormId };
+      const total = await strapi.db.query('api::survey.survey').count({ where });
+      const pageSize = 100;
+      const surveys: any[] = [];
+
+      for (let offset = 0; offset < total; offset += pageSize) {
+        const batch = await strapi.db.query('api::survey.survey').findMany({
+          where,
+          orderBy: { id: 'asc' },
+          limit: pageSize,
+          offset,
+          populate: {
+            contact: {
+              fields: ['documentId', 'email', 'first_name', 'last_name'],
+            },
+            survey_items: {
+              populate: {
+                file: {
+                  fields: ['name', 'url'],
+                },
+              },
+            },
+          },
+        });
+        surveys.push(...(batch || []));
+      }
+
+      const rows: string[][] = [];
+      const toKey = (value: unknown) => String(value || '').trim().toLowerCase();
+
+      for (const survey of surveys || []) {
+        const items = Array.isArray(survey.survey_items)
+          ? survey.survey_items
+          : [];
+
+        const answerMap = new Map<string, string[]>();
+        for (const item of items) {
+          const key = toKey(item?.question);
+          if (!key) continue;
+          const value =
+            item?.answer ||
+            item?.file?.url ||
+            item?.file?.name ||
+            '';
+          if (!answerMap.has(key)) answerMap.set(key, []);
+          if (value !== '') answerMap.get(key)?.push(String(value));
+        }
+
+        const row = [
+          String(survey?.contact?.documentId || ''),
+          ...sortedItems.map((item) => {
+          const labelKey = toKey(item?.label);
+          const nameKey = toKey(item?.name);
+          const values =
+            (labelKey && answerMap.get(labelKey)) ||
+            (nameKey && answerMap.get(nameKey)) ||
+            [];
+          return values.length > 0 ? values.join('; ') : '';
+        }),
+        ];
+
+        rows.push(row);
+      }
+
+      const csv = buildCsv(headers, rows);
+      ctx.set('Content-Type', 'text/csv; charset=utf-8');
+      ctx.set(
+        'Content-Disposition',
+        `attachment; filename=\"form_${surveyFormId}_results.csv\"`,
+      );
+      ctx.body = csv;
+    } catch (err) {
+      console.error('Export form results error:', err);
+      return ctx.send(
+        {
+          success: false,
+          message: 'Export form results failed',
+          error: err?.message,
+        },
+        500,
       );
     }
   },

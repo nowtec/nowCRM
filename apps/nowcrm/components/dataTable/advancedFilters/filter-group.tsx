@@ -60,6 +60,7 @@ interface FilterGroupProps<
 	) => void;
 	onRemoveGroup: () => void;
 	config: FilterGroupConfig;
+	canRemove: boolean;
 }
 
 const FilterGroupComponent = <
@@ -73,6 +74,7 @@ const FilterGroupComponent = <
 	onUpdateGroup,
 	onRemoveGroup,
 	config,
+	canRemove,
 }: FilterGroupProps<T>) => {
 	const [selectedCategory, setSelectedCategory] = React.useState<string>("");
 	const [selectedField, setSelectedField] = React.useState<string>("");
@@ -195,7 +197,13 @@ const FilterGroupComponent = <
 							variant="ghost"
 							size="sm"
 							onClick={onRemoveGroup}
-							className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+							disabled={!canRemove}
+							aria-disabled={!canRemove}
+							className={`h-7 w-7 p-0 ${
+								canRemove
+									? "text-destructive hover:text-destructive"
+									: "text-muted-foreground"
+							}`}
 						>
 							<Trash2 className="h-3 w-3" />
 						</Button>

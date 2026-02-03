@@ -358,6 +358,16 @@ export function CompositionChannelContent({
 													</div>
 												))}
 											</div>
+											<Separator />
+											<div className="space-y-1">
+												<p className="font-semibold text-xs">Text Blocks</p>
+												<p className="text-muted-foreground text-xs">
+													Insert a text block by adding:
+												</p>
+												<div className="inline-flex rounded bg-muted px-2 py-1 font-mono text-xs">
+													#text_block
+												</div>
+											</div>
 										</div>
 									</PopoverContent>
 								</Popover>

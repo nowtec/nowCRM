@@ -107,6 +107,7 @@ export const API_ROUTES_STRAPI = {
 	FORM_ITEMS: "form-items",
 	FORM_SUBMIT: "forms/form-submit",
 	FORM_DUPLICATE: "forms/duplicate",
+	FORM_EXPORT_RESULTS: "forms/export-results",
 	//Surveys
 	SURVEYS: "surveys",
 	SURVEY_ITEMS: "survey-items",

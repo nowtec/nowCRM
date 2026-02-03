@@ -119,7 +119,7 @@
       }
     ]
   },
-   {
+  {
     "endpoint": "/strapi/api/upload/files/{fileName}",
     "method": "DELETE",
     "output_encoding": "json",
@@ -143,6 +143,36 @@
             "headers_to_pass": [
               "Authorization"
             ], 
+            "return_error_details": "backend_status"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "endpoint": "/strapi/api/forms/export-results",
+    "method": "POST",
+    "output_encoding": "string",
+    "input_headers": [
+      "Authorization",
+      "Content-Type",
+      "Content-Length"
+    ],
+    "input_query_strings": [
+      "*"
+    ],
+    "backend": [
+      {
+        "url_pattern": "/api/forms/export-results",
+        "host": [
+          "{{ env "KRAKEND_STRAPI_URL" }}"
+        ],
+        "encoding": "string",
+        "extra_config": {
+          "backend/http": {
+            "headers_to_pass": [
+              "Authorization"
+            ],
             "return_error_details": "backend_status"
           }
         }

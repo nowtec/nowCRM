@@ -1,8 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { CampaignCategory } from "@nowcrm/services";
-import { campaignCategoriesService } from "@nowcrm/services/server";
 import { ListPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMessages } from "next-intl";
@@ -10,6 +8,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { GrAddCircle } from "react-icons/gr";
 import * as z from "zod";
+import { AsyncSelect } from "@/components/autoComplete/async-select";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -29,13 +28,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createCampaign } from "@/lib/actions/campaigns/create-campaign";
 
@@ -44,27 +36,18 @@ export default function CreateCampaignDialog() {
 
 	const router = useRouter();
 	const [dialogOpen, setDialogOpen] = React.useState(false);
-	const [campaigns, setCampaigns] = React.useState<CampaignCategory[]>([]);
-
-	React.useEffect(() => {
-		const fetchCategories = async () => {
-			//todo CHANGE CATEGORIES TO ASYNC SELCT
-			const response = await campaignCategoriesService.find("", {
-				fields: ["id", "name"],
-			});
-			if (response.success && response.data) {
-				setCampaigns(response.data);
-			}
-		};
-		fetchCategories();
-	}, []);
 
 	const formSchema = z.object({
 		name: z.string().min(2, {
 			message: t.Admin.Campaign.form.nameSchema,
 		}),
 		description: z.string().optional(),
-		campaignId: z.string().optional(),
+		campaignId: z
+			.object({
+				value: z.string(),
+				label: z.string(),
+			})
+			.optional(),
 	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -72,7 +55,7 @@ export default function CreateCampaignDialog() {
 		defaultValues: {
 			name: "",
 			description: "",
-			campaignId: "",
+			campaignId: undefined,
 		},
 	});
 
@@ -81,7 +64,7 @@ export default function CreateCampaignDialog() {
 		const res = await createCampaign(
 			values.name,
 			values.description,
-			values.campaignId ? values.campaignId : undefined,
+			values.campaignId?.value,
 		);
 		if (!res.success) {
 			toast.error(`${t.Admin.Campaign.toast.createError}: ${res.errorMessage}`);
@@ -156,32 +139,19 @@ export default function CreateCampaignDialog() {
 							control={form.control}
 							name="campaignId"
 							render={({ field }) => (
-								<FormItem>
+								<FormItem className="flex flex-col">
 									<FormLabel>{t.Admin.Campaign.form.categoryLabel}</FormLabel>
-									<Select
-										onValueChange={field.onChange}
-										defaultValue={field.value}
-									>
-										<FormControl>
-											<SelectTrigger>
-												<SelectValue
-													placeholder={
-														t.Admin.Campaign.form.categoryPlaceholder
-													}
-												/>
-											</SelectTrigger>
-										</FormControl>
-										<SelectContent>
-											{campaigns.map((campaign) => (
-												<SelectItem
-													key={campaign.id}
-													value={campaign.id.toString()}
-												>
-													{campaign.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+									<FormControl>
+										<AsyncSelect
+											serviceName="campaignCategoriesService"
+											label={t.Admin.Campaign.form.categoryLabel}
+											onValueChange={(option) =>
+												field.onChange(option ?? undefined)
+											}
+											presetOption={field.value}
+											useFormClear={false}
+										/>
+									</FormControl>
 									<FormDescription>
 										{t.Admin.Campaign.form.categoryDescription}
 									</FormDescription>

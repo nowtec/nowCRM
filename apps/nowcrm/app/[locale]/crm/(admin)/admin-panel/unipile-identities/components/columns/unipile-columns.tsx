@@ -110,7 +110,7 @@ export const columns: ColumnDef<UnipileIdentity>[] = [
 		header: ({ column }) => <SortableHeader column={column} label="Name" />,
 	},
 	{
-		accessorKey: "status",
+		accessorKey: "unipile_status",
 		header: ({ column }) => <SortableHeader column={column} label="Status" />,
 	},
 	{
