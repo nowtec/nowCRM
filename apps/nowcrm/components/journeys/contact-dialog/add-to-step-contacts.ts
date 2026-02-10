@@ -111,7 +111,6 @@ export async function addToStepAction(
 		}
 
 		if (data.type === "organization" && checkDocumentId(data.contacts)) {
-
 			const all_contacts = await contactsService.find(session.jwt, {
 				filters: { organization: { documentId: { $eq: data.contacts } } },
 				populate: {
