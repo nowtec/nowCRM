@@ -477,7 +477,7 @@ export async function fetchContactsFromList(
 ): Promise<ServiceResponse<Contact[] | null>> {
 	try {
 		let allContacts: Contact[] = [];
-		const list_contacts = await contactsService.find(
+		const list_contacts = await contactsService.findAll(
 			env.COMPOSER_STRAPI_API_TOKEN,
 			{
 				filters: { lists: { documentId: { $eq: listId } } },
@@ -495,10 +495,11 @@ export async function fetchContactsFromList(
 					contact_documents: true,
 					industry: true,
 				},
+				sort: ["id:asc"],
 			},
 		);
 
-		if (!list_contacts.data || !list_contacts.meta) {
+		if (!list_contacts.data) {
 			return ServiceResponse.failure(
 				list_contacts.errorMessage || "List not found",
 				null,
@@ -506,35 +507,7 @@ export async function fetchContactsFromList(
 			);
 		}
 
-		allContacts = [...list_contacts.data];
-		let currentPage = list_contacts.meta.pagination.page;
-		const totalPages = list_contacts.meta.pagination.pageCount;
-
-		while (currentPage < totalPages) {
-			currentPage++;
-			const result = await contactsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
-				filters: { lists: { documentId: { $eq: listId } } },
-				populate: {
-					subscriptions: {
-						populate: {
-							channel: true,
-						},
-					},
-					organization: true,
-					department: true,
-					salutation: true,
-					keywords: true,
-					contact_interests: true,
-					contact_documents: true,
-					industry: true,
-				},
-				pagination: { page: currentPage },
-			});
-
-			if (result.data) {
-				allContacts = allContacts.concat(result.data as Contact[]);
-			}
-		}
+		allContacts = list_contacts.data;
 
 		return ServiceResponse.success(
 			"Contacts fetched successfully",
@@ -562,7 +535,7 @@ export async function fetchContactsFromOrganization(
 ): Promise<ServiceResponse<Contact[] | null>> {
 	try {
 		let allContacts: Contact[] = [];
-		const org_contacts = await contactsService.find(
+		const org_contacts = await contactsService.findAll(
 			env.COMPOSER_STRAPI_API_TOKEN,
 			{
 				filters: { organization: { documentId: { $eq: orgId } } },
@@ -580,10 +553,11 @@ export async function fetchContactsFromOrganization(
 					contact_documents: true,
 					industry: true,
 				},
+				sort: ["id:asc"],
 			},
 		);
 
-		if (!org_contacts.data || !org_contacts.meta) {
+		if (!org_contacts.data) {
 			return ServiceResponse.failure(
 				org_contacts.errorMessage || "Organization not found",
 				null,
@@ -591,35 +565,7 @@ export async function fetchContactsFromOrganization(
 			);
 		}
 
-		allContacts = [...org_contacts.data];
-		let currentPage = org_contacts.meta.pagination.page;
-		const totalPages = org_contacts.meta.pagination.pageCount;
-
-		while (currentPage < totalPages) {
-			currentPage++;
-			const result = await contactsService.find(env.COMPOSER_STRAPI_API_TOKEN, {
-				filters: { organization: { documentId: { $eq: orgId } } },
-				populate: {
-					subscriptions: {
-						populate: {
-							channel: true,
-						},
-					},
-					organization: true,
-					department: true,
-					salutation: true,
-					keywords: true,
-					contact_interests: true,
-					contact_documents: true,
-					industry: true,
-				},
-				pagination: { page: currentPage },
-			});
-
-			if (result.data) {
-				allContacts = allContacts.concat(result.data as Contact[]);
-			}
-		}
+		allContacts = org_contacts.data;
 
 		return ServiceResponse.success(
 			"Contacts fetched successfully",

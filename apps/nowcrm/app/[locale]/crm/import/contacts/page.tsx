@@ -306,7 +306,13 @@ export default function Page() {
 			});
 		}
 		setDeletedColumns(deletedColumns);
-		setColumnMapping(mappings);
+		setColumnMapping(
+			Object.fromEntries(
+				Object.entries(mappings).filter(
+					([csvHeader]) => !deletedColumns.includes(csvHeader),
+				),
+			),
+		);
 
 		if (deletedColumns.length > 0) {
 			setSelectedColumns((current) =>
