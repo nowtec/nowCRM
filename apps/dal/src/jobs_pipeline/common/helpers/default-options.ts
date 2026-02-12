@@ -1,9 +1,9 @@
 export const DEFAULT_JOB_OPTIONS = {
 	removeOnComplete: {
-		age:2 * 60 * 60,
+		age: 2 * 60 * 60,
 	},
 	removeOnFail: {
-		age:2 * 60 * 60,
+		age: 2 * 60 * 60,
 	},
 };
 
