@@ -1,5 +1,6 @@
 import { Queue } from "bullmq";
 import { env } from "@/common/utils/env-config";
+import { MASS_JOB_OPTIONS } from "@/jobs_pipeline/common/helpers/default-options";
 
 const redisConnection = {
 	host: env.DAL_REDIS_HOST,
@@ -8,4 +9,5 @@ const redisConnection = {
 
 export const csvOrganizationsQueue = new Queue("csvOrganizationsQueue", {
 	connection: redisConnection,
+	defaultJobOptions: MASS_JOB_OPTIONS,
 });
