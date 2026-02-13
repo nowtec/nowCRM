@@ -1,5 +1,6 @@
 import type { DocumentId } from "@nowcrm/services";
 import { journeyPassedStepService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 /**
@@ -11,9 +12,8 @@ export async function getContactCurrentStep(
 	journeyId: DocumentId,
 ): Promise<DocumentId | null> {
 	try {
-		const data = await journeyPassedStepService.find(
-			env.JOURNEYS_STRAPI_API_TOKEN,
-			{
+		const data = await adaptiveRateLimiter.execute(() =>
+			journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 				filters: {
 					contact: { documentId: { $eq: contactId } },
 					journey: { documentId: { $eq: journeyId } },
@@ -27,7 +27,7 @@ export async function getContactCurrentStep(
 						},
 					},
 				},
-			},
+			}),
 		);
 
 		if (!data.data || data.data.length === 0) {

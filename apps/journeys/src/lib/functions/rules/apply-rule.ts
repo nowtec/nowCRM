@@ -1,4 +1,5 @@
 import type { DocumentId, JourneyStepRule } from "@nowcrm/services";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { AUTH_HEADER, env } from "@/common/utils/env-config";
 
 export async function applyRule(
@@ -15,7 +16,9 @@ export async function applyRule(
 			base,
 		);
 	}
-	const response = await fetch(url, { headers: AUTH_HEADER });
+	const response = await adaptiveRateLimiter.execute(() =>
+		fetch(url, { headers: AUTH_HEADER }),
+	);
 	if (!response.ok) {
 		throw new Error(`Failed to apply rule: ${response.statusText}`);
 	}

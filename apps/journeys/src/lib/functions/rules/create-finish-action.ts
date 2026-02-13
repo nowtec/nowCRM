@@ -5,15 +5,17 @@ import {
 	type DocumentId,
 } from "@nowcrm/services";
 import { actionsService, actionTypeService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function createFinishActions(
 	contactId: DocumentId,
 	journeyId: DocumentId,
 ): Promise<void> {
-	const actionType = await actionTypeService.find(
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{ filters: { name: { $eq: actionTypes.JOURNEY_FINISHED } } },
+	const actionType = await adaptiveRateLimiter.execute(() =>
+		actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+			filters: { name: { $eq: actionTypes.JOURNEY_FINISHED } },
+		}),
 	);
 	if (!actionType.data || actionType.data.length === 0) {
 		throw new Error("Error in finding action type. Probably strapi is down");
@@ -35,12 +37,14 @@ export async function createFinishActions(
 		}),
 	};
 
-	const response = await actionsService.create(
-		{
-			...data,
-			publishedAt: new Date(),
-		},
-		env.JOURNEYS_STRAPI_API_TOKEN,
+	const response = await adaptiveRateLimiter.execute(() =>
+		actionsService.create(
+			{
+				...data,
+				publishedAt: new Date(),
+			},
+			env.JOURNEYS_STRAPI_API_TOKEN,
+		),
 	);
 
 	if (!response.data || !response.success) {
