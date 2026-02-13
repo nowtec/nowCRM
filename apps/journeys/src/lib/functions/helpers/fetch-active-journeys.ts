@@ -1,16 +1,19 @@
 import type { Journey } from "@nowcrm/services";
 import { journeysService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function fetchActiveJourneys(): Promise<Journey[]> {
-	const response = await journeysService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-		filters: {
-			active: { $eq: true },
-		},
-		populate: {
-			journey_steps: true,
-		},
-	});
+	const response = await adaptiveRateLimiter.execute(() =>
+		journeysService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+			filters: {
+				active: { $eq: true },
+			},
+			populate: {
+				journey_steps: true,
+			},
+		}),
+	);
 
 	if (!response.data || !response.success) {
 		throw new Error(

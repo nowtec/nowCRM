@@ -4,6 +4,7 @@ import {
 	journeyStepsService,
 	journeysService,
 } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
@@ -20,9 +21,8 @@ const JOURNEY_JOB_KEY_PREFIX = "journey-job:";
  */
 async function isJourneyActive(journeyId: DocumentId): Promise<boolean> {
 	try {
-		const response = await journeysService.findOne(
-			journeyId,
-			env.JOURNEYS_STRAPI_API_TOKEN,
+		const response = await adaptiveRateLimiter.execute(() =>
+			journeysService.findOne(journeyId, env.JOURNEYS_STRAPI_API_TOKEN),
 		);
 		return response.success && response.data?.active === true;
 	} catch (error) {
@@ -125,14 +125,15 @@ export async function processJourneyMessage({
 		const contactPromises = step.contacts.map(async (contact) => {
 			try {
 				// Check if contact has already processed this step
-				const check = await journeyStepsService.checkStepAction(
-					env.JOURNEYS_STRAPI_API_TOKEN,
-					step.documentId,
-					contact.documentId,
+				const check = await adaptiveRateLimiter.execute(() =>
+					journeyStepsService.checkStepAction(
+						env.JOURNEYS_STRAPI_API_TOKEN,
+						step.documentId,
+						contact.documentId,
+					),
 				);
-				const passedStep = await journeyPassedStepService.find(
-					env.JOURNEYS_STRAPI_API_TOKEN,
-					{
+				const passedStep = await adaptiveRateLimiter.execute(() =>
+					journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 						filters: {
 							journey_step: { documentId: { $eq: step.documentId } },
 							contact: { documentId: { $eq: contact.documentId } },
@@ -144,7 +145,7 @@ export async function processJourneyMessage({
 								documentId: { $eq: step.channel?.documentId || undefined },
 							},
 						},
-					},
+					}),
 				);
 				if (!check.success || !check.data) {
 					throw new Error(check.errorMessage);

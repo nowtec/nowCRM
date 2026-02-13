@@ -1,5 +1,6 @@
 import type { DocumentId } from "@nowcrm/services";
 import { contactsService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "../../logger";
 import { withLock } from "./helpers/distributed-lock";
@@ -14,12 +15,10 @@ async function updateContactJourneySteps(
 	journeyId: DocumentId,
 	nextStep: DocumentId | null,
 ): Promise<void> {
-	const contactCurrent = await contactsService.findOne(
-		contactId,
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{
+	const contactCurrent = await adaptiveRateLimiter.execute(() =>
+		contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
 			populate: "*",
-		},
+		}),
 	);
 	if (!contactCurrent.success || !contactCurrent.data) {
 		throw new Error(
@@ -45,13 +44,15 @@ async function updateContactJourneySteps(
 			.map((item) => item.documentId);
 	}
 
-	const response = await contactsService.update(
-		contactId,
-		{
-			journey_steps: { set: updatedStepIds },
-			journeys: { set: journeysUpdated },
-		},
-		env.JOURNEYS_STRAPI_API_TOKEN,
+	const response = await adaptiveRateLimiter.execute(() =>
+		contactsService.update(
+			contactId,
+			{
+				journey_steps: { set: updatedStepIds },
+				journeys: { set: journeysUpdated },
+			},
+			env.JOURNEYS_STRAPI_API_TOKEN,
+		),
 	);
 
 	if (!response.success) {

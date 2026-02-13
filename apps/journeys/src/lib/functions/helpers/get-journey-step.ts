@@ -4,15 +4,14 @@ import {
 	ServiceResponse,
 } from "@nowcrm/services";
 import { journeyStepsService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function getJourneyStep(
 	id: DocumentId,
 ): Promise<ServiceResponse<JourneyStep | null>> {
-	const data = await journeyStepsService.findOne(
-		id,
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{
+	const data = await adaptiveRateLimiter.execute(() =>
+		journeyStepsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
 			populate: {
 				contacts: true,
 				channel: true,
@@ -34,7 +33,7 @@ export async function getJourneyStep(
 				},
 				identity: true,
 			},
-		},
+		}),
 	);
 	if (!data.data)
 		return ServiceResponse.failure(

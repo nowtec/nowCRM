@@ -4,15 +4,14 @@ import {
 	ServiceResponse,
 } from "@nowcrm/services";
 import { contactsService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function getContact(
 	id: DocumentId,
 ): Promise<ServiceResponse<Contact | null>> {
-	const data = await contactsService.findOne(
-		id,
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{
+	const data = await adaptiveRateLimiter.execute(() =>
+		contactsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
 			populate: {
 				subscriptions: {
 					populate: {
@@ -20,7 +19,7 @@ export async function getContact(
 					},
 				},
 			},
-		},
+		}),
 	);
 	if (!data.data)
 		return ServiceResponse.failure(

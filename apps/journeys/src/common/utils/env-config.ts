@@ -45,6 +45,16 @@ export const env = cleanEnv(process.env, {
 	CIRCUIT_BREAKER_RESET_TIMEOUT_MS: num({ devDefault: testOnly(60000) }),
 	CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS: num({ devDefault: testOnly(3) }),
 	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080") }),
+	// Adaptive rate limiter configuration
+	JOURNEYS_RATE_LIMITER_MIN_CONCURRENCY: num({ default: 5 }),
+	JOURNEYS_RATE_LIMITER_MAX_CONCURRENCY: num({ default: 30 }),
+	JOURNEYS_RATE_LIMITER_INITIAL_CONCURRENCY: num({ default: 10 }),
+	JOURNEYS_RATE_LIMITER_RESPONSE_WINDOW: num({ default: 30 }),
+	JOURNEYS_RATE_LIMITER_RAMP_UP_THRESHOLD: num({ default: 300 }),
+	JOURNEYS_RATE_LIMITER_RAMP_DOWN_THRESHOLD: num({ default: 800 }),
+	JOURNEYS_RATE_LIMITER_CIRCUIT_BREAK_THRESHOLD: num({ default: 2000 }),
+	JOURNEYS_RATE_LIMITER_MAX_CONSECUTIVE_ERRORS: num({ default: 10 }),
+	JOURNEYS_RATE_LIMITER_MAX_CIRCUIT_RECOVERY: num({ default: 30000 }),
 });
 
 // Construct the Authorization header correctly

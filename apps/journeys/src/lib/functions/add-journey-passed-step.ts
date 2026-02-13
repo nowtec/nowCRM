@@ -4,6 +4,7 @@ import {
 	ServiceResponse,
 } from "@nowcrm/services";
 import { journeyPassedStepService } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function addJourneyPassedStep(
@@ -13,16 +14,18 @@ export async function addJourneyPassedStep(
 	compositionId: DocumentId,
 	channelId: DocumentId,
 ): Promise<ServiceResponse<JourneyPassedStep | null>> {
-	const data = await journeyPassedStepService.create(
-		{
-			contact: contactId,
-			journey_step: stepId,
-			journey: journeyId,
-			composition: compositionId,
-			channel: channelId,
-			publishedAt: new Date(),
-		},
-		env.JOURNEYS_STRAPI_API_TOKEN,
+	const data = await adaptiveRateLimiter.execute(() =>
+		journeyPassedStepService.create(
+			{
+				contact: contactId,
+				journey_step: stepId,
+				journey: journeyId,
+				composition: compositionId,
+				channel: channelId,
+				publishedAt: new Date(),
+			},
+			env.JOURNEYS_STRAPI_API_TOKEN,
+		),
 	);
 	if (!data.data)
 		return ServiceResponse.failure(

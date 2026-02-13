@@ -11,6 +11,7 @@ import {
 	actionsService,
 	actionTypeService,
 } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function createContactActionAndScore(
@@ -27,13 +28,15 @@ export async function createContactActionAndScore(
 			return ServiceResponse.success("no score items to create", []);
 		const scoreItemIds = [];
 		for (const item of scoreItems) {
-			const response = await actionScoreItemsService.create(
-				{
-					name: item.name,
-					value: item.value,
-					publishedAt: new Date(),
-				},
-				env.JOURNEYS_STRAPI_API_TOKEN,
+			const response = await adaptiveRateLimiter.execute(() =>
+				actionScoreItemsService.create(
+					{
+						name: item.name,
+						value: item.value,
+						publishedAt: new Date(),
+					},
+					env.JOURNEYS_STRAPI_API_TOKEN,
+				),
 			);
 			if (!response.success || !response.data) {
 				return ServiceResponse.failure(
@@ -59,9 +62,10 @@ export async function createContactActionAndScore(
 		);
 	}
 
-	const actionType = await actionTypeService.find(
-		env.JOURNEYS_STRAPI_API_TOKEN,
-		{ filters: { name: { $eq: actionTypes.STEP_REACHED } } },
+	const actionType = await adaptiveRateLimiter.execute(() =>
+		actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+			filters: { name: { $eq: actionTypes.STEP_REACHED } },
+		}),
 	);
 	if (!actionType.data || actionType.data.length === 0) {
 		return ServiceResponse.failure(
@@ -92,12 +96,14 @@ export async function createContactActionAndScore(
 		}),
 	};
 
-	const response = await actionsService.create(
-		{
-			...data,
-			publishedAt: new Date(),
-		},
-		env.JOURNEYS_STRAPI_API_TOKEN,
+	const response = await adaptiveRateLimiter.execute(() =>
+		actionsService.create(
+			{
+				...data,
+				publishedAt: new Date(),
+			},
+			env.JOURNEYS_STRAPI_API_TOKEN,
+		),
 	);
 	if (!response.data || !response.success) {
 		return ServiceResponse.failure(

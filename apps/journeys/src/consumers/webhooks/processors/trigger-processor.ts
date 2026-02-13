@@ -10,9 +10,9 @@ import {
 	settingsService,
 	subscriptionsService,
 } from "@nowcrm/services/server";
+import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
-import { strapiCircuitBreaker } from "../../../lib/functions/helpers/circuit-breaker";
 import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
 import { logger } from "../../../logger";
 
@@ -172,7 +172,7 @@ async function getContactIdFromWebhook(
 	}
 
 	if (entry.id) {
-		const idResult = await strapiCircuitBreaker.execute(() =>
+		const idResult = await adaptiveRateLimiter.execute(() =>
 			contactsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 				filters: { id: { $eq: entry.id } },
 				pagination: { page: 1, pageSize: 1 },
@@ -184,7 +184,7 @@ async function getContactIdFromWebhook(
 	}
 
 	if (entry.email) {
-		const emailResult = await strapiCircuitBreaker.execute(() =>
+		const emailResult = await adaptiveRateLimiter.execute(() =>
 			contactsService.findAll(env.JOURNEYS_STRAPI_API_TOKEN, {
 				filters: { email: { $eqi: entry.email } },
 				pagination: { page: 1, pageSize: 1 },
@@ -209,8 +209,8 @@ export async function processTriggerMessage(data: any) {
 		);
 	}
 
-	// Use circuit breaker and pagination limits for Strapi calls
-	const trigger_steps = await strapiCircuitBreaker.execute(() =>
+	// Use adaptive rate limiter and pagination limits for Strapi calls
+	const trigger_steps = await adaptiveRateLimiter.execute(() =>
 		journeyStepsService.findAll(
 			env.JOURNEYS_STRAPI_API_TOKEN,
 			enforcePaginationLimits({
@@ -248,19 +248,16 @@ export async function processTriggerMessage(data: any) {
 		return entityMatches && enabled && eventOk;
 	});
 	if (filtered_steps.length > 0) {
-		const email_channel = await channelsService.find(
-			env.JOURNEYS_STRAPI_API_TOKEN,
-			{
+		const email_channel = await adaptiveRateLimiter.execute(() =>
+			channelsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 				filters: {
 					name: { $eqi: "Email" },
 				},
-			},
+			}),
 		);
 		if (email_channel.data) {
-			const contact = await contactsService.findOne(
-				contactId,
-				env.JOURNEYS_STRAPI_API_TOKEN,
-				{
+			const contact = await adaptiveRateLimiter.execute(() =>
+				contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
 					populate: {
 						subscriptions: {
 							populate: {
@@ -268,14 +265,14 @@ export async function processTriggerMessage(data: any) {
 							},
 						},
 					},
-				},
+				}),
 			);
 			if (contact.data) {
 				const emailChannelId = email_channel.data[0].documentId;
 
 				// Check settings to see if subscription checking should be ignored
-				const settings = await settingsService.find(
-					env.JOURNEYS_STRAPI_API_TOKEN,
+				const settings = await adaptiveRateLimiter.execute(() =>
+					settingsService.find(env.JOURNEYS_STRAPI_API_TOKEN),
 				);
 				const shouldIgnoreSubscriptions =
 					settings.data?.[0]?.subscription === "ignore";
@@ -298,15 +295,17 @@ export async function processTriggerMessage(data: any) {
 
 				// Only create subscription if there's no subscription at all and settings don't ignore subscriptions
 				if (!existingSubscription && !shouldIgnoreSubscriptions) {
-					await subscriptionsService.create(
-						{
-							channel: emailChannelId,
-							active: true,
-							contact: contactId,
-							subscribed_at: new Date(),
-							publishedAt: new Date(),
-						},
-						env.JOURNEYS_STRAPI_API_TOKEN,
+					await adaptiveRateLimiter.execute(() =>
+						subscriptionsService.create(
+							{
+								channel: emailChannelId,
+								active: true,
+								contact: contactId,
+								subscribed_at: new Date(),
+								publishedAt: new Date(),
+							},
+							env.JOURNEYS_STRAPI_API_TOKEN,
+						),
 					);
 				}
 			}
