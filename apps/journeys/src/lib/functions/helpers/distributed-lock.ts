@@ -38,8 +38,32 @@ export async function releaseLock(
 }
 
 /**
+ * Extends the TTL of an existing lock
+ * @param lockKey - The key for the lock
+ * @param lockValue - The value that was set when acquiring the lock
+ * @param ttlSeconds - New TTL in seconds
+ */
+async function extendLock(
+	lockKey: string,
+	lockValue: string,
+	ttlSeconds: number,
+): Promise<boolean> {
+	// Lua script to atomically check and extend lock TTL
+	const luaScript = `
+		if redis.call("get", KEYS[1]) == ARGV[1] then
+			return redis.call("expire", KEYS[1], ARGV[2])
+		else
+			return 0
+		end
+	`;
+	const result = await redis.eval(luaScript, 2, lockKey, lockValue, ttlSeconds.toString());
+	return result === 1;
+}
+
+/**
  * Executes a function with a distributed lock
  * Automatically acquires and releases the lock
+ * Extends lock TTL periodically if operation takes longer than expected
  * @param lockKey - The key for the lock
  * @param fn - Function to execute while holding the lock
  * @param ttlSeconds - Lock TTL in seconds (default: 60)
@@ -61,9 +85,36 @@ export async function withLock<T>(
 		return null;
 	}
 
+	// Set up lock extension interval to prevent expiration during long operations
+	// Extend lock every 50% of TTL to ensure it doesn't expire
+	// Convert seconds to milliseconds: ttlSeconds * 1000, then take 50% = ttlSeconds * 500
+	const extensionIntervalMs = Math.max(1000, ttlSeconds * 500); // At least 1 second
+	let extensionIntervalId: NodeJS.Timeout | null = null;
+	
+	// Only set up extension if TTL is long enough to warrant it (> 10 seconds)
+	if (ttlSeconds > 10) {
+		extensionIntervalId = setInterval(async () => {
+			const extended = await extendLock(lockKey, lockValue, ttlSeconds);
+			if (!extended) {
+				logger.warn(
+					{ lockKey },
+					"Failed to extend lock TTL - lock may have been released",
+				);
+				// Clear interval if lock was released
+				if (extensionIntervalId) {
+					clearInterval(extensionIntervalId);
+					extensionIntervalId = null;
+				}
+			}
+		}, extensionIntervalMs);
+	}
+
 	try {
 		return await fn();
 	} finally {
+		if (extensionIntervalId) {
+			clearInterval(extensionIntervalId);
+		}
 		await releaseLock(lockKey, lockValue);
 	}
 }

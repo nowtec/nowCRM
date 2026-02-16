@@ -75,7 +75,7 @@ export async function createJob(jobData: {
 			jobData.journey_step,
 		);
 		if (!wasSet) {
-			logger.warn(
+			logger.debug(
 				{
 					jobKey,
 					contactId: jobData.contact,
@@ -102,7 +102,7 @@ export async function createJob(jobData: {
 			jobData.journey_step,
 		);
 		if (!wasSet) {
-			logger.warn(
+			logger.debug(
 				{
 					jobKey,
 					contactId: jobData.contact,

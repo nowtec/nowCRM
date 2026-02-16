@@ -76,8 +76,9 @@ export async function passContactToNextStep(
 	// Use distributed lock per journey to serialize updates and prevent transaction conflicts
 	// When multiple contacts are being processed in parallel and removing the same journey,
 	// this prevents Strapi transaction conflicts
+	// Increased TTL to account for rate limiting delays (rate limiter can slow down requests)
 	const lockKey = `contact-update:journey:${journeyId}`;
-	const lockTTL = 30; // 30 seconds should be enough for a contact update
+	const lockTTL = 120; // 120 seconds to account for rate limiting delays
 
 	const result = await withLock(
 		lockKey,
@@ -100,7 +101,10 @@ export async function passContactToNextStep(
 		let retryCount = 0;
 
 		while (retryCount < maxRetries) {
-			const retryDelay = (100 + Math.random() * 200) * (retryCount + 1); // Increasing delay with jitter
+			// Increased retry delay to account for rate limiting - operations take longer
+			// Base delay accounts for rate limiter queue time + operation time
+			const baseDelay = 2000; // 2 seconds base delay for rate limiter
+			const retryDelay = baseDelay + (500 + Math.random() * 500) * (retryCount + 1); // Increasing delay with jitter
 			logger.debug(
 				{
 					contactId,
