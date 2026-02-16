@@ -103,15 +103,14 @@ export async function processJob(
 		}
 
 
-		console.log('composition sent!')
-		// await adaptiveRateLimiter.execute(() =>
-		// 	composerService.sendComposition(compositionPayload, {
-		// 		stepId,
-		// 		contactId,
-		// 		token: env.JOURNEYS_STRAPI_API_TOKEN,
-		// 		compositionId: stepData.composition.documentId,
-		// 	}),
-		// );
+		await adaptiveRateLimiter.execute(() =>
+			composerService.sendComposition(compositionPayload, {
+				stepId,
+				contactId,
+				token: env.JOURNEYS_STRAPI_API_TOKEN,
+				compositionId: stepData.composition.documentId,
+			}),
+		);
 	} else {
 		logger.warn(
 			{
