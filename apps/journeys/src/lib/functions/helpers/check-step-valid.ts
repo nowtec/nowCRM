@@ -32,12 +32,14 @@ export async function checkStepValid(
 			hasComposition = !!stepData.composition;
 		} else {
 			// Fallback: fetch step if not provided (should be rare)
-			const step = await adaptiveRateLimiter.execute(() =>
-				journeyStepsService.findOne(stepId, env.JOURNEYS_STRAPI_API_TOKEN, {
-					populate: {
-						composition: true,
-					},
-				}),
+			const step = await adaptiveRateLimiter.execute(
+				() =>
+					journeyStepsService.findOne(stepId, env.JOURNEYS_STRAPI_API_TOKEN, {
+						populate: {
+							composition: true,
+						},
+					}),
+				"journeyStepsService.findOne (checkStepValid)",
 			);
 
 			if (!step.data) {

@@ -28,15 +28,17 @@ export async function createContactActionAndScore(
 			return ServiceResponse.success("no score items to create", []);
 		const scoreItemIds = [];
 		for (const item of scoreItems) {
-			const response = await adaptiveRateLimiter.execute(() =>
-				actionScoreItemsService.create(
-					{
-						name: item.name,
-						value: item.value,
-						publishedAt: new Date(),
-					},
-					env.JOURNEYS_STRAPI_API_TOKEN,
-				),
+			const response = await adaptiveRateLimiter.execute(
+				() =>
+					actionScoreItemsService.create(
+						{
+							name: item.name,
+							value: item.value,
+							publishedAt: new Date(),
+						},
+						env.JOURNEYS_STRAPI_API_TOKEN,
+					),
+				"actionScoreItemsService.create",
 			);
 			if (!response.success || !response.data) {
 				return ServiceResponse.failure(
@@ -62,10 +64,12 @@ export async function createContactActionAndScore(
 		);
 	}
 
-	const actionType = await adaptiveRateLimiter.execute(() =>
-		actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-			filters: { name: { $eq: actionTypes.STEP_REACHED } },
-		}),
+	const actionType = await adaptiveRateLimiter.execute(
+		() =>
+			actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+				filters: { name: { $eq: actionTypes.STEP_REACHED } },
+			}),
+		"actionTypeService.find (createContactActionAndScore)",
 	);
 	if (!actionType.data || actionType.data.length === 0) {
 		return ServiceResponse.failure(
@@ -96,14 +100,16 @@ export async function createContactActionAndScore(
 		}),
 	};
 
-	const response = await adaptiveRateLimiter.execute(() =>
-		actionsService.create(
-			{
-				...data,
-				publishedAt: new Date(),
-			},
-			env.JOURNEYS_STRAPI_API_TOKEN,
-		),
+	const response = await adaptiveRateLimiter.execute(
+		() =>
+			actionsService.create(
+				{
+					...data,
+					publishedAt: new Date(),
+				},
+				env.JOURNEYS_STRAPI_API_TOKEN,
+			),
+		"actionsService.create (createContactActionAndScore)",
 	);
 	if (!response.data || !response.success) {
 		return ServiceResponse.failure(

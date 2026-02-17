@@ -15,10 +15,12 @@ async function updateContactJourneySteps(
 	journeyId: DocumentId,
 	nextStep: DocumentId | null,
 ): Promise<void> {
-	const contactCurrent = await adaptiveRateLimiter.execute(() =>
-		contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
-			populate: "*",
-		}),
+	const contactCurrent = await adaptiveRateLimiter.execute(
+		() =>
+			contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
+				populate: "*",
+			}),
+		"contactsService.findOne (passContactToNextStep)",
 	);
 	if (!contactCurrent.success || !contactCurrent.data) {
 		throw new Error(
@@ -44,15 +46,17 @@ async function updateContactJourneySteps(
 			.map((item) => item.documentId);
 	}
 
-	const response = await adaptiveRateLimiter.execute(() =>
-		contactsService.update(
-			contactId,
-			{
-				journey_steps: { set: updatedStepIds },
-				journeys: { set: journeysUpdated },
-			},
-			env.JOURNEYS_STRAPI_API_TOKEN,
-		),
+	const response = await adaptiveRateLimiter.execute(
+		() =>
+			contactsService.update(
+				contactId,
+				{
+					journey_steps: { set: updatedStepIds },
+					journeys: { set: journeysUpdated },
+				},
+				env.JOURNEYS_STRAPI_API_TOKEN,
+			),
+		"contactsService.update (passContactToNextStep)",
 	);
 
 	if (!response.success) {

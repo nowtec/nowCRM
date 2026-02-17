@@ -4,15 +4,17 @@ import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 
 export async function fetchActiveJourneys(): Promise<Journey[]> {
-	const response = await adaptiveRateLimiter.execute(() =>
-		journeysService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-			filters: {
-				active: { $eq: true },
-			},
-			populate: {
-				journey_steps: true,
-			},
-		}),
+	const response = await adaptiveRateLimiter.execute(
+		() =>
+			journeysService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+				filters: {
+					active: { $eq: true },
+				},
+				populate: {
+					journey_steps: true,
+				},
+			}),
+		"journeysService.find (fetchActiveJourneys)",
 	);
 
 	if (!response.data || !response.success) {

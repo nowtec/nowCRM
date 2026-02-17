@@ -75,12 +75,14 @@ export async function processJob(
 	let check: boolean | null = true;
 	if (!ignoreSubscription) {
 		check = (
-			await adaptiveRateLimiter.execute(() =>
-				contactsService.checkSubscription(
-					env.JOURNEYS_STRAPI_API_TOKEN,
-					contactData,
-					stepData.channel.name,
-				),
+			await adaptiveRateLimiter.execute(
+				() =>
+					contactsService.checkSubscription(
+						env.JOURNEYS_STRAPI_API_TOKEN,
+						contactData,
+						stepData.channel.name,
+					),
+				"contactsService.checkSubscription",
 			)
 		).data;
 	}

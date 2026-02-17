@@ -10,30 +10,32 @@ import { env } from "@/common/utils/env-config";
 export async function getJourneyStep(
 	id: DocumentId,
 ): Promise<ServiceResponse<JourneyStep | null>> {
-	const data = await adaptiveRateLimiter.execute(() =>
-		journeyStepsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
-			populate: {
-				contacts: true,
-				channel: true,
-				journey: true,
-				composition: true,
-				connections_from_this_step: {
-					sort: [{ priority: "asc" }],
-					populate: {
-						journey_step_rules: {
-							populate: { journey_step_rule_scores: true },
-						},
-						target_step: {
-							populate: {
-								channel: true,
-								composition: true,
+	const data = await adaptiveRateLimiter.execute(
+		() =>
+			journeyStepsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
+				populate: {
+					contacts: true,
+					channel: true,
+					journey: true,
+					composition: true,
+					connections_from_this_step: {
+						sort: [{ priority: "asc" }],
+						populate: {
+							journey_step_rules: {
+								populate: { journey_step_rule_scores: true },
+							},
+							target_step: {
+								populate: {
+									channel: true,
+									composition: true,
+								},
 							},
 						},
 					},
+					identity: true,
 				},
-				identity: true,
-			},
-		}),
+			}),
+		"journeyStepsService.findOne",
 	);
 	
 	// Check if step was deleted (404)

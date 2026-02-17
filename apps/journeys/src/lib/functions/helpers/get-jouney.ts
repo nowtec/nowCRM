@@ -10,18 +10,20 @@ import { env } from "@/common/utils/env-config";
 export async function getJourney(
 	id: DocumentId,
 ): Promise<ServiceResponse<Journey | null>> {
-	const data = await adaptiveRateLimiter.execute(() =>
-		journeysService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
-			populate: {
-				journey_steps: {
-					populate: {
-						contacts: true,
-						channel: true,
-						composition: true,
+	const data = await adaptiveRateLimiter.execute(
+		() =>
+			journeysService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
+				populate: {
+					journey_steps: {
+						populate: {
+							contacts: true,
+							channel: true,
+							composition: true,
+						},
 					},
 				},
-			},
-		}),
+			}),
+		"journeysService.findOne",
 	);
 	
 	// Check if journey was deleted (404)

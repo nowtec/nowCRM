@@ -36,10 +36,12 @@ export async function checkStepPassed(
 			filters.channel = { documentId: { $eq: channelId } };
 		}
 
-		const data = await adaptiveRateLimiter.execute(() =>
-			journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-				filters,
-			}),
+		const data = await adaptiveRateLimiter.execute(
+			() =>
+				journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+					filters,
+				}),
+			"journeyPassedStepService.find (checkStepPassed)",
 		);
 
 		if (!data.success || !data.data) {

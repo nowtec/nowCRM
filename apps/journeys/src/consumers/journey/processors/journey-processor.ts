@@ -135,27 +135,31 @@ export async function processJourneyMessage({
 		const contactPromises = step.contacts.map(async (contact) => {
 			try {
 				// Check if contact has already processed this step
-				const check = await adaptiveRateLimiter.execute(() =>
-					journeyStepsService.checkStepAction(
-						env.JOURNEYS_STRAPI_API_TOKEN,
-						step.documentId,
-						contact.documentId,
-					),
+				const check = await adaptiveRateLimiter.execute(
+					() =>
+						journeyStepsService.checkStepAction(
+							env.JOURNEYS_STRAPI_API_TOKEN,
+							step.documentId,
+							contact.documentId,
+						),
+					"journeyStepsService.checkStepAction",
 				);
-				const passedStep = await adaptiveRateLimiter.execute(() =>
-					journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-						filters: {
-							journey_step: { documentId: { $eq: step.documentId } },
-							contact: { documentId: { $eq: contact.documentId } },
-							journey: { documentId: { $eq: journeyId } },
-							composition: {
-								documentId: { $eq: step.composition?.documentId || undefined },
+				const passedStep = await adaptiveRateLimiter.execute(
+					() =>
+						journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+							filters: {
+								journey_step: { documentId: { $eq: step.documentId } },
+								contact: { documentId: { $eq: contact.documentId } },
+								journey: { documentId: { $eq: journeyId } },
+								composition: {
+									documentId: { $eq: step.composition?.documentId || undefined },
+								},
+								channel: {
+									documentId: { $eq: step.channel?.documentId || undefined },
+								},
 							},
-							channel: {
-								documentId: { $eq: step.channel?.documentId || undefined },
-							},
-						},
-					}),
+						}),
+					"journeyPassedStepService.find (processJourneyMessage)",
 				);
 				if (!check.success || !check.data) {
 					throw new Error(check.errorMessage);

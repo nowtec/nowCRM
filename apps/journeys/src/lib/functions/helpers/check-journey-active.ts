@@ -40,8 +40,9 @@ export async function checkJourneyStatus(
 	journeyId: DocumentId,
 ): Promise<JourneyStatus> {
 	try {
-		const response = await adaptiveRateLimiter.execute(() =>
-			journeysService.findOne(journeyId, env.JOURNEYS_STRAPI_API_TOKEN),
+		const response = await adaptiveRateLimiter.execute(
+			() => journeysService.findOne(journeyId, env.JOURNEYS_STRAPI_API_TOKEN),
+			"journeysService.findOne (checkJourneyStatus)",
 		);
 		
 		// Check if journey was deleted (404)

@@ -10,16 +10,18 @@ import { env } from "@/common/utils/env-config";
 export async function getContact(
 	id: DocumentId,
 ): Promise<ServiceResponse<Contact | null>> {
-	const data = await adaptiveRateLimiter.execute(() =>
-		contactsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
-			populate: {
-				subscriptions: {
-					populate: {
-						channel: true,
+	const data = await adaptiveRateLimiter.execute(
+		() =>
+			contactsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
+				populate: {
+					subscriptions: {
+						populate: {
+							channel: true,
+						},
 					},
 				},
-			},
-		}),
+			}),
+		"contactsService.findOne (getContact)",
 	);
 	if (!data.data)
 		return ServiceResponse.failure(

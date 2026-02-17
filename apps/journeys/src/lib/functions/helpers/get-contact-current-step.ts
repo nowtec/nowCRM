@@ -12,22 +12,24 @@ export async function getContactCurrentStep(
 	journeyId: DocumentId,
 ): Promise<DocumentId | null> {
 	try {
-		const data = await adaptiveRateLimiter.execute(() =>
-			journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-				filters: {
-					contact: { documentId: { $eq: contactId } },
-					journey: { documentId: { $eq: journeyId } },
-				},
-				sort: ["createdAt:desc"],
-				pagination: { limit: 1 },
-				populate: {
-					journey_step: {
-						populate: {
-							journey: true,
+		const data = await adaptiveRateLimiter.execute(
+			() =>
+				journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+					filters: {
+						contact: { documentId: { $eq: contactId } },
+						journey: { documentId: { $eq: journeyId } },
+					},
+					sort: ["createdAt:desc"],
+					pagination: { limit: 1 },
+					populate: {
+						journey_step: {
+							populate: {
+								journey: true,
+							},
 						},
 					},
-				},
-			}),
+				}),
+			"journeyPassedStepService.find (getContactCurrentStep)",
 		);
 
 		if (!data.data || data.data.length === 0) {

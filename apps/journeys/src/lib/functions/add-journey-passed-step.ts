@@ -14,18 +14,20 @@ export async function addJourneyPassedStep(
 	compositionId: DocumentId,
 	channelId: DocumentId,
 ): Promise<ServiceResponse<JourneyPassedStep | null>> {
-	const data = await adaptiveRateLimiter.execute(() =>
-		journeyPassedStepService.create(
-			{
-				contact: contactId,
-				journey_step: stepId,
-				journey: journeyId,
-				composition: compositionId,
-				channel: channelId,
-				publishedAt: new Date(),
-			},
-			env.JOURNEYS_STRAPI_API_TOKEN,
-		),
+	const data = await adaptiveRateLimiter.execute(
+		() =>
+			journeyPassedStepService.create(
+				{
+					contact: contactId,
+					journey_step: stepId,
+					journey: journeyId,
+					composition: compositionId,
+					channel: channelId,
+					publishedAt: new Date(),
+				},
+				env.JOURNEYS_STRAPI_API_TOKEN,
+			),
+		"journeyPassedStepService.create",
 	);
 	if (!data.data)
 		return ServiceResponse.failure(
