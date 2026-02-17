@@ -79,9 +79,65 @@ function isTransactionError(error: Error): boolean {
 }
 
 /**
+ * Checks if error indicates a timeout or slow response
+ * These errors benefit from backoff to allow the system to recover
+ */
+function isTimeoutOrSlowResponseError(error: Error): boolean {
+	const errorMessage = error.message || "";
+	const errorName = error.constructor.name || "";
+	
+	const timeoutPatterns = [
+		"timeout",
+		"Request timeout",
+		"Operation timeout",
+		"TimeoutError",
+		"ETIMEDOUT",
+		"network timeout",
+	];
+	
+	const slowResponsePatterns = [
+		"ECONNRESET",
+		"EPIPE",
+		"socket hang up",
+		"fetch failed",
+	];
+	
+	return (
+		timeoutPatterns.some((pattern) =>
+			errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+		) ||
+		timeoutPatterns.some((pattern) =>
+			errorName.toLowerCase().includes(pattern.toLowerCase()),
+		) ||
+		slowResponsePatterns.some((pattern) =>
+			errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+		)
+	);
+}
+
+/**
+ * Checks if error should retry immediately (no backoff)
+ * Only for very specific errors that are likely to succeed on immediate retry
+ */
+function shouldRetryImmediately(error: Error): boolean {
+	const errorMessage = error.message || "";
+	
+	// Only retry immediately for very specific cases where immediate retry makes sense
+	// For example, temporary network hiccups that might resolve instantly
+	const immediateRetryPatterns: string[] = [
+		// Add patterns here if we identify errors that benefit from immediate retry
+		// Currently, we use backoff for all errors to be safe
+	];
+	
+	return immediateRetryPatterns.some((pattern) =>
+		errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+	);
+}
+
+/**
  * Publishes message to retry queue with exponential backoff
- * For DELAYED queue messages, retries immediately (delay = 0) since original delay already passed
- * Exception: Transaction errors always get a delay to allow transaction rollback
+ * For DELAYED queue messages, uses backoff to prevent immediate retry failures
+ * Exception: Very specific errors that benefit from immediate retry (currently none)
  */
 async function republishWithRetry(
 	isJourneyQueue: boolean,
@@ -90,26 +146,50 @@ async function republishWithRetry(
 	metadata: RetryMetadata,
 	error: Error,
 ): Promise<void> {
-	// Check if this is a transaction error - these need a delay even for DELAYED queue
 	const isTransactionErr = isTransactionError(error);
+	const isTimeoutOrSlow = isTimeoutOrSlowResponseError(error);
 	const isDelayedQueue = queueType === "DELAYED";
+	const shouldRetryNow = shouldRetryImmediately(error);
 
-	// Transaction errors always need a delay to allow transaction rollback
-	// For delayed messages, retry immediately unless it's a transaction error
-	// For other queues, use exponential backoff
-	const delay = isTransactionErr
-		? calculateBackoffDelay(
-				metadata.retryCount,
-				env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
-				env.RABBITMQ_RETRY_MAX_DELAY_MS,
-			)
-		: isDelayedQueue
-			? 0 // Retry immediately for delayed messages (non-transaction errors)
-			: calculateBackoffDelay(
-					metadata.retryCount,
-					env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
-					env.RABBITMQ_RETRY_MAX_DELAY_MS,
-				);
+	// Calculate delay based on error type and queue type
+	let delay: number;
+	
+	if (shouldRetryNow) {
+		// Very specific cases where immediate retry makes sense
+		delay = 0;
+	} else if (isTransactionErr) {
+		// Transaction errors always need a delay to allow transaction rollback
+		delay = calculateBackoffDelay(
+			metadata.retryCount,
+			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+			env.RABBITMQ_RETRY_MAX_DELAY_MS,
+		);
+	} else if (isDelayedQueue) {
+		// DELAYED queue errors now use backoff to prevent immediate retry failures
+		// This is especially important for timeout/slow response errors
+		// The original delay has already passed, so we add backoff for retries
+		delay = calculateBackoffDelay(
+			metadata.retryCount,
+			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+			env.RABBITMQ_RETRY_MAX_DELAY_MS,
+		);
+		
+		// For timeout/slow response errors, use slightly longer initial delay
+		// to give Strapi more time to recover
+		if (isTimeoutOrSlow && metadata.retryCount === 0) {
+			delay = Math.max(
+				delay,
+				env.RABBITMQ_RETRY_INITIAL_DELAY_MS * 2, // Double initial delay for timeout errors
+			);
+		}
+	} else {
+		// Other queues use standard exponential backoff
+		delay = calculateBackoffDelay(
+			metadata.retryCount,
+			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+			env.RABBITMQ_RETRY_MAX_DELAY_MS,
+		);
+	}
 
 	const retryHeaders = createRetryHeaders(metadata, error);
 	const retryData = {
@@ -123,20 +203,23 @@ async function republishWithRetry(
 			retryCount: metadata.retryCount + 1,
 			maxRetries: env.RABBITMQ_MAX_RETRIES,
 			delay,
+			delaySeconds: Math.floor(delay / 1000),
 			isDelayedQueue,
 			isTransactionError: isTransactionErr,
+			isTimeoutOrSlow,
 			error: error.message,
 		},
-		`Republishing message to ${queueType} queue with retry${isTransactionErr ? " (transaction error - delayed retry)" : ""}`,
+		`Republishing message to ${queueType} queue with retry${isTransactionErr ? " (transaction error - delayed retry)" : isTimeoutOrSlow ? " (timeout/slow response - backoff retry)" : isDelayedQueue ? " (delayed queue - backoff retry)" : ""}`,
 	);
 
 	if (isJourneyQueue) {
-		// For delayed queue, republish back to DELAYED queue with delay=0 for immediate retry
+		// For delayed queue, republish back to DELAYED queue with calculated delay
 		// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue
+		// Delay is now calculated with backoff to prevent immediate retry failures
 		await publishToJourneyQueue(
 			queueType as JourneyQueueType,
 			retryData,
-			delay, // delay=0 for DELAYED queue (immediate retry), exponential backoff for others
+			delay, // Calculated delay with backoff for DELAYED queue retries
 		);
 	} else {
 		await publishToTriggerQueue(
@@ -173,24 +256,16 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 		// Note: Transaction errors are retryable but need a delay (handled in republishWithRetry)
 	];
 
-	const errorName = error.constructor.name;
+	const errorName = error.constructor.name || "";
+	const errorMessage = error.message || "";
+	
 	if (nonRetryableErrorNames.includes(errorName)) {
 		return false;
 	}
-
-	const errorMessage = error.message || "";
-	const errorName = error.constructor.name || "";
 	
 	if (nonRetryableErrorMessages.some((msg) => errorMessage.includes(msg))) {
 		return false;
 	}
-
-	// Detect timeout errors specifically
-	const isTimeoutError =
-		errorName === "TimeoutError" ||
-		errorMessage.includes("timeout") ||
-		errorMessage.includes("Request timeout") ||
-		errorMessage.includes("Operation timeout");
 
 	// Retry on network errors, timeouts, and transient errors
 	// Timeout errors are retryable as they indicate the request didn't complete
