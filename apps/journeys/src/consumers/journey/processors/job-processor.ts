@@ -5,6 +5,7 @@ import {
 	createRuleCheckJob,
 } from "../../../jobs/create-job";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
+import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
@@ -21,6 +22,10 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		ignoreSubscription,
 	} = data;
 	logger.debug(`Processing job ${jobId}`);
+
+	// Extend job key TTL when processing starts to prevent expiration during long operations
+	// This ensures the job key doesn't expire if processing takes longer than expected
+	await extendJobKeyTTL(contactId, journeyId, stepId);
 
 	// Get step to verify it's a "channel" type
 	// JOB queue should only process "channel" type steps

@@ -73,6 +73,8 @@ export async function createJob(jobData: {
 			jobData.contact,
 			jobData.journey,
 			jobData.journey_step,
+			jobData.type,
+			jobData.timing,
 		);
 		if (!wasSet) {
 			logger.debug(
@@ -100,6 +102,8 @@ export async function createJob(jobData: {
 			jobData.contact,
 			jobData.journey,
 			jobData.journey_step,
+			jobData.type,
+			jobData.timing,
 		);
 		if (!wasSet) {
 			logger.debug(

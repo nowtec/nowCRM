@@ -55,6 +55,10 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_RATE_LIMITER_CIRCUIT_BREAK_THRESHOLD: num({ default: 2000 }),
 	JOURNEYS_RATE_LIMITER_MAX_CONSECUTIVE_ERRORS: num({ default: 10 }),
 	JOURNEYS_RATE_LIMITER_MAX_CIRCUIT_RECOVERY: num({ default: 30000 }),
+	// Job key TTL configuration (in seconds)
+	JOURNEYS_JOB_KEY_BASE_TTL_SECONDS: num({ default: 3600 }), // 1 hour base TTL
+	JOURNEYS_JOB_KEY_MAX_TTL_SECONDS: num({ default: 2592000 }), // 30 days max TTL
+	JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: num({ default: 300 }), // 5 minutes buffer for processing
 });
 
 // Construct the Authorization header correctly

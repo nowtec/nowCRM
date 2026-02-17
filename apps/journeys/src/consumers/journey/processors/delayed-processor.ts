@@ -5,6 +5,7 @@ import {
 	createRuleCheckJob,
 } from "../../../jobs/create-job";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
+import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
@@ -23,6 +24,10 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		ignoreSubscription,
 	} = data;
 	logger.debug(`Processing delayed job: ${jobId}`);
+
+	// Extend job key TTL when processing starts to prevent expiration during long operations
+	// This ensures the job key doesn't expire if processing takes longer than expected
+	await extendJobKeyTTL(contactId, journeyId, stepId);
 
 	if (!timing) {
 		const error = new Error(
