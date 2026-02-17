@@ -264,10 +264,14 @@ export async function processJourneyMessage({
 	);
 
 	// After processing, schedule next run if journey is still active
-	// Double-check journey is still active before scheduling
+	// Reuse journey data from earlier fetch - if getJourney succeeded, journey exists
+	// Only check active status if we need to verify it hasn't changed
+	// Since we already fetched the journey with active status, we can use that data
 	try {
-		const stillActive = await isJourneyActive(journeyId);
-		if (stillActive) {
+		// Use the journey data we already fetched to check active status
+		// This avoids a duplicate API call to check journey status
+		const isStillActive = res.responseObject?.active === true;
+		if (isStillActive) {
 			await scheduleNextRun(journeyId);
 		} else {
 			logger.debug(

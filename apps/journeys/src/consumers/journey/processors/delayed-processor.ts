@@ -85,12 +85,12 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		// what we do here is that if we know its just a wait node(or a schedule node)
 		//all we need is to wait time and pass contact to the next step
 		//So when time is on and this function is runned we start job for all connected steps or ending if for some reason this is the last one node
-		const step = await getJourneyStep(stepId);
-		if (!step.success) {
+		const stepResp = await getJourneyStep(stepId);
+		if (!stepResp.success) {
 			// Check if step was deleted (404)
 			if (
-				step.message?.includes("not found") ||
-				step.message?.includes("deleted")
+				stepResp.message?.includes("not found") ||
+				stepResp.message?.includes("deleted")
 			) {
 				logger.info(
 					{
@@ -105,20 +105,20 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 				await closeJob(jobId);
 				return; // Consumer will ack the message
 			}
-			throw new Error(step.message);
+			throw new Error(stepResp.message);
 		}
-		if (!step.responseObject) {
+		if (!stepResp.responseObject) {
 			throw new Error("Step response has no data");
 		}
+		const step = stepResp.responseObject;
 
 		// Mark wait step as passed (no composition/channel needed for wait steps)
 		await closeJob(jobId);
 
-		if (step.responseObject.connections_from_this_step?.length) {
+		if (step.connections_from_this_step?.length) {
 			// Process all connections from this step
 			let jobsCreated = 0;
-			for (const connection_step of step.responseObject
-				.connections_from_this_step) {
+			for (const connection_step of step.connections_from_this_step) {
 				try {
 					logger.debug(
 						{
@@ -186,8 +186,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 					stepId,
 					type,
 					jobsCreated,
-					totalConnections:
-						step.responseObject.connections_from_this_step.length,
+					totalConnections: step.connections_from_this_step.length,
 				},
 				"Wait step completed, created jobs for all connected steps",
 			);
@@ -219,6 +218,33 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 				)
 			: false;
 
+	// Fetch step data once - will be reused for processJob and final step processing
+	let stepResp = await getJourneyStep(stepId);
+	if (!stepResp.success) {
+		// Check if step was deleted (404)
+		if (
+			stepResp.message?.includes("not found") ||
+			stepResp.message?.includes("deleted")
+		) {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+					type,
+				},
+				"Journey step was deleted, closing delayed job",
+			);
+			await closeJob(jobId);
+			return; // Consumer will ack the message
+		}
+		throw new Error(stepResp.message);
+	}
+	if (!stepResp.responseObject) {
+		throw new Error("Step response has no data");
+	}
+
 	if (hasPassed) {
 		logger.info(
 			{
@@ -235,31 +261,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		// Close the job since it's already been processed
 		await closeJob(jobId);
 		// Still create next job/rule check if needed, as the step was already processed
-		const stepResp = await getJourneyStep(stepId);
-		if (!stepResp.success) {
-			// Check if step was deleted (404)
-			if (
-				stepResp.message?.includes("not found") ||
-				stepResp.message?.includes("deleted")
-			) {
-				logger.info(
-					{
-						jobId,
-						contactId,
-						stepId,
-						journeyId,
-						type,
-					},
-					"Journey step was deleted during idempotency check, job already closed",
-				);
-				return; // Consumer will ack the message
-			}
-			throw new Error(stepResp.message);
-		}
-		if (!stepResp.responseObject) {
-			throw new Error("Step response has no data");
-		}
-
+		// Reuse step data already fetched to avoid duplicate API call
 		if (stepResp.responseObject.connections_from_this_step?.length) {
 			await createRuleCheckJob(data);
 		} else {
@@ -270,7 +272,14 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		return;
 	}
 
-	await processJob(contactId, stepId, journeyId, ignoreSubscription);
+	// Pass step data to processJob to avoid duplicate API call
+	await processJob(
+		contactId,
+		stepId,
+		journeyId,
+		ignoreSubscription,
+		stepResp.responseObject,
+	);
 	const passedStep = await addJourneyPassedStep(
 		stepId,
 		contactId,
@@ -284,31 +293,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 	}
 	await closeJob(jobId);
 
-	const stepResp = await getJourneyStep(stepId);
-	if (!stepResp.success) {
-		// Check if step was deleted (404)
-		if (
-			stepResp.message?.includes("not found") ||
-			stepResp.message?.includes("deleted")
-		) {
-			logger.info(
-				{
-					jobId,
-					contactId,
-					stepId,
-					journeyId,
-					type,
-				},
-				"Journey step was deleted after processing, job already closed",
-			);
-			return; // Consumer will ack the message
-		}
-		throw new Error(stepResp.message);
-	}
-	if (!stepResp.responseObject) {
-		throw new Error("Step response has no data");
-	}
-
+	// Reuse step data already fetched to avoid duplicate API call
 	if (stepResp.responseObject.connections_from_this_step?.length) {
 		await createRuleCheckJob(data);
 	} else {

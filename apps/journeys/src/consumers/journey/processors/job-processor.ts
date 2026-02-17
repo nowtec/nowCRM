@@ -140,6 +140,7 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		// Close the job since it's already been processed
 		await closeJob(jobId);
 		// Still create next job/rule check if needed, as the step was already processed
+		// Reuse step data already fetched to avoid duplicate API call
 		const step = stepResp.responseObject;
 		if (step.connections_from_this_step?.length) {
 			await createRuleCheckJob(data);
@@ -151,7 +152,14 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		return;
 	}
 
-	await processJob(contactId, stepId, journeyId, ignoreSubscription);
+	// Pass step data to processJob to avoid duplicate API call
+	await processJob(
+		contactId,
+		stepId,
+		journeyId,
+		ignoreSubscription,
+		stepResp.responseObject,
+	);
 	const passedStep = await addJourneyPassedStep(
 		stepId,
 		contactId,
