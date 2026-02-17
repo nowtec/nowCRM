@@ -6,6 +6,7 @@ import {
 } from "../../../jobs/create-job";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
 import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
+import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passed";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
@@ -136,6 +137,50 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 			return;
 		}
 	}
+
+	// Idempotency check: Verify step hasn't already been passed
+	// This prevents duplicate processing if job is redelivered or processed multiple times
+	// Only check for channel steps (wait/scheduler-trigger/publish steps don't have composition/channel)
+	const hasPassed = compositionId && channel
+		? await checkStepPassed(
+				stepId,
+				contactId,
+				journeyId,
+				compositionId,
+				channel,
+			)
+		: false;
+
+	if (hasPassed) {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				type,
+				compositionId,
+				channel,
+			},
+			"Step has already been passed, skipping processing (idempotency check)",
+		);
+		// Close the job since it's already been processed
+		await closeJob(jobId);
+		// Still create next job/rule check if needed, as the step was already processed
+		const stepResp = await getJourneyStep(stepId);
+		if (!stepResp.success || !stepResp.responseObject)
+			throw new Error(stepResp.message);
+
+		if (stepResp.responseObject.connections_from_this_step?.length) {
+			await createRuleCheckJob(data);
+		} else {
+			const scoreResp = await createContactActionAndScore(stepId, contactId);
+			if (!scoreResp.success) throw new Error(scoreResp.message);
+			await createNextJob(data, null);
+		}
+		return;
+	}
+
 	await processJob(contactId, stepId, journeyId, ignoreSubscription);
 	const passedStep = await addJourneyPassedStep(
 		stepId,

@@ -6,6 +6,7 @@ import {
 } from "../../../jobs/create-job";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
 import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
+import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passed";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
@@ -49,6 +50,42 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		throw new Error(
 			`Job processor can only handle "channel" type steps, but received "${stepType}". This step should be processed via DELAYED queue.`,
 		);
+	}
+
+	// Idempotency check: Verify step hasn't already been passed
+	// This prevents duplicate processing if job is redelivered or processed multiple times
+	const hasPassed = await checkStepPassed(
+		stepId,
+		contactId,
+		journeyId,
+		compositionId,
+		channel,
+	);
+
+	if (hasPassed) {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				compositionId,
+				channel,
+			},
+			"Step has already been passed, skipping processing (idempotency check)",
+		);
+		// Close the job since it's already been processed
+		await closeJob(jobId);
+		// Still create next job/rule check if needed, as the step was already processed
+		const step = stepResp.responseObject;
+		if (step.connections_from_this_step?.length) {
+			await createRuleCheckJob(data);
+		} else {
+			const scoreResp = await createContactActionAndScore(stepId, contactId);
+			if (!scoreResp.success) throw new Error(scoreResp.message);
+			await createNextJob(data, null);
+		}
+		return;
 	}
 
 	await processJob(contactId, stepId, journeyId, ignoreSubscription);
