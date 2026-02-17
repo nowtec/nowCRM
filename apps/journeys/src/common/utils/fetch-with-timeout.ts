@@ -43,11 +43,13 @@ export async function fetchWithTimeout(
 				{
 					operation,
 					url: url.toString(),
+					method: options.method || "GET",
 					timeout,
 					timeoutMs: timeout,
 					error: error.message,
+					hasAbortSignal: !!options.signal,
 				},
-				`Operation "${operation}" timed out after ${timeout}ms: ${url}`,
+				`Operation "${operation}" timed out after ${timeout}ms - URL: ${url.toString()}`,
 			);
 			throw timeoutError;
 		}
@@ -63,34 +65,78 @@ export async function fetchWithTimeout(
  * @param fn - The async function to wrap
  * @param timeoutMs - Timeout in milliseconds (defaults to JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS)
  * @param operationName - Optional name/description of the operation for better logging (e.g., "journeysService.findOne", "processJob")
+ * @param queueWaitTime - Optional queue wait time to subtract from timeout (so timeout only applies to actual request)
  * @returns Promise that resolves to the function result or rejects with a timeout error
  */
 export async function withTimeout<T>(
 	fn: () => Promise<T>,
 	timeoutMs?: number,
 	operationName?: string,
+	queueWaitTime?: number,
 ): Promise<T> {
-	const timeout = timeoutMs ?? env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
+	const baseTimeout = timeoutMs ?? env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
 	const operation = operationName || "unknown operation";
+	
+	// Subtract queue wait time from timeout so timeout only applies to actual request execution
+	// This prevents false timeouts when requests are waiting in queue
+	const effectiveTimeout = queueWaitTime 
+		? Math.max(1000, baseTimeout - queueWaitTime) // Minimum 1 second timeout
+		: baseTimeout;
+	
+	const fnStartTime = Date.now();
+	let fnCompleted = false;
+	let timeoutFired = false;
 
-	return Promise.race([
-		fn(),
-		new Promise<T>((_, reject) => {
-			setTimeout(() => {
+	const fnPromise = fn().then(
+		(result) => {
+			fnCompleted = true;
+			if (timeoutFired) {
+				const actualDuration = Date.now() - fnStartTime;
+				logger.warn(
+					{
+						operation,
+						effectiveTimeout,
+						baseTimeout,
+						queueWaitTime,
+						actualDuration,
+					},
+					`Operation "${operation}" completed after timeout fired (race condition) - actual duration: ${actualDuration}ms`,
+				);
+			}
+			return result;
+		},
+		(error) => {
+			fnCompleted = true;
+			throw error;
+		},
+	);
+
+	const timeoutPromise = new Promise<T>((_, reject) => {
+		setTimeout(() => {
+			timeoutFired = true;
+			if (!fnCompleted) {
+				const actualDuration = Date.now() - fnStartTime;
 				const timeoutError = new Error(
-					`Operation "${operation}" timed out after ${timeout}ms`,
+					`Operation "${operation}" timed out after ${effectiveTimeout}ms (actual duration: ${actualDuration}ms)`,
 				);
 				timeoutError.name = "TimeoutError";
 				logger.warn(
 					{
 						operation,
-						timeout,
-						timeoutMs: timeout,
+						effectiveTimeout,
+						baseTimeout,
+						queueWaitTime,
+						actualDuration,
+						note: queueWaitTime 
+							? `Timeout applied only to request execution (${effectiveTimeout}ms), queue wait was ${queueWaitTime}ms`
+							: "Timeout includes full operation duration",
 					},
-					`Operation "${operation}" timed out after ${timeout}ms`,
+					`Operation "${operation}" timed out after ${effectiveTimeout}ms (actual duration: ${actualDuration}ms)`,
 				);
 				reject(timeoutError);
-			}, timeout);
-		}),
-	]);
+			}
+		}, effectiveTimeout);
+	});
+
+	return Promise.race([fnPromise, timeoutPromise]);
 }

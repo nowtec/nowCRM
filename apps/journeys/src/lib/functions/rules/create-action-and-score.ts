@@ -13,6 +13,7 @@ import {
 } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
+import { buildServiceUrl } from "../helpers/build-service-url";
 
 export async function createContactActionAndScore(
 	stepId: DocumentId,
@@ -28,6 +29,7 @@ export async function createContactActionAndScore(
 			return ServiceResponse.success("no score items to create", []);
 		const scoreItemIds = [];
 		for (const item of scoreItems) {
+			const url = buildServiceUrl("action-score-items");
 			const response = await adaptiveRateLimiter.execute(
 				() =>
 					actionScoreItemsService.create(
@@ -38,7 +40,7 @@ export async function createContactActionAndScore(
 						},
 						env.JOURNEYS_STRAPI_API_TOKEN,
 					),
-				"actionScoreItemsService.create",
+				`actionScoreItemsService.create - ${url}`,
 			);
 			if (!response.success || !response.data) {
 				return ServiceResponse.failure(
@@ -64,12 +66,15 @@ export async function createContactActionAndScore(
 		);
 	}
 
+	const actionTypeUrl = buildServiceUrl("action-types", undefined, {
+		filters: { name: { $eq: actionTypes.STEP_REACHED } },
+	});
 	const actionType = await adaptiveRateLimiter.execute(
 		() =>
 			actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 				filters: { name: { $eq: actionTypes.STEP_REACHED } },
 			}),
-		"actionTypeService.find (createContactActionAndScore)",
+		`actionTypeService.find (createContactActionAndScore) - ${actionTypeUrl}`,
 	);
 	if (!actionType.data || actionType.data.length === 0) {
 		return ServiceResponse.failure(
@@ -100,6 +105,7 @@ export async function createContactActionAndScore(
 		}),
 	};
 
+	const createActionUrl = buildServiceUrl("actions");
 	const response = await adaptiveRateLimiter.execute(
 		() =>
 			actionsService.create(
@@ -109,7 +115,7 @@ export async function createContactActionAndScore(
 				},
 				env.JOURNEYS_STRAPI_API_TOKEN,
 			),
-		"actionsService.create (createContactActionAndScore)",
+		`actionsService.create (createContactActionAndScore) - ${createActionUrl}`,
 	);
 	if (!response.data || !response.success) {
 		return ServiceResponse.failure(

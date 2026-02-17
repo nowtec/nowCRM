@@ -3,6 +3,7 @@ import { journeyPassedStepService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "../../../logger";
+import { buildServiceUrl } from "./build-service-url";
 
 /**
  * Checks if a contact has already passed a specific journey step
@@ -36,12 +37,13 @@ export async function checkStepPassed(
 			filters.channel = { documentId: { $eq: channelId } };
 		}
 
+		const url = buildServiceUrl("journey-passed-steps", undefined, { filters });
 		const data = await adaptiveRateLimiter.execute(
 			() =>
 				journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 					filters,
 				}),
-			"journeyPassedStepService.find (checkStepPassed)",
+			`journeyPassedStepService.find (checkStepPassed) - ${url}`,
 		);
 
 		if (!data.success || !data.data) {

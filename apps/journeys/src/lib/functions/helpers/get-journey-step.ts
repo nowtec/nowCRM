@@ -6,10 +6,12 @@ import {
 import { journeyStepsService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
+import { buildJourneyStepUrl } from "./build-service-url";
 
 export async function getJourneyStep(
 	id: DocumentId,
 ): Promise<ServiceResponse<JourneyStep | null>> {
+	const url = buildJourneyStepUrl(id);
 	const data = await adaptiveRateLimiter.execute(
 		() =>
 			journeyStepsService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
@@ -35,7 +37,7 @@ export async function getJourneyStep(
 					identity: true,
 				},
 			}),
-		"journeyStepsService.findOne",
+		`journeyStepsService.findOne - ${url}`,
 	);
 	
 	// Check if step was deleted (404)

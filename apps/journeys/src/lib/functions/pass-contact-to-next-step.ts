@@ -3,6 +3,7 @@ import { contactsService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "../../logger";
+import { buildContactUrl, buildServiceUrl } from "./helpers/build-service-url";
 import { withLock } from "./helpers/distributed-lock";
 
 /**
@@ -46,6 +47,7 @@ async function updateContactJourneySteps(
 			.map((item) => item.documentId);
 	}
 
+	const updateUrl = buildContactUrl(contactId);
 	const response = await adaptiveRateLimiter.execute(
 		() =>
 			contactsService.update(
@@ -56,7 +58,7 @@ async function updateContactJourneySteps(
 				},
 				env.JOURNEYS_STRAPI_API_TOKEN,
 			),
-		"contactsService.update (passContactToNextStep)",
+		`contactsService.update (passContactToNextStep) - ${updateUrl}`,
 	);
 
 	if (!response.success) {

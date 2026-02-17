@@ -3,6 +3,7 @@ import { journeysService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "../../../logger";
+import { buildJourneyUrl } from "./build-service-url";
 
 export type JourneyStatus = "active" | "paused" | "deleted" | "unknown";
 
@@ -40,11 +41,11 @@ export async function checkJourneyStatus(
 	journeyId: DocumentId,
 ): Promise<JourneyStatus> {
 	try {
+		const url = buildJourneyUrl(journeyId);
 		const response = await adaptiveRateLimiter.execute(
 			() => journeysService.findOne(journeyId, env.JOURNEYS_STRAPI_API_TOKEN),
-			"journeysService.findOne (checkJourneyStatus)",
+			`journeysService.findOne (checkJourneyStatus) - ${url}`,
 		);
-		
 		// Check if journey was deleted (404)
 		if (!response.success && isNotFoundError(response)) {
 			logger.info(

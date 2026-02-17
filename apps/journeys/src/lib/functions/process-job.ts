@@ -74,6 +74,8 @@ export async function processJob(
 
 	let check: boolean | null = true;
 	if (!ignoreSubscription) {
+		// checkSubscription doesn't make HTTP requests - it checks locally after fetching settings
+		// So we log it as a local operation
 		check = (
 			await adaptiveRateLimiter.execute(
 				() =>
@@ -82,7 +84,7 @@ export async function processJob(
 						contactData,
 						stepData.channel.name,
 					),
-				"contactsService.checkSubscription",
+				`contactsService.checkSubscription (local check for contact ${contactId}, channel: ${stepData.channel.name})`,
 			)
 		).data;
 	}

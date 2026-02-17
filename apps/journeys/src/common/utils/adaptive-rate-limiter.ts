@@ -221,22 +221,41 @@ class AdaptiveRateLimiter {
 		operationName?: string,
 	): Promise<T> {
 		const startTime = Date.now();
+		const queueEntryTime = Date.now();
 		let _isError = false;
 		let errorType: ErrorType | null = null;
 		const operation = operationName || "unknown operation";
 
 		try {
 			const result = await this.limit(async () => {
+				const queueWaitTime = Date.now() - queueEntryTime;
+				const requestStartTime = Date.now();
+				
+				// Log if queue wait time is significant (helps debug timeouts)
+				if (queueWaitTime > 1000) {
+					logger.debug(
+						{
+							operation,
+							queueWaitTime,
+							concurrency: this.concurrency,
+						},
+						`Operation "${operation}" waited ${queueWaitTime}ms in rate limiter queue`,
+					);
+				}
+				
 				try {
 					// Wrap function with timeout protection
+					// Pass queueWaitTime so timeout only applies to actual request execution, not queue wait
 					return await withTimeout(
 						fn,
 						env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
 						operation,
+						queueWaitTime,
 					);
 				} catch (error: any) {
 					_isError = true;
 					const duration = Date.now() - startTime;
+					const requestDuration = Date.now() - requestStartTime;
 
 					// Classify the error for better handling
 					const classified = classifyError(
@@ -253,11 +272,16 @@ class AdaptiveRateLimiter {
 								operation,
 								errorType: classified.type,
 								timeout: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
-								responseTime: duration,
+								totalDuration: duration,
+								queueWaitTime,
+								requestDuration,
 								error: error.message,
 								description: classified.description,
+								note: queueWaitTime > duration * 0.5 
+									? "Timeout likely due to rate limiter queue delay (request may not have reached Strapi)"
+									: "Timeout occurred during actual request",
 							},
-							`Operation "${operation}" timed out after ${duration}ms`,
+							`Operation "${operation}" timed out after ${duration}ms (queue: ${queueWaitTime}ms, request: ${requestDuration}ms)`,
 						);
 					} else if (classified.type === "slow_response") {
 						logger.info(

@@ -15,6 +15,10 @@ import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
 import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
 import { logger } from "../../../logger";
+import {
+	buildServiceUrl,
+	buildContactUrl,
+} from "../../../lib/functions/helpers/build-service-url";
 
 /** Allowed webhook event labels */
 type StringEvent =
@@ -172,13 +176,16 @@ async function getContactIdFromWebhook(
 	}
 
 	if (entry.id) {
+		const url = buildServiceUrl("contacts", undefined, {
+			filters: { id: { $eq: entry.id } },
+		});
 		const idResult = await adaptiveRateLimiter.execute(
 			() =>
 				contactsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
 					filters: { id: { $eq: entry.id } },
 					pagination: { page: 1, pageSize: 1 },
 				}),
-			"contactsService.find (getContactIdFromWebhook by id)",
+			`contactsService.find (getContactIdFromWebhook by id) - ${url}`,
 		);
 		if (idResult.data && idResult.data.length > 0) {
 			return idResult.data[0].documentId;
@@ -214,6 +221,9 @@ export async function processTriggerMessage(data: any) {
 	}
 
 	// Use adaptive rate limiter and pagination limits for Strapi calls
+	const triggerStepsUrl = buildServiceUrl("journey-steps", undefined, {
+		filters: { type: { $eq: "trigger" }, journey: { active: { $eq: true } } },
+	});
 	const trigger_steps = await adaptiveRateLimiter.execute(
 		() =>
 			journeyStepsService.findAll(
@@ -235,7 +245,7 @@ export async function processTriggerMessage(data: any) {
 					},
 				}),
 			),
-		"journeyStepsService.findAll (processTriggerMessage)",
+		`journeyStepsService.findAll (processTriggerMessage) - ${triggerStepsUrl}`,
 	);
 
 	if (!trigger_steps.data) {
@@ -264,6 +274,7 @@ export async function processTriggerMessage(data: any) {
 			"channelsService.find (processTriggerMessage)",
 		);
 		if (email_channel.data) {
+			const contactUrl = buildContactUrl(contactId);
 			const contact = await adaptiveRateLimiter.execute(
 				() =>
 					contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
@@ -275,15 +286,16 @@ export async function processTriggerMessage(data: any) {
 							},
 						},
 					}),
-				"contactsService.findOne (processTriggerMessage)",
+				`contactsService.findOne (processTriggerMessage) - ${contactUrl}`,
 			);
 			if (contact.data) {
 				const emailChannelId = email_channel.data[0].documentId;
 
 				// Check settings to see if subscription checking should be ignored
+				const settingsUrl = buildServiceUrl("settings");
 				const settings = await adaptiveRateLimiter.execute(
 					() => settingsService.find(env.JOURNEYS_STRAPI_API_TOKEN),
-					"settingsService.find (processTriggerMessage)",
+					`settingsService.find (processTriggerMessage) - ${settingsUrl}`,
 				);
 				const shouldIgnoreSubscriptions =
 					settings.data?.[0]?.subscription === "ignore";
@@ -306,6 +318,7 @@ export async function processTriggerMessage(data: any) {
 
 				// Only create subscription if there's no subscription at all and settings don't ignore subscriptions
 				if (!existingSubscription && !shouldIgnoreSubscriptions) {
+					const subscriptionUrl = buildServiceUrl("subscriptions");
 					await adaptiveRateLimiter.execute(
 						() =>
 							subscriptionsService.create(
@@ -318,7 +331,7 @@ export async function processTriggerMessage(data: any) {
 								},
 								env.JOURNEYS_STRAPI_API_TOKEN,
 							),
-						"subscriptionsService.create (processTriggerMessage)",
+						`subscriptionsService.create (processTriggerMessage) - ${subscriptionUrl}`,
 					);
 				}
 			}

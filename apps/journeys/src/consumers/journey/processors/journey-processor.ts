@@ -9,6 +9,7 @@ import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
 import { isJourneyActive } from "../../../lib/functions/helpers/check-journey-active";
+import { buildServiceUrl } from "../../../lib/functions/helpers/build-service-url";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
@@ -135,6 +136,14 @@ export async function processJourneyMessage({
 		const contactPromises = step.contacts.map(async (contact) => {
 			try {
 				// Check if contact has already processed this step
+				// checkStepAction internally calls actionsService.find, so we build URL for that
+				const checkStepActionUrl = buildServiceUrl("actions", undefined, {
+					filters: {
+						action_type: { name: { $eq: "STEP_REACHED" } },
+						external_id: { $eq: step.documentId },
+						contact: { documentId: { $eq: contact.documentId } },
+					},
+				});
 				const check = await adaptiveRateLimiter.execute(
 					() =>
 						journeyStepsService.checkStepAction(
@@ -142,8 +151,15 @@ export async function processJourneyMessage({
 							step.documentId,
 							contact.documentId,
 						),
-					"journeyStepsService.checkStepAction",
+					`journeyStepsService.checkStepAction (via actionsService.find) - ${checkStepActionUrl}`,
 				);
+				const passedStepUrl = buildServiceUrl("journey-passed-steps", undefined, {
+					filters: {
+						journey_step: { documentId: { $eq: step.documentId } },
+						contact: { documentId: { $eq: contact.documentId } },
+						journey: { documentId: { $eq: journeyId } },
+					},
+				});
 				const passedStep = await adaptiveRateLimiter.execute(
 					() =>
 						journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
@@ -159,7 +175,7 @@ export async function processJourneyMessage({
 								},
 							},
 						}),
-					"journeyPassedStepService.find (processJourneyMessage)",
+					`journeyPassedStepService.find (processJourneyMessage) - ${passedStepUrl}`,
 				);
 				if (!check.success || !check.data) {
 					throw new Error(check.errorMessage);
