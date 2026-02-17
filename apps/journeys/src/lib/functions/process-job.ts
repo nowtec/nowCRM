@@ -99,7 +99,12 @@ export async function processJob(
 		if (isEmailChannel && stepData.identity?.name) {
 			compositionPayload.from = stepData.identity.name;
 		}
-		console.log('composition sent')
+
+		logger.info({
+			step: stepId,
+			contact: contactId,
+			compositino :stepData.composition.documentId
+		},"Composition sent")
 		// await adaptiveRateLimiter.execute(() =>
 		// 	composerService.sendComposition(compositionPayload, {
 		// 		stepId,

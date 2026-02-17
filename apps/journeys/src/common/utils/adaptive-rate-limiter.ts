@@ -213,17 +213,27 @@ class AdaptiveRateLimiter {
 
 	/**
 	 * Execute a function with rate limiting, timeout protection, and response time tracking
+	 * @param fn - The async function to execute
+	 * @param operationName - Optional name/description of the operation for better logging (e.g., "journeysService.findOne", "processJob")
 	 */
-	async execute<T>(fn: () => Promise<T>): Promise<T> {
+	async execute<T>(
+		fn: () => Promise<T>,
+		operationName?: string,
+	): Promise<T> {
 		const startTime = Date.now();
 		let _isError = false;
 		let errorType: ErrorType | null = null;
+		const operation = operationName || "unknown operation";
 
 		try {
 			const result = await this.limit(async () => {
 				try {
 					// Wrap function with timeout protection
-					return await withTimeout(fn, env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS);
+					return await withTimeout(
+						fn,
+						env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+						operation,
+					);
 				} catch (error: any) {
 					_isError = true;
 					const duration = Date.now() - startTime;
@@ -240,13 +250,14 @@ class AdaptiveRateLimiter {
 					if (classified.type === "timeout") {
 						logger.warn(
 							{
+								operation,
 								errorType: classified.type,
 								timeout: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
 								responseTime: duration,
 								error: error.message,
 								description: classified.description,
 							},
-							"Request timed out",
+							`Operation "${operation}" timed out after ${duration}ms`,
 						);
 					} else if (classified.type === "slow_response") {
 						logger.info(
