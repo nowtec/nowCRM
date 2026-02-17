@@ -79,8 +79,11 @@ export async function withTimeout<T>(
 
 	// Subtract queue wait time from timeout so timeout only applies to actual request execution
 	// This prevents false timeouts when requests are waiting in queue
+	// Use 10% of baseTimeout as minimum to accommodate Strapi's normal response times (1-8 seconds)
+	// This ensures we don't timeout successful requests that take longer than 1 second
+	const minTimeout = Math.max(10000, Math.floor(baseTimeout * 0.1)); // At least 10 seconds or 10% of baseTimeout
 	const effectiveTimeout = queueWaitTime
-		? Math.max(1000, baseTimeout - queueWaitTime) // Minimum 1 second timeout
+		? Math.max(minTimeout, baseTimeout - queueWaitTime)
 		: baseTimeout;
 
 	const fnStartTime = Date.now();

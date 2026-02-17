@@ -22,6 +22,7 @@ export default async function RootLayout(props: {
 
 	// Ensure that the incoming `locale` is valid
 	if (!routing.locales.includes(locale as any)) {
+		console.log('pepa')
 		notFound();
 	}
 

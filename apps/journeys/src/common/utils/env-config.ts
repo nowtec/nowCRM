@@ -61,10 +61,14 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: num({ default: 300 }), // 5 minutes buffer for processing
 	// Strapi request timeout configuration (in milliseconds)
 	JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: num({ default: 120000 }), // 120 seconds (2 minutes) default timeout - allows for multiple API calls and slow responses
+	// Delayed consumer timeout configuration (in milliseconds)
+	JOURNEYS_DELAYED_CONSUMER_TIMEOUT_MS: num({ default: 180000 }), // 180 seconds (3 minutes) - allows for multiple API calls, rate limiter queue waits, and slow Strapi responses
 	// Subscription error retry configuration (in milliseconds)
 	JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS: num({ default: 3600000 }), // 24 hours default delay for subscription errors
 	// Paused journey retry configuration (in milliseconds)
 	JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS: num({ default: 3600000 }), // 1 hour default delay to check if paused journey was reactivated
+	// Timeout for creating next job from wait step (in milliseconds)
+	JOURNEYS_CREATE_NEXT_JOB_TIMEOUT_MS: num({ default: 60000 }), // 60 seconds - allows for rate limiter queue wait, Strapi API calls, and Redis operations
 });
 
 // Construct the Authorization header correctly

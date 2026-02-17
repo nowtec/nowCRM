@@ -75,6 +75,23 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 	await extendJobKeyTTL(contactId, journeyId, stepId);
 
 	if (!timing) {
+		// Channel-type jobs should be in JOB queue, not DELAYED queue
+		// If they end up here (e.g., from retries), republish to correct queue
+		if (type === "channel") {
+			logger.warn(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+					type,
+				},
+				"Channel-type job found in DELAYED queue without timing - republishing to JOB queue",
+			);
+			await publishToJourneyQueue("JOB", data);
+			return; // Consumer will ack the message after successful republish
+		}
+		// For non-channel types, timing is required
 		const error = new Error(
 			`Job ${jobId} missing timing - delayed messages must have timing`,
 		);
@@ -131,6 +148,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 						"Creating next job from wait step",
 					);
 					// Add timeout to prevent hanging forever
+					// Use configurable timeout that accounts for rate limiter queue wait, Strapi API calls, and Redis operations
 					const createJobPromise = createNextJob(
 						{
 							contactId,
@@ -147,8 +165,8 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 										`Timeout creating next job for step ${connection_step.target_step.documentId}`,
 									),
 								),
-							15000,
-						); // 15 second timeout
+							env.JOURNEYS_CREATE_NEXT_JOB_TIMEOUT_MS,
+						);
 					});
 					await Promise.race([createJobPromise, timeoutPromise]);
 					jobsCreated++;
