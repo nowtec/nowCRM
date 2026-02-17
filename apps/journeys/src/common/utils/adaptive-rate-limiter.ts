@@ -1,6 +1,7 @@
 import pLimit from "p-limit";
 import { logger } from "../../logger";
 import { env } from "./env-config";
+import { classifyError, type ErrorType } from "./error-classification";
 import { withTimeout } from "./fetch-with-timeout";
 
 /**
@@ -216,6 +217,7 @@ class AdaptiveRateLimiter {
 	async execute<T>(fn: () => Promise<T>): Promise<T> {
 		const startTime = Date.now();
 		let _isError = false;
+		let errorType: ErrorType | null = null;
 
 		try {
 			const result = await this.limit(async () => {
@@ -224,36 +226,57 @@ class AdaptiveRateLimiter {
 					return await withTimeout(fn, env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS);
 				} catch (error: any) {
 					_isError = true;
-					const msg = error?.message || "";
-					const errorName = error?.name || "";
+					const duration = Date.now() - startTime;
 					
-					// Detect timeout errors
-					const isTimeoutError =
-						errorName === "TimeoutError" ||
-						msg.includes("timeout") ||
-						msg.includes("Request timeout");
-					
-					// Detect HTTP/network errors
-					const isHttpError =
-						msg.includes("ECONNRESET") ||
-						msg.includes("EPIPE") ||
-						msg.includes("ETIMEDOUT") ||
-						msg.includes("socket hang up") ||
-						msg.includes("network timeout") ||
-						msg.toLowerCase().includes("fetch failed");
+					// Classify the error for better handling
+					const classified = classifyError(
+						error,
+						duration,
+						env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+					);
+					errorType = classified.type;
 
-					// Log timeout errors specifically
-					if (isTimeoutError) {
+					// Log errors with classification
+					if (classified.type === "timeout") {
 						logger.warn(
 							{
+								errorType: classified.type,
 								timeout: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
-								error: msg,
+								responseTime: duration,
+								error: error.message,
+								description: classified.description,
 							},
 							"Request timed out",
 						);
+					} else if (classified.type === "slow_response") {
+						logger.info(
+							{
+								errorType: classified.type,
+								responseTime: duration,
+								timeout: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+								description: classified.description,
+							},
+							"Slow response detected (but successful)",
+						);
+					} else {
+						logger.warn(
+							{
+								errorType: classified.type,
+								responseTime: duration,
+								error: error.message,
+								description: classified.description,
+								isRetryable: classified.isRetryable,
+							},
+							`Error occurred: ${classified.description}`,
+						);
 					}
 
-					if (isHttpError || isTimeoutError) {
+					// Track HTTP/network/timeout errors for circuit breaker
+					if (
+						classified.type === "timeout" ||
+						classified.type === "network_error" ||
+						classified.type === "http_error"
+					) {
 						this.onHttpError();
 					}
 
@@ -262,6 +285,25 @@ class AdaptiveRateLimiter {
 			});
 
 			const duration = Date.now() - startTime;
+			
+			// Check if response was slow but successful
+			if (duration > this.RAMP_DOWN_THRESHOLD) {
+				const classified = classifyError(
+					new Error("Slow response"),
+					duration,
+					env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+				);
+				if (classified.type === "slow_response") {
+					logger.debug(
+						{
+							responseTime: duration,
+							threshold: this.RAMP_DOWN_THRESHOLD,
+						},
+						"Slow but successful response",
+					);
+				}
+			}
+			
 			this.recordResponseTime(duration, false);
 			this.onHttpSuccess();
 
@@ -269,6 +311,22 @@ class AdaptiveRateLimiter {
 		} catch (error) {
 			const duration = Date.now() - startTime;
 			this.recordResponseTime(duration, true);
+			
+			// Re-classify error if not already classified
+			if (!errorType) {
+				const classified = classifyError(
+					error as Error,
+					duration,
+					env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+				);
+				errorType = classified.type;
+			}
+			
+			// Attach error type to error for downstream handling
+			if (error instanceof Error) {
+				(error as any).errorType = errorType;
+			}
+			
 			throw error;
 		}
 	}
