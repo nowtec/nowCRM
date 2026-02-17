@@ -216,10 +216,7 @@ class AdaptiveRateLimiter {
 	 * @param fn - The async function to execute
 	 * @param operationName - Optional name/description of the operation for better logging (e.g., "journeysService.findOne", "processJob")
 	 */
-	async execute<T>(
-		fn: () => Promise<T>,
-		operationName?: string,
-	): Promise<T> {
+	async execute<T>(fn: () => Promise<T>, operationName?: string): Promise<T> {
 		const startTime = Date.now();
 		const queueEntryTime = Date.now();
 		let _isError = false;
@@ -230,7 +227,7 @@ class AdaptiveRateLimiter {
 			const result = await this.limit(async () => {
 				const queueWaitTime = Date.now() - queueEntryTime;
 				const requestStartTime = Date.now();
-				
+
 				// Log if queue wait time is significant (helps debug timeouts)
 				if (queueWaitTime > 1000) {
 					logger.debug(
@@ -242,7 +239,7 @@ class AdaptiveRateLimiter {
 						`Operation "${operation}" waited ${queueWaitTime}ms in rate limiter queue`,
 					);
 				}
-				
+
 				try {
 					// Wrap function with timeout protection
 					// Pass queueWaitTime so timeout only applies to actual request execution, not queue wait
@@ -277,9 +274,10 @@ class AdaptiveRateLimiter {
 								requestDuration,
 								error: error.message,
 								description: classified.description,
-								note: queueWaitTime > duration * 0.5 
-									? "Timeout likely due to rate limiter queue delay (request may not have reached Strapi)"
-									: "Timeout occurred during actual request",
+								note:
+									queueWaitTime > duration * 0.5
+										? "Timeout likely due to rate limiter queue delay (request may not have reached Strapi)"
+										: "Timeout occurred during actual request",
 							},
 							`Operation "${operation}" timed out after ${duration}ms (queue: ${queueWaitTime}ms, request: ${requestDuration}ms)`,
 						);

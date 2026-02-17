@@ -7,9 +7,9 @@ import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
-import { getJourney } from "../../../lib/functions/helpers/get-jouney";
-import { isJourneyActive } from "../../../lib/functions/helpers/check-journey-active";
 import { buildServiceUrl } from "../../../lib/functions/helpers/build-service-url";
+import { isJourneyActive } from "../../../lib/functions/helpers/check-journey-active";
+import { getJourney } from "../../../lib/functions/helpers/get-jouney";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
@@ -94,7 +94,10 @@ export async function processJourneyMessage({
 	const res = await getJourney(journeyId);
 	if (!res.success) {
 		// Check if journey was deleted (404)
-		if (res.message?.includes("not found") || res.message?.includes("deleted")) {
+		if (
+			res.message?.includes("not found") ||
+			res.message?.includes("deleted")
+		) {
 			logger.info(
 				{ journeyId },
 				"Journey was deleted, cancelling scheduled job and removing from Redis",
@@ -119,7 +122,7 @@ export async function processJourneyMessage({
 		}
 		throw new Error(res.message);
 	}
-	
+
 	if (!res.responseObject?.journey_steps) {
 		throw new Error("Journey response has no journey_steps");
 	}
@@ -153,13 +156,17 @@ export async function processJourneyMessage({
 						),
 					`journeyStepsService.checkStepAction (via actionsService.find) - ${checkStepActionUrl}`,
 				);
-				const passedStepUrl = buildServiceUrl("journey-passed-steps", undefined, {
-					filters: {
-						journey_step: { documentId: { $eq: step.documentId } },
-						contact: { documentId: { $eq: contact.documentId } },
-						journey: { documentId: { $eq: journeyId } },
+				const passedStepUrl = buildServiceUrl(
+					"journey-passed-steps",
+					undefined,
+					{
+						filters: {
+							journey_step: { documentId: { $eq: step.documentId } },
+							contact: { documentId: { $eq: contact.documentId } },
+							journey: { documentId: { $eq: journeyId } },
+						},
 					},
-				});
+				);
 				const passedStep = await adaptiveRateLimiter.execute(
 					() =>
 						journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
@@ -168,7 +175,9 @@ export async function processJourneyMessage({
 								contact: { documentId: { $eq: contact.documentId } },
 								journey: { documentId: { $eq: journeyId } },
 								composition: {
-									documentId: { $eq: step.composition?.documentId || undefined },
+									documentId: {
+										$eq: step.composition?.documentId || undefined,
+									},
 								},
 								channel: {
 									documentId: { $eq: step.channel?.documentId || undefined },

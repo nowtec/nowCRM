@@ -140,7 +140,7 @@ async function republishWithRetry(
 		// This allows periodic checks if contact gets subscription without spamming retries
 		// Use fixed delay instead of exponential backoff to avoid extremely long delays
 		delay = env.JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS;
-		
+
 		logger.info(
 			{
 				contactId: data.contactId,
@@ -230,11 +230,7 @@ async function republishWithRetry(
 				},
 				"Subscription error from JOB queue - republishing to DELAYED queue with long delay",
 			);
-			await publishToJourneyQueue(
-				"DELAYED",
-				retryData,
-				delay,
-			);
+			await publishToJourneyQueue("DELAYED", retryData, delay);
 		} else {
 			// For delayed queue, republish back to DELAYED queue with calculated delay
 			// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue

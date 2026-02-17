@@ -18,7 +18,8 @@ export async function applyRule(
 		);
 	}
 	const response = await adaptiveRateLimiter.execute(
-		() => fetchWithTimeout(url, { headers: AUTH_HEADER }, undefined, "applyRule"),
+		() =>
+			fetchWithTimeout(url, { headers: AUTH_HEADER }, undefined, "applyRule"),
 		"applyRule",
 	);
 	if (!response.ok) {

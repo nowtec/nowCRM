@@ -3,7 +3,7 @@ import { contactsService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "../../logger";
-import { buildContactUrl, buildServiceUrl } from "./helpers/build-service-url";
+import { buildContactUrl } from "./helpers/build-service-url";
 import { withLock } from "./helpers/distributed-lock";
 
 /**

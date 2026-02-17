@@ -11,14 +11,16 @@ export type JourneyStatus = "active" | "paused" | "deleted" | "unknown";
  * Checks if a response indicates a deleted resource (404)
  * Checks both response.status and error structure from Strapi
  */
-function isNotFoundError(
-	response: { success: boolean; status: number; errorMessage?: string },
-): boolean {
+function isNotFoundError(response: {
+	success: boolean;
+	status: number;
+	errorMessage?: string;
+}): boolean {
 	// Check HTTP status code
 	if (response.status === 404) {
 		return true;
 	}
-	
+
 	// Check error message for Strapi's NotFoundError pattern
 	const errorMessage = response.errorMessage?.toLowerCase() || "";
 	if (
@@ -28,7 +30,7 @@ function isNotFoundError(
 	) {
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -58,7 +60,7 @@ export async function checkJourneyStatus(
 			);
 			return "deleted";
 		}
-		
+
 		if (!response.success) {
 			logger.warn(
 				{
@@ -70,7 +72,7 @@ export async function checkJourneyStatus(
 			);
 			return "unknown";
 		}
-		
+
 		if (!response.data) {
 			logger.warn(
 				{ journeyId },
@@ -78,23 +80,20 @@ export async function checkJourneyStatus(
 			);
 			return "unknown";
 		}
-		
+
 		const isActive = response.data.active === true;
-		
+
 		if (!isActive) {
-			logger.debug(
-				{ journeyId },
-				"Journey is paused/inactive",
-			);
+			logger.debug({ journeyId }, "Journey is paused/inactive");
 			return "paused";
 		}
-		
+
 		return "active";
 	} catch (error: any) {
 		// Check if error indicates 404/deleted
 		const errorMessage = error?.message?.toLowerCase() || "";
 		const errorStatus = error?.status;
-		
+
 		if (
 			errorStatus === 404 ||
 			errorMessage.includes("404") ||
@@ -107,7 +106,7 @@ export async function checkJourneyStatus(
 			);
 			return "deleted";
 		}
-		
+
 		logger.error(
 			{ err: error, journeyId },
 			"Failed to check journey status, assuming unknown to avoid blocking legitimate processing",

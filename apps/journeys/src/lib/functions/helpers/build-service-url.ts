@@ -12,7 +12,7 @@ export function buildServiceUrl(
 	const baseUrl = env.API_GATEWAY || "http://localhost:8080";
 	const path = id ? `strapi/api/${endpoint}/${id}` : `strapi/api/${endpoint}`;
 	const url = new URL(path, baseUrl);
-	
+
 	if (queryParams) {
 		// Simple query string building for logging (not exact match but close enough)
 		const params = new URLSearchParams();
@@ -26,7 +26,7 @@ export function buildServiceUrl(
 			url.search = queryString;
 		}
 	}
-	
+
 	return url.toString();
 }
 
@@ -54,6 +54,8 @@ export function buildContactUrl(contactId: string): string {
 /**
  * Builds URL for journeyPassedStepService.find
  */
-export function buildJourneyPassedStepFindUrl(filters?: Record<string, any>): string {
+export function buildJourneyPassedStepFindUrl(
+	filters?: Record<string, any>,
+): string {
 	return buildServiceUrl("journey-passed-steps", undefined, filters);
 }

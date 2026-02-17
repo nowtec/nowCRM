@@ -27,7 +27,7 @@ export async function getJourney(
 			}),
 		`journeysService.findOne - ${url}`,
 	);
-	
+
 	// Check if journey was deleted (404)
 	// Check both response.status and error structure from Strapi
 	if (!data.success) {
@@ -36,15 +36,12 @@ export async function getJourney(
 			data.errorMessage?.toLowerCase().includes("404") ||
 			data.errorMessage?.toLowerCase().includes("not found") ||
 			data.errorMessage?.toLowerCase().includes("notfounderror");
-		
+
 		if (isNotFound) {
-			return ServiceResponse.failure(
-				"Journey not found (deleted)",
-				null,
-			);
+			return ServiceResponse.failure("Journey not found (deleted)", null);
 		}
 	}
-	
+
 	if (!data.data)
 		return ServiceResponse.failure(
 			"Could not get journey .Probably strapi is down",

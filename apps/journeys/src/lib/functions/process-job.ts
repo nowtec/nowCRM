@@ -1,5 +1,5 @@
 import type { DocumentId } from "@nowcrm/services";
-import { composerService, contactsService } from "@nowcrm/services/server";
+import { contactsService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "@/server";
@@ -104,11 +104,14 @@ export async function processJob(
 			compositionPayload.from = stepData.identity.name;
 		}
 
-		logger.info({
-			step: stepId,
-			contact: contactId,
-			compositino :stepData.composition.documentId
-		},"Composition sent")
+		logger.info(
+			{
+				step: stepId,
+				contact: contactId,
+				compositino: stepData.composition.documentId,
+			},
+			"Composition sent",
+		);
 		// await adaptiveRateLimiter.execute(() =>
 		// 	composerService.sendComposition(compositionPayload, {
 		// 		stepId,

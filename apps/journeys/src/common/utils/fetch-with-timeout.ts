@@ -76,13 +76,13 @@ export async function withTimeout<T>(
 ): Promise<T> {
 	const baseTimeout = timeoutMs ?? env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
 	const operation = operationName || "unknown operation";
-	
+
 	// Subtract queue wait time from timeout so timeout only applies to actual request execution
 	// This prevents false timeouts when requests are waiting in queue
-	const effectiveTimeout = queueWaitTime 
+	const effectiveTimeout = queueWaitTime
 		? Math.max(1000, baseTimeout - queueWaitTime) // Minimum 1 second timeout
 		: baseTimeout;
-	
+
 	const fnStartTime = Date.now();
 	let fnCompleted = false;
 	let timeoutFired = false;
@@ -127,7 +127,7 @@ export async function withTimeout<T>(
 						baseTimeout,
 						queueWaitTime,
 						actualDuration,
-						note: queueWaitTime 
+						note: queueWaitTime
 							? `Timeout applied only to request execution (${effectiveTimeout}ms), queue wait was ${queueWaitTime}ms`
 							: "Timeout includes full operation duration",
 					},

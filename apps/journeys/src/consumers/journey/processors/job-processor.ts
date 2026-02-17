@@ -1,16 +1,13 @@
 import type { jobProcessorJobData } from "@nowcrm/services";
+import { env } from "../../../common/utils/env-config";
 import {
 	closeJob,
 	createNextJob,
 	createRuleCheckJob,
 } from "../../../jobs/create-job";
-import { env } from "../../../common/utils/env-config";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
 import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
-import {
-	checkJourneyStatus,
-	isJourneyActive,
-} from "../../../lib/functions/helpers/check-journey-active";
+import { checkJourneyStatus } from "../../../lib/functions/helpers/check-journey-active";
 import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passed";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
@@ -32,7 +29,7 @@ export async function processJobMessage(data: jobProcessorJobData) {
 
 	// Check journey status before processing
 	const journeyStatus = await checkJourneyStatus(journeyId);
-	
+
 	if (journeyStatus === "deleted") {
 		logger.info(
 			{
@@ -46,7 +43,7 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		await closeJob(jobId);
 		return; // Consumer will ack the message
 	}
-	
+
 	if (journeyStatus === "paused") {
 		logger.info(
 			{
@@ -54,13 +51,18 @@ export async function processJobMessage(data: jobProcessorJobData) {
 				contactId,
 				stepId,
 				journeyId,
-				delayHours: env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS / (60 * 60 * 1000),
+				delayHours:
+					env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS / (60 * 60 * 1000),
 			},
 			"Journey is paused/inactive, republishing job with delay to check if journey was reactivated",
 		);
 		// Republish to JOB queue with delay to check again later
 		// This allows the job to be processed when journey is reactivated
-		await publishToJourneyQueue("JOB", data, env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS);
+		await publishToJourneyQueue(
+			"JOB",
+			data,
+			env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS,
+		);
 		return; // Consumer will ack the message after successful republish
 	}
 
@@ -74,7 +76,10 @@ export async function processJobMessage(data: jobProcessorJobData) {
 	const stepResp = await getJourneyStep(stepId);
 	if (!stepResp.success) {
 		// Check if step was deleted (404)
-		if (stepResp.message?.includes("not found") || stepResp.message?.includes("deleted")) {
+		if (
+			stepResp.message?.includes("not found") ||
+			stepResp.message?.includes("deleted")
+		) {
 			logger.info(
 				{
 					jobId,
@@ -89,7 +94,7 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		}
 		throw new Error(stepResp.message);
 	}
-	
+
 	if (!stepResp.responseObject) {
 		throw new Error("Step response has no data");
 	}

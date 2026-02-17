@@ -13,12 +13,12 @@ import {
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
+import {
+	buildContactUrl,
+	buildServiceUrl,
+} from "../../../lib/functions/helpers/build-service-url";
 import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
 import { logger } from "../../../logger";
-import {
-	buildServiceUrl,
-	buildContactUrl,
-} from "../../../lib/functions/helpers/build-service-url";
 
 /** Allowed webhook event labels */
 type StringEvent =
