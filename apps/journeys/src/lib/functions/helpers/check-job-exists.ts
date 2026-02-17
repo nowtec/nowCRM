@@ -1,7 +1,7 @@
 import type { DocumentId, JourneyTiming } from "@nowcrm/services";
-import { redis } from "../../../redis";
 import { env } from "../../../common/utils/env-config";
 import { logger } from "../../../logger";
+import { redis } from "../../../redis";
 
 /**
  * Checks if a job already exists in Redis (for tracking pending jobs)
@@ -24,7 +24,7 @@ export async function checkJobExists(
  * @returns TTL in seconds
  */
 export function calculateJobKeyTTL(
-	jobType: string,
+	_jobType: string,
 	timing?: JourneyTiming | null,
 ): number {
 	const baseTTL = env.JOURNEYS_JOB_KEY_BASE_TTL_SECONDS;
@@ -73,11 +73,13 @@ export async function setJobKeyAtomic(
 	timing?: JourneyTiming | null,
 ): Promise<boolean> {
 	const jobKey = `job-contact:${contactId}-journey:${journeyId}-step:${stepId}`;
-	
+
 	// Calculate TTL based on job type and timing
-	const ttlSeconds = jobType && timing !== undefined
-		? calculateJobKeyTTL(jobType, timing)
-		: env.JOURNEYS_JOB_KEY_BASE_TTL_SECONDS + env.JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS;
+	const ttlSeconds =
+		jobType && timing !== undefined
+			? calculateJobKeyTTL(jobType, timing)
+			: env.JOURNEYS_JOB_KEY_BASE_TTL_SECONDS +
+				env.JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS;
 
 	logger.debug(
 		{
@@ -113,16 +115,16 @@ export async function extendJobKeyTTL(
 	additionalSeconds?: number,
 ): Promise<boolean> {
 	const jobKey = `job-contact:${contactId}-journey:${journeyId}-step:${stepId}`;
-	
+
 	// Get current TTL
 	const currentTTL = await redis.ttl(jobKey);
-	
+
 	if (currentTTL === -2) {
 		// Key doesn't exist
 		logger.warn({ jobKey }, "Cannot extend TTL - job key does not exist");
 		return false;
 	}
-	
+
 	if (currentTTL === -1) {
 		// Key exists but has no expiration (shouldn't happen with our implementation)
 		logger.warn({ jobKey }, "Job key has no expiration, setting new TTL");
@@ -130,13 +132,16 @@ export async function extendJobKeyTTL(
 		await redis.expire(jobKey, newTTL);
 		return true;
 	}
-	
+
 	// Extend TTL by adding additional seconds
 	const extendBy = additionalSeconds ?? env.JOURNEYS_JOB_KEY_BASE_TTL_SECONDS;
-	const newTTL = Math.min(currentTTL + extendBy, env.JOURNEYS_JOB_KEY_MAX_TTL_SECONDS);
-	
+	const newTTL = Math.min(
+		currentTTL + extendBy,
+		env.JOURNEYS_JOB_KEY_MAX_TTL_SECONDS,
+	);
+
 	const result = await redis.expire(jobKey, newTTL);
-	
+
 	logger.debug(
 		{
 			jobKey,
@@ -146,7 +151,7 @@ export async function extendJobKeyTTL(
 		},
 		"Extended job key TTL",
 	);
-	
+
 	return result === 1;
 }
 
@@ -163,9 +168,11 @@ export async function setJobKey(
 	timing?: JourneyTiming | null,
 ): Promise<void> {
 	const jobKey = `job-contact:${contactId}-journey:${journeyId}-step:${stepId}`;
-	const ttlSeconds = jobType && timing !== undefined
-		? calculateJobKeyTTL(jobType, timing)
-		: env.JOURNEYS_JOB_KEY_BASE_TTL_SECONDS + env.JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS;
+	const ttlSeconds =
+		jobType && timing !== undefined
+			? calculateJobKeyTTL(jobType, timing)
+			: env.JOURNEYS_JOB_KEY_BASE_TTL_SECONDS +
+				env.JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS;
 	await redis.setex(jobKey, ttlSeconds, "1");
 }
 

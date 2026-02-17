@@ -233,7 +233,7 @@ export function getBackoffMultiplier(
 ): number {
 	const classified = classifyError(error, responseTimeMs, timeoutMs);
 	return classified.shouldUseBackoff
-		? classified.backoffMultiplier ?? 1.0
+		? (classified.backoffMultiplier ?? 1.0)
 		: 1.0;
 }
 

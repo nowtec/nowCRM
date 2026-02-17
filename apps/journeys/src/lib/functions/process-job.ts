@@ -91,9 +91,7 @@ export async function processJob(
 			channels: [channelName],
 			to: contactData.email,
 			type: "contact",
-			subject:
-				stepData.composition.subject ||
-				stepData.composition.name,
+			subject: stepData.composition.subject || stepData.composition.name,
 			ignoreSubscription,
 		};
 
@@ -101,7 +99,6 @@ export async function processJob(
 		if (isEmailChannel && stepData.identity?.name) {
 			compositionPayload.from = stepData.identity.name;
 		}
-
 
 		await adaptiveRateLimiter.execute(() =>
 			composerService.sendComposition(compositionPayload, {

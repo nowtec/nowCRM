@@ -104,7 +104,8 @@ export async function passContactToNextStep(
 			// Increased retry delay to account for rate limiting - operations take longer
 			// Base delay accounts for rate limiter queue time + operation time
 			const baseDelay = 2000; // 2 seconds base delay for rate limiter
-			const retryDelay = baseDelay + (500 + Math.random() * 500) * (retryCount + 1); // Increasing delay with jitter
+			const retryDelay =
+				baseDelay + (500 + Math.random() * 500) * (retryCount + 1); // Increasing delay with jitter
 			logger.debug(
 				{
 					contactId,

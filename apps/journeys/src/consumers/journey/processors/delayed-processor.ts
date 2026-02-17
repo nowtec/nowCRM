@@ -141,15 +141,16 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 	// Idempotency check: Verify step hasn't already been passed
 	// This prevents duplicate processing if job is redelivered or processed multiple times
 	// Only check for channel steps (wait/scheduler-trigger/publish steps don't have composition/channel)
-	const hasPassed = compositionId && channel
-		? await checkStepPassed(
-				stepId,
-				contactId,
-				journeyId,
-				compositionId,
-				channel,
-			)
-		: false;
+	const hasPassed =
+		compositionId && channel
+			? await checkStepPassed(
+					stepId,
+					contactId,
+					journeyId,
+					compositionId,
+					channel,
+				)
+			: false;
 
 	if (hasPassed) {
 		logger.info(

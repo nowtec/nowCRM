@@ -227,7 +227,7 @@ class AdaptiveRateLimiter {
 				} catch (error: any) {
 					_isError = true;
 					const duration = Date.now() - startTime;
-					
+
 					// Classify the error for better handling
 					const classified = classifyError(
 						error,
@@ -285,7 +285,7 @@ class AdaptiveRateLimiter {
 			});
 
 			const duration = Date.now() - startTime;
-			
+
 			// Check if response was slow but successful
 			if (duration > this.RAMP_DOWN_THRESHOLD) {
 				const classified = classifyError(
@@ -303,7 +303,7 @@ class AdaptiveRateLimiter {
 					);
 				}
 			}
-			
+
 			this.recordResponseTime(duration, false);
 			this.onHttpSuccess();
 
@@ -311,7 +311,7 @@ class AdaptiveRateLimiter {
 		} catch (error) {
 			const duration = Date.now() - startTime;
 			this.recordResponseTime(duration, true);
-			
+
 			// Re-classify error if not already classified
 			if (!errorType) {
 				const classified = classifyError(
@@ -321,12 +321,12 @@ class AdaptiveRateLimiter {
 				);
 				errorType = classified.type;
 			}
-			
+
 			// Attach error type to error for downstream handling
 			if (error instanceof Error) {
 				(error as any).errorType = errorType;
 			}
-			
+
 			throw error;
 		}
 	}

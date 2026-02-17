@@ -2,7 +2,6 @@ import { env } from "@/common/utils/env-config";
 import {
 	classifyError,
 	getBackoffMultiplier,
-	isRetryableError,
 } from "@/common/utils/error-classification";
 import type { JOURNEY_QUEUES, TRIGGER_QUEUES } from "@/config";
 import { logger } from "@/logger";
@@ -92,14 +91,14 @@ function isTimeoutOrSlowResponseError(error: Error): boolean {
  */
 function shouldRetryImmediately(error: Error): boolean {
 	const errorMessage = error.message || "";
-	
+
 	// Only retry immediately for very specific cases where immediate retry makes sense
 	// For example, temporary network hiccups that might resolve instantly
 	const immediateRetryPatterns: string[] = [
 		// Add patterns here if we identify errors that benefit from immediate retry
 		// Currently, we use backoff for all errors to be safe
 	];
-	
+
 	return immediateRetryPatterns.some((pattern) =>
 		errorMessage.toLowerCase().includes(pattern.toLowerCase()),
 	);
@@ -118,7 +117,7 @@ async function republishWithRetry(
 	error: Error,
 ): Promise<void> {
 	const isTransactionErr = isTransactionError(error);
-	const isTimeoutOrSlow = isTimeoutOrSlowResponseError(error);
+	const _isTimeoutOrSlow = isTimeoutOrSlowResponseError(error);
 	const isDelayedQueue = queueType === "DELAYED";
 	const shouldRetryNow = shouldRetryImmediately(error);
 
@@ -129,10 +128,10 @@ async function republishWithRetry(
 		classified.type === "timeout" ||
 		classified.type === "slow_response" ||
 		classified.type === "network_error";
-	
+
 	// Calculate delay based on error type, classification, and queue type
 	let delay: number;
-	
+
 	if (shouldRetryNow) {
 		// Very specific cases where immediate retry makes sense
 		delay = 0;
@@ -154,10 +153,10 @@ async function republishWithRetry(
 			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
 			env.RABBITMQ_RETRY_MAX_DELAY_MS,
 		);
-		
+
 		// Apply error-type-specific backoff multiplier
 		delay = Math.floor(delay * backoffMultiplier);
-		
+
 		// For timeout errors, use longer initial delay to give Strapi more time to recover
 		if (classified.type === "timeout" && metadata.retryCount === 0) {
 			delay = Math.max(
@@ -231,7 +230,7 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 
 	// Use error classification to determine if error is retryable
 	const classified = classifyError(error);
-	
+
 	// Don't retry non-retryable errors
 	if (!classified.isRetryable) {
 		logger.debug(

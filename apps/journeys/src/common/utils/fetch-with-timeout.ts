@@ -1,5 +1,5 @@
-import { env } from "./env-config";
 import { logger } from "../../logger";
+import { env } from "./env-config";
 
 /**
  * Fetches a URL with a configurable timeout
@@ -29,7 +29,7 @@ export async function fetchWithTimeout(
 		return response;
 	} catch (error: any) {
 		clearTimeout(timer);
-		
+
 		// Check if error is due to timeout (abort)
 		if (error.name === "AbortError" || controller.signal.aborted) {
 			const timeoutError = new Error(
@@ -46,7 +46,7 @@ export async function fetchWithTimeout(
 			);
 			throw timeoutError;
 		}
-		
+
 		// Re-throw other errors
 		throw error;
 	}
@@ -64,14 +64,12 @@ export async function withTimeout<T>(
 	timeoutMs?: number,
 ): Promise<T> {
 	const timeout = timeoutMs ?? env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
-	
+
 	return Promise.race([
 		fn(),
 		new Promise<T>((_, reject) => {
 			setTimeout(() => {
-				const timeoutError = new Error(
-					`Operation timeout after ${timeout}ms`,
-				);
+				const timeoutError = new Error(`Operation timeout after ${timeout}ms`);
 				timeoutError.name = "TimeoutError";
 				logger.warn(
 					{

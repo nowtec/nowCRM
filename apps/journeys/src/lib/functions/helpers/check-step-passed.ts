@@ -58,7 +58,7 @@ export async function checkStepPassed(
 		}
 
 		const hasPassed = data.data.length > 0;
-		
+
 		if (hasPassed) {
 			logger.debug(
 				{
