@@ -135,6 +135,22 @@ async function republishWithRetry(
 	if (shouldRetryNow) {
 		// Very specific cases where immediate retry makes sense
 		delay = 0;
+	} else if (classified.type === "subscription_error") {
+		// Subscription errors: retry with fixed long delay (e.g., 24 hours)
+		// This allows periodic checks if contact gets subscription without spamming retries
+		// Use fixed delay instead of exponential backoff to avoid extremely long delays
+		delay = env.JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS;
+		
+		logger.info(
+			{
+				contactId: data.contactId,
+				stepId: data.stepId,
+				journeyId: data.journeyId,
+				delayHours: delay / (60 * 60 * 1000),
+				retryCount: metadata.retryCount + 1,
+			},
+			"Subscription error - scheduling retry with long delay to check if subscription was added",
+		);
 	} else if (isTransactionErr) {
 		// Transaction errors always need a delay to allow transaction rollback
 		delay = calculateBackoffDelay(
@@ -201,14 +217,34 @@ async function republishWithRetry(
 	);
 
 	if (isJourneyQueue) {
-		// For delayed queue, republish back to DELAYED queue with calculated delay
-		// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue
-		// Delay is now calculated with backoff to prevent immediate retry failures
-		await publishToJourneyQueue(
-			queueType as JourneyQueueType,
-			retryData,
-			delay, // Calculated delay with backoff for DELAYED queue retries
-		);
+		// For subscription errors from JOB queue, republish to DELAYED queue with long delay
+		// This allows periodic checks without blocking the JOB queue
+		if (classified.type === "subscription_error" && queueType === "JOB") {
+			logger.debug(
+				{
+					originalQueue: queueType,
+					newQueue: "DELAYED",
+					delayHours: delay / (60 * 60 * 1000),
+					contactId: data.contactId,
+					stepId: data.stepId,
+				},
+				"Subscription error from JOB queue - republishing to DELAYED queue with long delay",
+			);
+			await publishToJourneyQueue(
+				"DELAYED",
+				retryData,
+				delay,
+			);
+		} else {
+			// For delayed queue, republish back to DELAYED queue with calculated delay
+			// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue
+			// Delay is now calculated with backoff to prevent immediate retry failures
+			await publishToJourneyQueue(
+				queueType as JourneyQueueType,
+				retryData,
+				delay, // Calculated delay with backoff for DELAYED queue retries
+			);
+		}
 	} else {
 		await publishToTriggerQueue(
 			queueType as TriggerQueueType,
@@ -223,13 +259,27 @@ async function republishWithRetry(
  * Uses error classification for consistent retry decisions
  */
 function shouldRetry(error: Error, retryCount: number): boolean {
-	// Don't retry if max retries exceeded
+	// Use error classification to determine if error is retryable
+	const classified = classifyError(error);
+
+	// Subscription errors: always retry (with long delay) regardless of retry count
+	// This allows periodic checks if contact gets subscription
+	if (classified.type === "subscription_error") {
+		logger.debug(
+			{
+				errorType: classified.type,
+				errorDescription: classified.description,
+				retryCount,
+			},
+			"Subscription error - will retry with long delay",
+		);
+		return true;
+	}
+
+	// Don't retry if max retries exceeded (except subscription errors handled above)
 	if (retryCount >= env.RABBITMQ_MAX_RETRIES) {
 		return false;
 	}
-
-	// Use error classification to determine if error is retryable
-	const classified = classifyError(error);
 
 	// Don't retry non-retryable errors
 	if (!classified.isRetryable) {
@@ -245,6 +295,7 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 	}
 
 	// Don't retry on certain error messages (application-level errors)
+	// Note: Subscription errors are handled separately with long delays
 	const nonRetryableErrorMessages = [
 		"Job processor can only handle",
 		"should only be called for",
@@ -258,7 +309,8 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 		return false;
 	}
 
-	// Retry on network errors, timeouts, and transient errors
+	// Subscription errors are retryable (with long delay)
+	// Other retryable errors: network errors, timeouts, and transient errors
 	return true;
 }
 

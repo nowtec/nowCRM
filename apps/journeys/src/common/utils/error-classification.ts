@@ -9,6 +9,7 @@ export type ErrorType =
 	| "transaction_error"
 	| "validation_error"
 	| "authorization_error"
+	| "subscription_error"
 	| "unknown_error";
 
 /**
@@ -146,7 +147,26 @@ export function classifyError(
 		};
 	}
 
-	// 6. Validation errors (400, 422)
+	// 6. Subscription errors - contact doesn't have subscription for channel
+	// These are retryable but with very long delays (hours/days) to check periodically
+	if (
+		errorMessageLower.includes("doesnt have active subscription") ||
+		errorMessageLower.includes("doesn't have active subscription") ||
+		errorMessageLower.includes("no active subscription") ||
+		errorMessageLower.includes("subscription required") ||
+		errorName === "SubscriptionError"
+	) {
+		return {
+			type: "subscription_error",
+			error,
+			isRetryable: true, // Retryable but with very long delay
+			shouldUseBackoff: true,
+			backoffMultiplier: 100.0, // Very long delay multiplier (hours/days)
+			description: "Contact doesn't have active subscription for channel",
+		};
+	}
+
+	// 7. Validation errors (400, 422)
 	if (
 		errorMessageLower.includes("400") ||
 		errorMessageLower.includes("422") ||
@@ -163,7 +183,7 @@ export function classifyError(
 		};
 	}
 
-	// 7. HTTP errors (4xx, 5xx)
+	// 8. HTTP errors (4xx, 5xx)
 	if (
 		errorMessageLower.includes("404") ||
 		errorMessageLower.includes("not found") ||
@@ -199,7 +219,7 @@ export function classifyError(
 		};
 	}
 
-	// 8. Unknown error - default classification
+	// 9. Unknown error - default classification
 	return {
 		type: "unknown_error",
 		error,

@@ -61,6 +61,8 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: num({ default: 300 }), // 5 minutes buffer for processing
 	// Strapi request timeout configuration (in milliseconds)
 	JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: num({ default: 30000 }), // 30 seconds default timeout
+	// Subscription error retry configuration (in milliseconds)
+	JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS: num({ default: 3600000 }), // 24 hours default delay for subscription errors
 });
 
 // Construct the Authorization header correctly
