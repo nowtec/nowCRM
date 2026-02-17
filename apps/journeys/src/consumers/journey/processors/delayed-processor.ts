@@ -4,13 +4,19 @@ import {
 	createNextJob,
 	createRuleCheckJob,
 } from "../../../jobs/create-job";
+import { env } from "../../../common/utils/env-config";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
 import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
+import {
+	checkJourneyStatus,
+	isJourneyActive,
+} from "../../../lib/functions/helpers/check-journey-active";
 import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passed";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
 import { logger } from "../../../logger";
+import { publishToJourneyQueue } from "../../../rabbitmq";
 
 export async function processDelayedMessage(data: delayedProcessorJobData) {
 	const {
@@ -25,6 +31,42 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		ignoreSubscription,
 	} = data;
 	logger.debug(`Processing delayed job: ${jobId}`);
+
+	// Check journey status before processing
+	const journeyStatus = await checkJourneyStatus(journeyId);
+	
+	if (journeyStatus === "deleted") {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				type,
+			},
+			"Journey was deleted, closing delayed job",
+		);
+		await closeJob(jobId);
+		return; // Consumer will ack the message
+	}
+	
+	if (journeyStatus === "paused") {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				type,
+				delayHours: env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS / (60 * 60 * 1000),
+			},
+			"Journey is paused/inactive, republishing delayed job with delay to check if journey was reactivated",
+		);
+		// Republish to DELAYED queue with delay to check again later
+		// This allows the job to be processed when journey is reactivated
+		await publishToJourneyQueue("DELAYED", data, env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS);
+		return; // Consumer will ack the message after successful republish
+	}
 
 	// Extend job key TTL when processing starts to prevent expiration during long operations
 	// This ensures the job key doesn't expire if processing takes longer than expected
@@ -42,7 +84,27 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		//all we need is to wait time and pass contact to the next step
 		//So when time is on and this function is runned we start job for all connected steps or ending if for some reason this is the last one node
 		const step = await getJourneyStep(stepId);
-		if (!step.success || !step.responseObject) throw new Error(step.message);
+		if (!step.success) {
+			// Check if step was deleted (404)
+			if (step.message?.includes("not found") || step.message?.includes("deleted")) {
+				logger.info(
+					{
+						jobId,
+						contactId,
+						stepId,
+						journeyId,
+						type,
+					},
+					"Journey step was deleted, closing delayed job",
+				);
+				await closeJob(jobId);
+				return; // Consumer will ack the message
+			}
+			throw new Error(step.message);
+		}
+		if (!step.responseObject) {
+			throw new Error("Step response has no data");
+		}
 
 		// Mark wait step as passed (no composition/channel needed for wait steps)
 		await closeJob(jobId);
@@ -169,8 +231,26 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		await closeJob(jobId);
 		// Still create next job/rule check if needed, as the step was already processed
 		const stepResp = await getJourneyStep(stepId);
-		if (!stepResp.success || !stepResp.responseObject)
+		if (!stepResp.success) {
+			// Check if step was deleted (404)
+			if (stepResp.message?.includes("not found") || stepResp.message?.includes("deleted")) {
+				logger.info(
+					{
+						jobId,
+						contactId,
+						stepId,
+						journeyId,
+						type,
+					},
+					"Journey step was deleted during idempotency check, job already closed",
+				);
+				return; // Consumer will ack the message
+			}
 			throw new Error(stepResp.message);
+		}
+		if (!stepResp.responseObject) {
+			throw new Error("Step response has no data");
+		}
 
 		if (stepResp.responseObject.connections_from_this_step?.length) {
 			await createRuleCheckJob(data);
@@ -197,8 +277,26 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 	await closeJob(jobId);
 
 	const stepResp = await getJourneyStep(stepId);
-	if (!stepResp.success || !stepResp.responseObject)
+	if (!stepResp.success) {
+		// Check if step was deleted (404)
+		if (stepResp.message?.includes("not found") || stepResp.message?.includes("deleted")) {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+					type,
+				},
+				"Journey step was deleted after processing, job already closed",
+			);
+			return; // Consumer will ack the message
+		}
 		throw new Error(stepResp.message);
+	}
+	if (!stepResp.responseObject) {
+		throw new Error("Step response has no data");
+	}
 
 	if (stepResp.responseObject.connections_from_this_step?.length) {
 		await createRuleCheckJob(data);

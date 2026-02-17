@@ -60,9 +60,11 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_JOB_KEY_MAX_TTL_SECONDS: num({ default: 2592000 }), // 30 days max TTL
 	JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: num({ default: 300 }), // 5 minutes buffer for processing
 	// Strapi request timeout configuration (in milliseconds)
-	JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: num({ default: 30000 }), // 30 seconds default timeout
+	JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: num({ default: 120000 }), // 120 seconds (2 minutes) default timeout - allows for multiple API calls and slow responses
 	// Subscription error retry configuration (in milliseconds)
 	JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS: num({ default: 3600000 }), // 24 hours default delay for subscription errors
+	// Paused journey retry configuration (in milliseconds)
+	JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS: num({ default: 3600000 }), // 1 hour default delay to check if paused journey was reactivated
 });
 
 // Construct the Authorization header correctly

@@ -35,11 +35,30 @@ export async function getJourneyStep(
 			},
 		}),
 	);
-	if (!data.data)
+	
+	// Check if step was deleted (404)
+	// Check both response.status and error structure from Strapi
+	if (!data.success) {
+		const isNotFound =
+			data.status === 404 ||
+			data.errorMessage?.toLowerCase().includes("404") ||
+			data.errorMessage?.toLowerCase().includes("not found") ||
+			data.errorMessage?.toLowerCase().includes("notfounderror");
+		
+		if (isNotFound) {
+			return ServiceResponse.failure(
+				"Journey step not found (deleted)",
+				null,
+			);
+		}
+	}
+	
+	if (!data.data) {
 		return ServiceResponse.failure(
 			"Could not get journey step.Probably strapi is down",
 			null,
 		);
+	}
 
 	if (!Object.hasOwn(data.data, "contacts")) {
 		return ServiceResponse.failure(

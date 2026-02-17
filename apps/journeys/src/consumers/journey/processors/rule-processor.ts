@@ -1,6 +1,11 @@
 import type { ruleProcessorJobData } from "@nowcrm/services";
 import { CHECK_JOB_TTL_SEC } from "../../../config";
 import { closeJob, createNextJob } from "../../../jobs/create-job";
+import { env } from "../../../common/utils/env-config";
+import {
+	checkJourneyStatus,
+	isJourneyActive,
+} from "../../../lib/functions/helpers/check-journey-active";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
 import { processStepConnections } from "../../../lib/functions/rules/process-connections";
@@ -12,10 +17,65 @@ export async function processRuleMessage(data: ruleProcessorJobData) {
 	logger.debug(`Checking rules for job ${jobId}`);
 
 	const stepResp = await getJourneyStep(stepId);
-	if (!stepResp.success || !stepResp.responseObject)
+	if (!stepResp.success) {
+		// Check if step was deleted (404)
+		if (stepResp.message?.includes("not found") || stepResp.message?.includes("deleted")) {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+				},
+				"Journey step was deleted, closing rule check job",
+			);
+			await closeJob(jobId);
+			return; // Consumer will ack the message
+		}
 		throw new Error(stepResp.message);
+	}
+	
+	if (!stepResp.responseObject) {
+		throw new Error("Step response has no data");
+	}
 
 	const step = stepResp.responseObject;
+	
+	// Check journey status before processing rules
+	const journeyId = step.journey?.documentId;
+	if (journeyId) {
+		const journeyStatus = await checkJourneyStatus(journeyId);
+		
+		if (journeyStatus === "deleted") {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+				},
+				"Journey was deleted, closing rule check job",
+			);
+			await closeJob(jobId);
+			return; // Consumer will ack the message
+		}
+		
+		if (journeyStatus === "paused") {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+					delayHours: env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS / (60 * 60 * 1000),
+				},
+				"Journey is paused/inactive, republishing rule check job with delay to check if journey was reactivated",
+			);
+			// Republish to RULE_CHECK queue with delay to check again later
+			// This allows the rule check to resume when journey is reactivated
+			await publishToJourneyQueue("RULE_CHECK", data, env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS);
+			return; // Consumer will ack the message after successful republish
+		}
+	}
 	// no connections means its last step - close the job and finish
 	if (!step.connections_from_this_step) {
 		logger.debug(

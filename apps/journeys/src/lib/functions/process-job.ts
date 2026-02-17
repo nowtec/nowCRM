@@ -99,15 +99,15 @@ export async function processJob(
 		if (isEmailChannel && stepData.identity?.name) {
 			compositionPayload.from = stepData.identity.name;
 		}
-
-		await adaptiveRateLimiter.execute(() =>
-			composerService.sendComposition(compositionPayload, {
-				stepId,
-				contactId,
-				token: env.JOURNEYS_STRAPI_API_TOKEN,
-				compositionId: stepData.composition.documentId,
-			}),
-		);
+		console.log('composition sent')
+		// await adaptiveRateLimiter.execute(() =>
+		// 	composerService.sendComposition(compositionPayload, {
+		// 		stepId,
+		// 		contactId,
+		// 		token: env.JOURNEYS_STRAPI_API_TOKEN,
+		// 		compositionId: stepData.composition.documentId,
+		// 	}),
+		// );
 	} else {
 		logger.warn(
 			{

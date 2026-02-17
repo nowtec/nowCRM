@@ -2,38 +2,19 @@ import type { DocumentId } from "@nowcrm/services";
 import {
 	journeyPassedStepService,
 	journeyStepsService,
-	journeysService,
 } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
+import { isJourneyActive } from "../../../lib/functions/helpers/check-journey-active";
 import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
 import { redis } from "../../../redis";
 
 const JOURNEY_JOB_KEY_PREFIX = "journey-job:";
-
-/**
- * Checks if journey is still active
- */
-async function isJourneyActive(journeyId: DocumentId): Promise<boolean> {
-	try {
-		const response = await adaptiveRateLimiter.execute(() =>
-			journeysService.findOne(journeyId, env.JOURNEYS_STRAPI_API_TOKEN),
-		);
-		return response.success && response.data?.active === true;
-	} catch (error) {
-		logger.error(
-			{ err: error, journeyId },
-			"Failed to check if journey is active",
-		);
-		// If we can't check, assume it's active to avoid cancelling active journeys
-		return true;
-	}
-}
 
 /**
  * Schedules the journey job to rerun after JOURNEY_TIME_CHECK_SEC
@@ -110,8 +91,37 @@ export async function processJourneyMessage({
 	}
 
 	const res = await getJourney(journeyId);
-	if (!res.success || !res.responseObject?.journey_steps)
+	if (!res.success) {
+		// Check if journey was deleted (404)
+		if (res.message?.includes("not found") || res.message?.includes("deleted")) {
+			logger.info(
+				{ journeyId },
+				"Journey was deleted, cancelling scheduled job and removing from Redis",
+			);
+			// Remove Redis key to cancel future runs
+			const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journeyId}`;
+			try {
+				await redis.del(redisKey);
+				logger.debug(
+					{ journeyId, redisKey },
+					"Removed Redis key for deleted journey",
+				);
+			} catch (redisError) {
+				logger.error(
+					{ err: redisError, journeyId, redisKey },
+					"Failed to remove Redis key for deleted journey",
+				);
+				// Don't throw - allow message to be acked
+			}
+			// Return early - consumer will ack the message since no error was thrown
+			return;
+		}
 		throw new Error(res.message);
+	}
+	
+	if (!res.responseObject?.journey_steps) {
+		throw new Error("Journey response has no journey_steps");
+	}
 
 	let totalContactsProcessed = 0;
 
