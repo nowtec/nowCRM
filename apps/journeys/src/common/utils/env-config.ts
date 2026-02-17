@@ -59,6 +59,8 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_JOB_KEY_BASE_TTL_SECONDS: num({ default: 3600 }), // 1 hour base TTL
 	JOURNEYS_JOB_KEY_MAX_TTL_SECONDS: num({ default: 2592000 }), // 30 days max TTL
 	JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: num({ default: 300 }), // 5 minutes buffer for processing
+	// Strapi request timeout configuration (in milliseconds)
+	JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: num({ default: 30000 }), // 30 seconds default timeout
 });
 
 // Construct the Authorization header correctly

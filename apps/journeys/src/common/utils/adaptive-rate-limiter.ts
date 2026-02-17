@@ -1,6 +1,7 @@
 import pLimit from "p-limit";
 import { logger } from "../../logger";
 import { env } from "./env-config";
+import { withTimeout } from "./fetch-with-timeout";
 
 /**
  * Adaptive rate limiter that adjusts concurrency based on Strapi response times
@@ -210,7 +211,7 @@ class AdaptiveRateLimiter {
 	}
 
 	/**
-	 * Execute a function with rate limiting and response time tracking
+	 * Execute a function with rate limiting, timeout protection, and response time tracking
 	 */
 	async execute<T>(fn: () => Promise<T>): Promise<T> {
 		const startTime = Date.now();
@@ -219,10 +220,20 @@ class AdaptiveRateLimiter {
 		try {
 			const result = await this.limit(async () => {
 				try {
-					return await fn();
+					// Wrap function with timeout protection
+					return await withTimeout(fn, env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS);
 				} catch (error: any) {
 					_isError = true;
 					const msg = error?.message || "";
+					const errorName = error?.name || "";
+					
+					// Detect timeout errors
+					const isTimeoutError =
+						errorName === "TimeoutError" ||
+						msg.includes("timeout") ||
+						msg.includes("Request timeout");
+					
+					// Detect HTTP/network errors
 					const isHttpError =
 						msg.includes("ECONNRESET") ||
 						msg.includes("EPIPE") ||
@@ -231,7 +242,18 @@ class AdaptiveRateLimiter {
 						msg.includes("network timeout") ||
 						msg.toLowerCase().includes("fetch failed");
 
-					if (isHttpError) {
+					// Log timeout errors specifically
+					if (isTimeoutError) {
+						logger.warn(
+							{
+								timeout: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+								error: msg,
+							},
+							"Request timed out",
+						);
+					}
+
+					if (isHttpError || isTimeoutError) {
 						this.onHttpError();
 					}
 

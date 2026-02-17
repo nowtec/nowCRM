@@ -179,11 +179,21 @@ function shouldRetry(error: Error, retryCount: number): boolean {
 	}
 
 	const errorMessage = error.message || "";
+	const errorName = error.constructor.name || "";
+	
 	if (nonRetryableErrorMessages.some((msg) => errorMessage.includes(msg))) {
 		return false;
 	}
 
+	// Detect timeout errors specifically
+	const isTimeoutError =
+		errorName === "TimeoutError" ||
+		errorMessage.includes("timeout") ||
+		errorMessage.includes("Request timeout") ||
+		errorMessage.includes("Operation timeout");
+
 	// Retry on network errors, timeouts, and transient errors
+	// Timeout errors are retryable as they indicate the request didn't complete
 	return true;
 }
 
