@@ -1,12 +1,12 @@
 import type { DocumentId } from "@nowcrm/services";
 import { contactsService } from "@nowcrm/services/server";
+import pLimit from "p-limit";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
+import { redis } from "@/redis";
 import { logger } from "../../logger";
 import { buildContactUrl } from "./helpers/build-service-url";
 import { releaseLock } from "./helpers/distributed-lock";
-import { redis } from "@/redis";
-import pLimit from "p-limit";
 
 // Lock configuration - contact-level locking to prevent concurrent updates to same contact
 const LOCK_TTL_SECONDS = 15; // Lock expires after 15 seconds (updates should be quick)
@@ -31,7 +31,7 @@ function calculateRetryDelay(
 	maxDelay: number,
 	multiplier: number,
 ): number {
-	const baseDelay = initialDelay * Math.pow(multiplier, attempt);
+	const baseDelay = initialDelay * multiplier ** attempt;
 	const delay = Math.min(baseDelay, maxDelay);
 	// Add small random jitter (±10%) to prevent thundering herd
 	const jitter = delay * 0.1 * (Math.random() * 2 - 1);
@@ -149,7 +149,8 @@ async function updateContactJourneySteps(
 	const contact = contactResp.data;
 	const currentJourneySteps =
 		(contact.journey_steps as { documentId: DocumentId }[]) || [];
-	const currentJourneys = (contact.journeys as { documentId: DocumentId }[]) || [];
+	const currentJourneys =
+		(contact.journeys as { documentId: DocumentId }[]) || [];
 
 	// Build new journey_steps array: remove currentStep, add nextStep if exists
 	const updatedJourneySteps = currentJourneySteps
@@ -260,11 +261,15 @@ async function updateContactJourneySteps(
 		if (isTransientError && attempt < UPDATE_MAX_RETRIES) {
 			const retryDelay =
 				UPDATE_RETRY_INITIAL_DELAY_MS *
-				Math.pow(UPDATE_RETRY_BACKOFF_MULTIPLIER, attempt - 1);
+				UPDATE_RETRY_BACKOFF_MULTIPLIER ** (attempt - 1);
 
 			const retryError = new Error(
 				`TRANSIENT_ERROR:${errorMessage} (Status: ${statusCode})`,
-			) as Error & { isTransient: boolean; retryDelay: number; attempt: number };
+			) as Error & {
+				isTransient: boolean;
+				retryDelay: number;
+				attempt: number;
+			};
 			retryError.isTransient = true;
 			retryError.retryDelay = retryDelay;
 			retryError.attempt = attempt;

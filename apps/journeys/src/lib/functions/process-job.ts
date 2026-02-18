@@ -95,7 +95,8 @@ export async function processJob(
 			channels: [channelName],
 			to: contactData.email,
 			type: "contact",
-			subject: stepDataFinal.composition.subject || stepDataFinal.composition.name,
+			subject:
+				stepDataFinal.composition.subject || stepDataFinal.composition.name,
 			ignoreSubscription,
 		};
 

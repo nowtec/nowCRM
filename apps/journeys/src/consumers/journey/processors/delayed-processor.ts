@@ -267,7 +267,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 			: false;
 
 	// Fetch step data once - will be reused for processJob and final step processing
-	let stepResp = await getJourneyStep(stepId);
+	const stepResp = await getJourneyStep(stepId);
 	if (!stepResp.success) {
 		// Check if step was deleted (404)
 		if (

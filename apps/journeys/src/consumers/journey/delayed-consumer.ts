@@ -1,5 +1,5 @@
-import { JOURNEY_QUEUES } from "../../config";
 import { env } from "../../common/utils/env-config";
+import { JOURNEY_QUEUES } from "../../config";
 import { handleMessageRetry } from "../../lib/functions/helpers/retry-handler";
 import { logger } from "../../logger";
 import { getChannel } from "../../rabbitmq";

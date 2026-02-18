@@ -22,8 +22,7 @@ export function hasConnectionsWithRules(
 	// Check if any connection has rules
 	return connections.some(
 		(connection) =>
-			connection.journey_step_rules &&
-			connection.journey_step_rules.length > 0,
+			connection.journey_step_rules && connection.journey_step_rules.length > 0,
 	);
 }
 

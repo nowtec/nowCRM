@@ -167,7 +167,7 @@ class AdaptiveRateLimiter {
 		const avgTotalTime =
 			this.responseTimes.length > 0
 				? this.responseTimes.reduce((sum, t) => sum + t, 0) /
-				  this.responseTimes.length
+					this.responseTimes.length
 				: avgRequestTime;
 
 		// Check if we're in cooldown period after circuit breaker recovery
@@ -176,10 +176,7 @@ class AdaptiveRateLimiter {
 
 		// Circuit breaker threshold exceeded - use actual request time
 		// But only trigger if not in cooldown period (prevents rapid re-triggering)
-		if (
-			avgRequestTime > this.CIRCUIT_BREAK_THRESHOLD &&
-			!isInCooldown
-		) {
+		if (avgRequestTime > this.CIRCUIT_BREAK_THRESHOLD && !isInCooldown) {
 			void this.triggerCircuitBreaker(
 				`avg request time ${avgRequestTime.toFixed(0)}ms (total: ${avgTotalTime.toFixed(0)}ms)`,
 			);
@@ -219,10 +216,7 @@ class AdaptiveRateLimiter {
 			avgRequestTime < this.RAMP_UP_THRESHOLD &&
 			this.concurrency < this.MAX_CONCURRENCY
 		) {
-			this.concurrency = Math.min(
-				this.concurrency + 1,
-				this.MAX_CONCURRENCY,
-			);
+			this.concurrency = Math.min(this.concurrency + 1, this.MAX_CONCURRENCY);
 			this.reinitLimiter();
 			this.lastAdjustmentTime = Date.now();
 			logger.info(
@@ -345,18 +339,14 @@ class AdaptiveRateLimiter {
 					// Pass queueWaitTime so timeout only applies to actual request execution, not queue wait
 					// Use longer timeout for findAll operations - they can legitimately take 60+ seconds
 					// Note: .find() operations are NOT findAll - they use regular timeout
-					const isFindAllOperation =
-						operationName?.toLowerCase().includes("findall");
+					const isFindAllOperation = operationName
+						?.toLowerCase()
+						.includes("findall");
 					const timeoutMs = isFindAllOperation
 						? env.JOURNEYS_STRAPI_FINDALL_TIMEOUT_MS
 						: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
 
-					return await withTimeout(
-						fn,
-						timeoutMs,
-						operation,
-						queueWaitTime,
-					);
+					return await withTimeout(fn, timeoutMs, operation, queueWaitTime);
 				} catch (error: any) {
 					_isError = true;
 					const totalDuration = Date.now() - startTime;
@@ -364,8 +354,9 @@ class AdaptiveRateLimiter {
 
 					// Determine the correct timeout for error classification
 					// Note: .find() operations are NOT findAll - they use regular timeout
-					const isFindAllOperation =
-						operationName?.toLowerCase().includes("findall");
+					const isFindAllOperation = operationName
+						?.toLowerCase()
+						.includes("findall");
 					const timeoutForClassification = isFindAllOperation
 						? env.JOURNEYS_STRAPI_FINDALL_TIMEOUT_MS
 						: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
