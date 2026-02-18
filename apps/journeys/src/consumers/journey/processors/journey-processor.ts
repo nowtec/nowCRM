@@ -1,8 +1,5 @@
 import type { DocumentId } from "@nowcrm/services";
-import {
-	journeyPassedStepService,
-	journeyStepsService,
-} from "@nowcrm/services/server";
+import { journeyPassedStepService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
@@ -10,7 +7,6 @@ import { createJob } from "../../../jobs/create-job";
 import { buildServiceUrl } from "../../../lib/functions/helpers/build-service-url";
 import { isJourneyActive } from "../../../lib/functions/helpers/check-journey-active";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
-import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
 import { redis } from "../../../redis";
@@ -138,24 +134,9 @@ export async function processJourneyMessage({
 		// Process contacts in parallel batches to reduce sequential awaits
 		const contactPromises = step.contacts.map(async (contact) => {
 			try {
-				// Check if contact has already processed this step
-				// checkStepAction internally calls actionsService.find, so we build URL for that
-				const checkStepActionUrl = buildServiceUrl("actions", undefined, {
-					filters: {
-						action_type: { name: { $eq: "STEP_REACHED" } },
-						external_id: { $eq: step.documentId },
-						contact: { documentId: { $eq: contact.documentId } },
-					},
-				});
-				const check = await adaptiveRateLimiter.execute(
-					() =>
-						journeyStepsService.checkStepAction(
-							env.JOURNEYS_STRAPI_API_TOKEN,
-							step.documentId,
-							contact.documentId,
-						),
-					`journeyStepsService.checkStepAction (via actionsService.find) - ${checkStepActionUrl}`,
-				);
+				// Check if contact has already passed this step
+				// Only check passedStep - the checkStepAction is redundant since
+				// job-processor.ts will check again for idempotency when processing the job
 				const passedStepUrl = buildServiceUrl(
 					"journey-passed-steps",
 					undefined,
@@ -164,6 +145,14 @@ export async function processJourneyMessage({
 							journey_step: { documentId: { $eq: step.documentId } },
 							contact: { documentId: { $eq: contact.documentId } },
 							journey: { documentId: { $eq: journeyId } },
+							composition: {
+								documentId: {
+									$eq: step.composition?.documentId || undefined,
+								},
+							},
+							channel: {
+								documentId: { $eq: step.channel?.documentId || undefined },
+							},
 						},
 					},
 				);
@@ -186,26 +175,11 @@ export async function processJourneyMessage({
 						}),
 					`journeyPassedStepService.find (processJourneyMessage) - ${passedStepUrl}`,
 				);
-				if (!check.success || !check.data) {
-					throw new Error(check.errorMessage);
-				}
 				if (!passedStep.success || !passedStep.data) {
 					throw new Error(passedStep.errorMessage);
 				}
 				if (passedStep.data.length > 0) {
-					// Contact is checking rules, skip creating job
-					return null;
-				}
-
-				if (check.data.find) {
-					// Contact already processed this step, move to next step
-					await passContactToNextStep(
-						contact.documentId,
-						step.documentId,
-						journeyId,
-						check.data.target_step,
-					);
-					// Skip creating job for this step since it's already been processed
+					// Contact has already passed this step, skip creating job
 					return null;
 				}
 

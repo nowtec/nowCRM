@@ -7,6 +7,26 @@ import {
 } from "@nowcrm/services";
 import { processRules } from "./process-rules";
 
+/**
+ * Checks if any connection has rules that need to be evaluated
+ * @param connections - Array of journey step connections
+ * @returns true if any connection has rules, false if all connections have no rules
+ */
+export function hasConnectionsWithRules(
+	connections: JourneyStepConnection[] | undefined,
+): boolean {
+	if (!connections || connections.length === 0) {
+		return false;
+	}
+
+	// Check if any connection has rules
+	return connections.some(
+		(connection) =>
+			connection.journey_step_rules &&
+			connection.journey_step_rules.length > 0,
+	);
+}
+
 export async function processStepConnections(
 	connections: JourneyStepConnection[], // they come here sorted by priority
 	contactId: DocumentId,

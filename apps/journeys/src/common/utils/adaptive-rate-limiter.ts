@@ -19,6 +19,7 @@ class AdaptiveRateLimiter {
 	private circuitRecoveryTime: number;
 	private lastCircuitBreakTime: number = 0; // Track when circuit breaker was last triggered
 	private cooldownPeriod: number = 60000; // 60 seconds cooldown after circuit breaker recovery
+	private lastAdjustmentTime: number = 0; // Track when concurrency was last adjusted
 
 	// Configuration constants
 	private readonly MIN_CONCURRENCY: number;
@@ -30,6 +31,9 @@ class AdaptiveRateLimiter {
 	private readonly CIRCUIT_BREAK_THRESHOLD: number;
 	private readonly MAX_CONSECUTIVE_ERRORS: number;
 	private readonly MAX_CIRCUIT_RECOVERY: number;
+	private readonly STABILITY_ZONE_MIN: number;
+	private readonly STABILITY_ZONE_MAX: number;
+	private readonly MIN_ADJUSTMENT_INTERVAL_MS: number;
 
 	constructor() {
 		// Load configuration from environment or use defaults
@@ -47,6 +51,12 @@ class AdaptiveRateLimiter {
 			env.JOURNEYS_RATE_LIMITER_MAX_CONSECUTIVE_ERRORS ?? 10;
 		this.MAX_CIRCUIT_RECOVERY =
 			env.JOURNEYS_RATE_LIMITER_MAX_CIRCUIT_RECOVERY ?? 30000;
+		this.STABILITY_ZONE_MIN =
+			env.JOURNEYS_RATE_LIMITER_STABILITY_ZONE_MIN ?? 300;
+		this.STABILITY_ZONE_MAX =
+			env.JOURNEYS_RATE_LIMITER_STABILITY_ZONE_MAX ?? 500;
+		this.MIN_ADJUSTMENT_INTERVAL_MS =
+			env.JOURNEYS_RATE_LIMITER_MIN_ADJUSTMENT_INTERVAL_MS ?? 10000;
 
 		this.concurrency = this.INITIAL_CONCURRENCY;
 		this.limit = pLimit(this.concurrency);
@@ -127,6 +137,7 @@ class AdaptiveRateLimiter {
 		this.consecutiveErrors = 0;
 		this.httpErrorsInRow = 0;
 		this.circuitBroken = false;
+		this.lastAdjustmentTime = Date.now(); // Reset adjustment timer after circuit breaker
 
 		logger.info(
 			{
@@ -180,39 +191,64 @@ class AdaptiveRateLimiter {
 			return;
 		}
 
-		// Ramp up if request times are good (use actual request time, not total)
+		// Check minimum time between adjustments to prevent oscillation
+		const timeSinceLastAdjustment = Date.now() - this.lastAdjustmentTime;
+		if (timeSinceLastAdjustment < this.MIN_ADJUSTMENT_INTERVAL_MS) {
+			return; // Too soon since last adjustment, wait for more stability
+		}
+
+		// Stability zone: if response times are in a good range, don't adjust
+		// This prevents oscillation when system is performing well
+		if (
+			avgRequestTime >= this.STABILITY_ZONE_MIN &&
+			avgRequestTime <= this.STABILITY_ZONE_MAX
+		) {
+			// In stability zone - don't adjust, system is performing well
+			return;
+		}
+
+		// Require more data points before making adjustments (at least 70% of window)
+		const minDataPoints = Math.ceil(this.RESPONSE_WINDOW * 0.7);
+		if (this.requestTimes.length < minDataPoints) {
+			return; // Not enough data yet
+		}
+
+		// Ramp up if request times are consistently good (use actual request time, not total)
+		// Only increment by 1 to prevent aggressive increases
 		if (
 			avgRequestTime < this.RAMP_UP_THRESHOLD &&
 			this.concurrency < this.MAX_CONCURRENCY
 		) {
-			const increment =
-				avgRequestTime < this.RAMP_UP_THRESHOLD / 2 ? 2 : 1;
 			this.concurrency = Math.min(
-				this.concurrency + increment,
+				this.concurrency + 1,
 				this.MAX_CONCURRENCY,
 			);
 			this.reinitLimiter();
+			this.lastAdjustmentTime = Date.now();
 			logger.info(
 				{
 					newConcurrency: this.concurrency,
 					avgRequestTime: avgRequestTime.toFixed(0),
 					avgTotalTime: avgTotalTime.toFixed(0),
+					stabilityZone: `${this.STABILITY_ZONE_MIN}-${this.STABILITY_ZONE_MAX}ms`,
 				},
 				"Concurrency increased",
 			);
 		}
-		// Ramp down if request times are slow (use actual request time, not total)
+		// Ramp down if request times are consistently slow (use actual request time, not total)
 		else if (
 			avgRequestTime > this.RAMP_DOWN_THRESHOLD &&
 			this.concurrency > this.MIN_CONCURRENCY
 		) {
 			this.concurrency--;
 			this.reinitLimiter();
+			this.lastAdjustmentTime = Date.now();
 			logger.info(
 				{
 					newConcurrency: this.concurrency,
 					avgRequestTime: avgRequestTime.toFixed(0),
 					avgTotalTime: avgTotalTime.toFixed(0),
+					stabilityZone: `${this.STABILITY_ZONE_MIN}-${this.STABILITY_ZONE_MAX}ms`,
 				},
 				"Concurrency decreased",
 			);
@@ -307,9 +343,17 @@ class AdaptiveRateLimiter {
 				try {
 					// Wrap function with timeout protection
 					// Pass queueWaitTime so timeout only applies to actual request execution, not queue wait
+					// Use longer timeout for findAll operations - they can legitimately take 60+ seconds
+					// Note: .find() operations are NOT findAll - they use regular timeout
+					const isFindAllOperation =
+						operationName?.toLowerCase().includes("findall");
+					const timeoutMs = isFindAllOperation
+						? env.JOURNEYS_STRAPI_FINDALL_TIMEOUT_MS
+						: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
+
 					return await withTimeout(
 						fn,
-						env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+						timeoutMs,
 						operation,
 						queueWaitTime,
 					);
@@ -318,11 +362,19 @@ class AdaptiveRateLimiter {
 					const totalDuration = Date.now() - startTime;
 					const requestDuration = Date.now() - requestStartTime;
 
+					// Determine the correct timeout for error classification
+					// Note: .find() operations are NOT findAll - they use regular timeout
+					const isFindAllOperation =
+						operationName?.toLowerCase().includes("findall");
+					const timeoutForClassification = isFindAllOperation
+						? env.JOURNEYS_STRAPI_FINDALL_TIMEOUT_MS
+						: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS;
+
 					// Classify the error for better handling - use request duration for timeout classification
 					const classified = classifyError(
 						error,
 						requestDuration,
-						env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+						timeoutForClassification,
 					);
 					errorType = classified.type;
 
@@ -332,7 +384,8 @@ class AdaptiveRateLimiter {
 							{
 								operation,
 								errorType: classified.type,
-								timeout: env.JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS,
+								timeout: timeoutForClassification,
+								isFindAllOperation,
 								totalDuration,
 								queueWaitTime,
 								requestDuration,
@@ -341,9 +394,11 @@ class AdaptiveRateLimiter {
 								note:
 									queueWaitTime > totalDuration * 0.5
 										? "Timeout likely due to rate limiter queue delay (request may not have reached Strapi)"
-										: "Timeout occurred during actual request",
+										: isFindAllOperation
+											? "findAll operation timed out - this may indicate a very large dataset or Strapi performance issue"
+											: "Timeout occurred during actual request",
 							},
-							`Operation "${operation}" timed out after ${totalDuration}ms (queue: ${queueWaitTime}ms, request: ${requestDuration}ms)`,
+							`Operation "${operation}" timed out after ${totalDuration}ms (queue: ${queueWaitTime}ms, request: ${requestDuration}ms, timeout: ${timeoutForClassification}ms)`,
 						);
 					} else if (classified.type === "slow_response") {
 						logger.info(

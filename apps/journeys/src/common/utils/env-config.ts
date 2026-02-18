@@ -46,29 +46,38 @@ export const env = cleanEnv(process.env, {
 	CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS: num({ devDefault: testOnly(3) }),
 	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080") }),
 	// Adaptive rate limiter configuration
-	JOURNEYS_RATE_LIMITER_MIN_CONCURRENCY: num({ default: 5 }),
-	JOURNEYS_RATE_LIMITER_MAX_CONCURRENCY: num({ default: 30 }),
-	JOURNEYS_RATE_LIMITER_INITIAL_CONCURRENCY: num({ default: 10 }),
-	JOURNEYS_RATE_LIMITER_RESPONSE_WINDOW: num({ default: 30 }),
-	JOURNEYS_RATE_LIMITER_RAMP_UP_THRESHOLD: num({ default: 300 }),
-	JOURNEYS_RATE_LIMITER_RAMP_DOWN_THRESHOLD: num({ default: 800 }),
+	JOURNEYS_RATE_LIMITER_MIN_CONCURRENCY: num({ default: 2 }),
+	JOURNEYS_RATE_LIMITER_MAX_CONCURRENCY: num({ default: 10 }), // Reduced from 30 to prevent oscillation
+	JOURNEYS_RATE_LIMITER_INITIAL_CONCURRENCY: num({ default: 5 }), // Reduced from 10 to start more conservatively
+	JOURNEYS_RATE_LIMITER_RESPONSE_WINDOW: num({ default: 50 }), // Increased from 30 to require more data points before adjusting
+	JOURNEYS_RATE_LIMITER_RAMP_UP_THRESHOLD: num({ default: 250 }), // Lowered from 300 - ramp up only when consistently fast
+	JOURNEYS_RATE_LIMITER_RAMP_DOWN_THRESHOLD: num({ default: 600 }), // Lowered from 800 - ramp down earlier to prevent overload
 	JOURNEYS_RATE_LIMITER_CIRCUIT_BREAK_THRESHOLD: num({ default: 2000 }),
 	JOURNEYS_RATE_LIMITER_MAX_CONSECUTIVE_ERRORS: num({ default: 10 }),
 	JOURNEYS_RATE_LIMITER_MAX_CIRCUIT_RECOVERY: num({ default: 30000 }),
+	JOURNEYS_RATE_LIMITER_STABILITY_ZONE_MIN: num({ default: 300 }), // Lower bound of stability zone (ms)
+	JOURNEYS_RATE_LIMITER_STABILITY_ZONE_MAX: num({ default: 500 }), // Upper bound of stability zone (ms) - don't adjust if in this range
+	JOURNEYS_RATE_LIMITER_MIN_ADJUSTMENT_INTERVAL_MS: num({ default: 10000 }), // Minimum 10 seconds between adjustments
 	// Job key TTL configuration (in seconds)
 	JOURNEYS_JOB_KEY_BASE_TTL_SECONDS: num({ default: 3600 }), // 1 hour base TTL
 	JOURNEYS_JOB_KEY_MAX_TTL_SECONDS: num({ default: 2592000 }), // 30 days max TTL
 	JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: num({ default: 300 }), // 5 minutes buffer for processing
 	// Strapi request timeout configuration (in milliseconds)
 	JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: num({ default: 120000 }), // 120 seconds (2 minutes) default timeout - allows for multiple API calls and slow responses
+	// Timeout for findAll operations - these can legitimately take 60+ seconds when fetching many records
+	// This is NOT an error condition, just expected behavior for large datasets
+	JOURNEYS_STRAPI_FINDALL_TIMEOUT_MS: num({ default: 600000 }), // 600 seconds (10 minutes) - findAll operations can take a long time
 	// Delayed consumer timeout configuration (in milliseconds)
-	JOURNEYS_DELAYED_CONSUMER_TIMEOUT_MS: num({ default: 180000 }), // 180 seconds (3 minutes) - allows for multiple API calls, rate limiter queue waits, and slow Strapi responses
+	// Delayed consumer timeout should be longer than createNextJob timeout to avoid race conditions
+	// When createNextJob times out, it republishes the message, so we need extra time for that
+	JOURNEYS_DELAYED_CONSUMER_TIMEOUT_MS: num({ default: 240000 }), // 240 seconds (4 minutes) - longer than createNextJob timeout to allow for republishing
 	// Subscription error retry configuration (in milliseconds)
 	JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS: num({ default: 3600000 }), // 24 hours default delay for subscription errors
 	// Paused journey retry configuration (in milliseconds)
 	JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS: num({ default: 3600000 }), // 1 hour default delay to check if paused journey was reactivated
 	// Timeout for creating next job from wait step (in milliseconds)
-	JOURNEYS_CREATE_NEXT_JOB_TIMEOUT_MS: num({ default: 60000 }), // 60 seconds - allows for rate limiter queue wait, Strapi API calls, and Redis operations
+	// Increased to account for lock retry logic (20 retries with exponential backoff can take 2-3 minutes under high contention)
+	JOURNEYS_CREATE_NEXT_JOB_TIMEOUT_MS: num({ default: 180000 }), // 180 seconds (3 minutes) - allows for rate limiter queue wait, Strapi API calls, Redis operations, and lock retries
 });
 
 // Construct the Authorization header correctly

@@ -18,6 +18,7 @@ export const JOURNEY_QUEUES = {
 	JOB: "jobQueue",
 	RULE_CHECK: "ruleCheckQueue",
 	DELAYED: "delayedJobQueue",
+	CONTACT_UPDATE: "contactUpdateQueue",
 };
 
 export const EXCHANGE_NAME_TRIGGER = "journey_exchange";

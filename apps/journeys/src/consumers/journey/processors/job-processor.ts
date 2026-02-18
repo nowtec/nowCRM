@@ -12,6 +12,7 @@ import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passe
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
+import { hasConnectionsWithRules } from "../../../lib/functions/rules/process-connections";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
 
@@ -143,7 +144,23 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		// Reuse step data already fetched to avoid duplicate API call
 		const step = stepResp.responseObject;
 		if (step.connections_from_this_step?.length) {
-			await createRuleCheckJob(data);
+			// Only create rule check job if connections have rules
+			// If connections exist but have no rules, directly create next jobs
+			if (hasConnectionsWithRules(step.connections_from_this_step)) {
+				await createRuleCheckJob(data);
+			} else {
+				// No rules - directly create jobs for all connections (like wait steps)
+				for (const connection_step of step.connections_from_this_step) {
+					await createNextJob(
+						{
+							contactId,
+							journeyId,
+							stepId,
+						},
+						connection_step.target_step.documentId,
+					);
+				}
+			}
 		} else {
 			const scoreResp = await createContactActionAndScore(stepId, contactId);
 			if (!scoreResp.success) throw new Error(scoreResp.message);
@@ -174,7 +191,23 @@ export async function processJobMessage(data: jobProcessorJobData) {
 
 	const step = stepResp.responseObject;
 	if (step.connections_from_this_step?.length) {
-		await createRuleCheckJob(data);
+		// Only create rule check job if connections have rules
+		// If connections exist but have no rules, directly create next jobs
+		if (hasConnectionsWithRules(step.connections_from_this_step)) {
+			await createRuleCheckJob(data);
+		} else {
+			// No rules - directly create jobs for all connections (like wait steps)
+			for (const connection_step of step.connections_from_this_step) {
+				await createNextJob(
+					{
+						contactId,
+						journeyId,
+						stepId,
+					},
+					connection_step.target_step.documentId,
+				);
+			}
+		}
 	} else {
 		const scoreResp = await createContactActionAndScore(stepId, contactId);
 		if (!scoreResp.success) throw new Error(scoreResp.message);

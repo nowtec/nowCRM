@@ -15,6 +15,11 @@ import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { buildServiceUrl } from "../helpers/build-service-url";
 
+// Cache action type documentId to avoid repeated API calls
+// The action type for STEP_REACHED is constant and rarely changes
+let cachedActionTypeId: DocumentId | null = null;
+let actionTypeCachePromise: Promise<DocumentId> | null = null;
+
 export async function createContactActionAndScore(
 	stepId: DocumentId,
 	contactId: DocumentId,
@@ -66,25 +71,51 @@ export async function createContactActionAndScore(
 		);
 	}
 
-	const actionTypeUrl = buildServiceUrl("action-types", undefined, {
-		filters: { name: { $eq: actionTypes.STEP_REACHED } },
-	});
-	const actionType = await adaptiveRateLimiter.execute(
-		() =>
-			actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+	// Use cached action type ID if available, otherwise fetch and cache it
+	let actionTypeId: DocumentId;
+	if (cachedActionTypeId) {
+		actionTypeId = cachedActionTypeId;
+	} else {
+		// If a fetch is already in progress, wait for it
+		if (actionTypeCachePromise) {
+			actionTypeId = await actionTypeCachePromise;
+		} else {
+			// Start fetching action type
+			const actionTypeUrl = buildServiceUrl("action-types", undefined, {
 				filters: { name: { $eq: actionTypes.STEP_REACHED } },
-			}),
-		`actionTypeService.find (createContactActionAndScore) - ${actionTypeUrl}`,
-	);
-	if (!actionType.data || actionType.data.length === 0) {
-		return ServiceResponse.failure(
-			"Error in finding action type. Probably strapi is down",
-			null,
-		);
+			});
+			actionTypeCachePromise = adaptiveRateLimiter
+				.execute(
+					() =>
+						actionTypeService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+							filters: { name: { $eq: actionTypes.STEP_REACHED } },
+						}),
+					`actionTypeService.find (createContactActionAndScore) - ${actionTypeUrl}`,
+				)
+				.then((actionType) => {
+					if (!actionType.data || actionType.data.length === 0) {
+						// Clear cache promise on error so we can retry
+						actionTypeCachePromise = null;
+						throw new Error(
+							"Error in finding action type. Probably strapi is down",
+						);
+					}
+					const id = actionType.data[0].documentId;
+					cachedActionTypeId = id;
+					actionTypeCachePromise = null;
+					return id;
+				})
+				.catch((error) => {
+					// Clear cache promise on error so we can retry
+					actionTypeCachePromise = null;
+					throw error;
+				});
+			actionTypeId = await actionTypeCachePromise;
+		}
 	}
 
 	const data = {
-		action_type: actionType.data[0].documentId,
+		action_type: actionTypeId,
 		entity: actionEntities.JOURNEY_STEPS,
 		value: totalScore?.toString() || "0",
 		external_id: stepId.toString(),

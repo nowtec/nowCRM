@@ -5,7 +5,6 @@ import {
 } from "../lib/functions/helpers/check-job-exists";
 import { checkStepValid } from "../lib/functions/helpers/check-step-valid";
 import { getJourneyStep } from "../lib/functions/helpers/get-journey-step";
-import { passContactToNextStep } from "../lib/functions/pass-contact-to-next-step";
 import { createFinishActions } from "../lib/functions/rules/create-finish-action";
 import { logger } from "../logger";
 import { publishToJourneyQueue } from "../rabbitmq";
@@ -302,7 +301,15 @@ export async function createNextJob(
 		}
 
 		const next = nextResp.responseObject;
-		await passContactToNextStep(contactId, stepId, journeyId, targetStep);
+		// Publish contact update to separate queue (non-blocking)
+		// This allows email sending to continue without waiting for contact updates
+		await publishToJourneyQueue("CONTACT_UPDATE", {
+			contactId,
+			currentStep: stepId,
+			journeyId,
+			nextStep: targetStep,
+		});
+		// Create next job immediately (doesn't wait for contact update)
 		await createJob({
 			contact: contactId,
 			journey: journeyId,
@@ -316,11 +323,17 @@ export async function createNextJob(
 	} else {
 		//if no target step we assume that this is last step of journey
 		// Remove contact from journey and create finish action
-		await passContactToNextStep(contactId, stepId, journeyId, null);
+		// Publish contact update to separate queue (non-blocking)
+		await publishToJourneyQueue("CONTACT_UPDATE", {
+			contactId,
+			currentStep: stepId,
+			journeyId,
+			nextStep: null,
+		});
 		await createFinishActions(contactId, journeyId);
 		logger.debug(
 			{ contactId, journeyId, stepId },
-			"Journey completed, contact removed from journey",
+			"Journey completed, contact update queued",
 		);
 	}
 }

@@ -12,6 +12,7 @@ import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passe
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
+import { hasConnectionsWithRules } from "../../../lib/functions/rules/process-connections";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
 
@@ -181,6 +182,36 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 						"Successfully created next job from wait step",
 					);
 				} catch (nextJobError) {
+					const isTimeoutError =
+						nextJobError instanceof Error &&
+						nextJobError.message.includes("Timeout creating next job");
+
+					if (isTimeoutError) {
+						// Timeout due to lock contention - republish message with delay to retry later
+						// This allows the lock queue to drain before retrying
+						// Use a delay that gives time for lock contention to decrease
+						const retryDelay = 60000; // 60 seconds delay - allows lock queue to drain
+						logger.warn(
+							{
+								contactId,
+								journeyId,
+								stepId,
+								targetStepId: connection_step.target_step.documentId,
+								type,
+								retryDelay,
+								error: nextJobError.message,
+							},
+							"Timeout creating next job due to lock contention, republishing delayed message with delay",
+						);
+						// Republish the entire delayed message so it can retry creating all next jobs
+						// Idempotency checks in createJob will prevent duplicate jobs if some connections already succeeded
+						await publishToJourneyQueue("DELAYED", data, retryDelay);
+						// Return successfully so consumer acks the original message
+						// The republished message will retry creating the next job later
+						return;
+					}
+
+					// For non-timeout errors, re-throw to let consumer handle retry
 					logger.error(
 						{
 							err: nextJobError,
@@ -192,7 +223,6 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 						},
 						"Failed to create next job from wait step",
 					);
-					// Re-throw to let consumer handle retry
 					throw nextJobError;
 				}
 			}
@@ -281,7 +311,28 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		// Still create next job/rule check if needed, as the step was already processed
 		// Reuse step data already fetched to avoid duplicate API call
 		if (stepResp.responseObject.connections_from_this_step?.length) {
-			await createRuleCheckJob(data);
+			// Only create rule check job if connections have rules
+			// If connections exist but have no rules, directly create next jobs
+			if (
+				hasConnectionsWithRules(
+					stepResp.responseObject.connections_from_this_step,
+				)
+			) {
+				await createRuleCheckJob(data);
+			} else {
+				// No rules - directly create jobs for all connections (like wait steps)
+				for (const connection_step of stepResp.responseObject
+					.connections_from_this_step) {
+					await createNextJob(
+						{
+							contactId,
+							journeyId,
+							stepId,
+						},
+						connection_step.target_step.documentId,
+					);
+				}
+			}
 		} else {
 			const scoreResp = await createContactActionAndScore(stepId, contactId);
 			if (!scoreResp.success) throw new Error(scoreResp.message);
@@ -313,7 +364,28 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 
 	// Reuse step data already fetched to avoid duplicate API call
 	if (stepResp.responseObject.connections_from_this_step?.length) {
-		await createRuleCheckJob(data);
+		// Only create rule check job if connections have rules
+		// If connections exist but have no rules, directly create next jobs
+		if (
+			hasConnectionsWithRules(
+				stepResp.responseObject.connections_from_this_step,
+			)
+		) {
+			await createRuleCheckJob(data);
+		} else {
+			// No rules - directly create jobs for all connections (like wait steps)
+			for (const connection_step of stepResp.responseObject
+				.connections_from_this_step) {
+				await createNextJob(
+					{
+						contactId,
+						journeyId,
+						stepId,
+					},
+					connection_step.target_step.documentId,
+				);
+			}
+		}
 	} else {
 		const scoreResp = await createContactActionAndScore(stepId, contactId);
 		if (!scoreResp.success) throw new Error(scoreResp.message);
