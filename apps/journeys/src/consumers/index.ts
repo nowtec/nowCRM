@@ -1,3 +1,4 @@
+export { contactUpdateConsumer } from "./journey/contact-update-consumer";
 export { delayedConsumer } from "./journey/delayed-consumer";
 export { jobConsumer } from "./journey/job-consumer";
 export { journeyConsumer } from "./journey/journey-consumer";

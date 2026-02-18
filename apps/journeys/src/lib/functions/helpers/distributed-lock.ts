@@ -56,7 +56,13 @@ async function extendLock(
 			return 0
 		end
 	`;
-	const result = await redis.eval(luaScript, 2, lockKey, lockValue, ttlSeconds.toString());
+	const result = await redis.eval(
+		luaScript,
+		2,
+		lockKey,
+		lockValue,
+		ttlSeconds.toString(),
+	);
 	return result === 1;
 }
 
@@ -90,7 +96,7 @@ export async function withLock<T>(
 	// Convert seconds to milliseconds: ttlSeconds * 1000, then take 50% = ttlSeconds * 500
 	const extensionIntervalMs = Math.max(1000, ttlSeconds * 500); // At least 1 second
 	let extensionIntervalId: NodeJS.Timeout | null = null;
-	
+
 	// Only set up extension if TTL is long enough to warrant it (> 10 seconds)
 	if (ttlSeconds > 10) {
 		extensionIntervalId = setInterval(async () => {

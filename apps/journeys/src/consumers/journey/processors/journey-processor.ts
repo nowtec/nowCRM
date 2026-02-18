@@ -1,39 +1,17 @@
 import type { DocumentId } from "@nowcrm/services";
-import {
-	journeyPassedStepService,
-	journeyStepsService,
-	journeysService,
-} from "@nowcrm/services/server";
+import { journeyPassedStepService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { JOURNEY_TIME_CHECK_SEC } from "../../../config";
 import { createJob } from "../../../jobs/create-job";
+import { buildServiceUrl } from "../../../lib/functions/helpers/build-service-url";
+import { isJourneyActive } from "../../../lib/functions/helpers/check-journey-active";
 import { getJourney } from "../../../lib/functions/helpers/get-jouney";
-import { passContactToNextStep } from "../../../lib/functions/pass-contact-to-next-step";
 import { logger } from "../../../logger";
 import { publishToJourneyQueue } from "../../../rabbitmq";
 import { redis } from "../../../redis";
 
 const JOURNEY_JOB_KEY_PREFIX = "journey-job:";
-
-/**
- * Checks if journey is still active
- */
-async function isJourneyActive(journeyId: DocumentId): Promise<boolean> {
-	try {
-		const response = await adaptiveRateLimiter.execute(() =>
-			journeysService.findOne(journeyId, env.JOURNEYS_STRAPI_API_TOKEN),
-		);
-		return response.success && response.data?.active === true;
-	} catch (error) {
-		logger.error(
-			{ err: error, journeyId },
-			"Failed to check if journey is active",
-		);
-		// If we can't check, assume it's active to avoid cancelling active journeys
-		return true;
-	}
-}
 
 /**
  * Schedules the journey job to rerun after JOURNEY_TIME_CHECK_SEC
@@ -110,8 +88,40 @@ export async function processJourneyMessage({
 	}
 
 	const res = await getJourney(journeyId);
-	if (!res.success || !res.responseObject?.journey_steps)
+	if (!res.success) {
+		// Check if journey was deleted (404)
+		if (
+			res.message?.includes("not found") ||
+			res.message?.includes("deleted")
+		) {
+			logger.info(
+				{ journeyId },
+				"Journey was deleted, cancelling scheduled job and removing from Redis",
+			);
+			// Remove Redis key to cancel future runs
+			const redisKey = `${JOURNEY_JOB_KEY_PREFIX}${journeyId}`;
+			try {
+				await redis.del(redisKey);
+				logger.debug(
+					{ journeyId, redisKey },
+					"Removed Redis key for deleted journey",
+				);
+			} catch (redisError) {
+				logger.error(
+					{ err: redisError, journeyId, redisKey },
+					"Failed to remove Redis key for deleted journey",
+				);
+				// Don't throw - allow message to be acked
+			}
+			// Return early - consumer will ack the message since no error was thrown
+			return;
+		}
 		throw new Error(res.message);
+	}
+
+	if (!res.responseObject?.journey_steps) {
+		throw new Error("Journey response has no journey_steps");
+	}
 
 	let totalContactsProcessed = 0;
 
@@ -124,49 +134,52 @@ export async function processJourneyMessage({
 		// Process contacts in parallel batches to reduce sequential awaits
 		const contactPromises = step.contacts.map(async (contact) => {
 			try {
-				// Check if contact has already processed this step
-				const check = await adaptiveRateLimiter.execute(() =>
-					journeyStepsService.checkStepAction(
-						env.JOURNEYS_STRAPI_API_TOKEN,
-						step.documentId,
-						contact.documentId,
-					),
-				);
-				const passedStep = await adaptiveRateLimiter.execute(() =>
-					journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+				// Check if contact has already passed this step
+				// Only check passedStep - the checkStepAction is redundant since
+				// job-processor.ts will check again for idempotency when processing the job
+				const passedStepUrl = buildServiceUrl(
+					"journey-passed-steps",
+					undefined,
+					{
 						filters: {
 							journey_step: { documentId: { $eq: step.documentId } },
 							contact: { documentId: { $eq: contact.documentId } },
 							journey: { documentId: { $eq: journeyId } },
 							composition: {
-								documentId: { $eq: step.composition?.documentId || undefined },
+								documentId: {
+									$eq: step.composition?.documentId || undefined,
+								},
 							},
 							channel: {
 								documentId: { $eq: step.channel?.documentId || undefined },
 							},
 						},
-					}),
+					},
 				);
-				if (!check.success || !check.data) {
-					throw new Error(check.errorMessage);
-				}
+				const passedStep = await adaptiveRateLimiter.execute(
+					() =>
+						journeyPassedStepService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+							filters: {
+								journey_step: { documentId: { $eq: step.documentId } },
+								contact: { documentId: { $eq: contact.documentId } },
+								journey: { documentId: { $eq: journeyId } },
+								composition: {
+									documentId: {
+										$eq: step.composition?.documentId || undefined,
+									},
+								},
+								channel: {
+									documentId: { $eq: step.channel?.documentId || undefined },
+								},
+							},
+						}),
+					`journeyPassedStepService.find (processJourneyMessage) - ${passedStepUrl}`,
+				);
 				if (!passedStep.success || !passedStep.data) {
 					throw new Error(passedStep.errorMessage);
 				}
 				if (passedStep.data.length > 0) {
-					// Contact is checking rules, skip creating job
-					return null;
-				}
-
-				if (check.data.find) {
-					// Contact already processed this step, move to next step
-					await passContactToNextStep(
-						contact.documentId,
-						step.documentId,
-						journeyId,
-						check.data.target_step,
-					);
-					// Skip creating job for this step since it's already been processed
+					// Contact has already passed this step, skip creating job
 					return null;
 				}
 
@@ -225,10 +238,14 @@ export async function processJourneyMessage({
 	);
 
 	// After processing, schedule next run if journey is still active
-	// Double-check journey is still active before scheduling
+	// Reuse journey data from earlier fetch - if getJourney succeeded, journey exists
+	// Only check active status if we need to verify it hasn't changed
+	// Since we already fetched the journey with active status, we can use that data
 	try {
-		const stillActive = await isJourneyActive(journeyId);
-		if (stillActive) {
+		// Use the journey data we already fetched to check active status
+		// This avoids a duplicate API call to check journey status
+		const isStillActive = res.responseObject?.active === true;
+		if (isStillActive) {
 			await scheduleNextRun(journeyId);
 		} else {
 			logger.debug(

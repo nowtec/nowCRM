@@ -13,6 +13,10 @@ import {
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { createJob } from "../../../jobs/create-job";
+import {
+	buildContactUrl,
+	buildServiceUrl,
+} from "../../../lib/functions/helpers/build-service-url";
 import { enforcePaginationLimits } from "../../../lib/functions/helpers/pagination-limiter";
 import { logger } from "../../../logger";
 
@@ -172,11 +176,16 @@ async function getContactIdFromWebhook(
 	}
 
 	if (entry.id) {
-		const idResult = await adaptiveRateLimiter.execute(() =>
-			contactsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-				filters: { id: { $eq: entry.id } },
-				pagination: { page: 1, pageSize: 1 },
-			}),
+		const url = buildServiceUrl("contacts", undefined, {
+			filters: { id: { $eq: entry.id } },
+		});
+		const idResult = await adaptiveRateLimiter.execute(
+			() =>
+				contactsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+					filters: { id: { $eq: entry.id } },
+					pagination: { page: 1, pageSize: 1 },
+				}),
+			`contactsService.find (getContactIdFromWebhook by id) - ${url}`,
 		);
 		if (idResult.data && idResult.data.length > 0) {
 			return idResult.data[0].documentId;
@@ -184,11 +193,13 @@ async function getContactIdFromWebhook(
 	}
 
 	if (entry.email) {
-		const emailResult = await adaptiveRateLimiter.execute(() =>
-			contactsService.findAll(env.JOURNEYS_STRAPI_API_TOKEN, {
-				filters: { email: { $eqi: entry.email } },
-				pagination: { page: 1, pageSize: 1 },
-			}),
+		const emailResult = await adaptiveRateLimiter.execute(
+			() =>
+				contactsService.findAll(env.JOURNEYS_STRAPI_API_TOKEN, {
+					filters: { email: { $eqi: entry.email } },
+					pagination: { page: 1, pageSize: 1 },
+				}),
+			"contactsService.findAll (getContactIdFromWebhook by email)",
 		);
 		if (emailResult.data && emailResult.data.length > 0) {
 			return emailResult.data[0].documentId;
@@ -210,26 +221,31 @@ export async function processTriggerMessage(data: any) {
 	}
 
 	// Use adaptive rate limiter and pagination limits for Strapi calls
-	const trigger_steps = await adaptiveRateLimiter.execute(() =>
-		journeyStepsService.findAll(
-			env.JOURNEYS_STRAPI_API_TOKEN,
-			enforcePaginationLimits({
-				filters: {
-					type: { $eq: "trigger" },
-					journey: { active: { $eq: true } },
-				},
-				populate: {
-					journey: true,
-					connections_from_this_step: {
-						populate: {
-							target_step: {
-								populate: { composition: true, channel: true },
+	const triggerStepsUrl = buildServiceUrl("journey-steps", undefined, {
+		filters: { type: { $eq: "trigger" }, journey: { active: { $eq: true } } },
+	});
+	const trigger_steps = await adaptiveRateLimiter.execute(
+		() =>
+			journeyStepsService.findAll(
+				env.JOURNEYS_STRAPI_API_TOKEN,
+				enforcePaginationLimits({
+					filters: {
+						type: { $eq: "trigger" },
+						journey: { active: { $eq: true } },
+					},
+					populate: {
+						journey: true,
+						connections_from_this_step: {
+							populate: {
+								target_step: {
+									populate: { composition: true, channel: true },
+								},
 							},
 						},
 					},
-				},
-			}),
-		),
+				}),
+			),
+		`journeyStepsService.findAll (processTriggerMessage) - ${triggerStepsUrl}`,
 	);
 
 	if (!trigger_steps.data) {
@@ -248,31 +264,38 @@ export async function processTriggerMessage(data: any) {
 		return entityMatches && enabled && eventOk;
 	});
 	if (filtered_steps.length > 0) {
-		const email_channel = await adaptiveRateLimiter.execute(() =>
-			channelsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
-				filters: {
-					name: { $eqi: "Email" },
-				},
-			}),
-		);
-		if (email_channel.data) {
-			const contact = await adaptiveRateLimiter.execute(() =>
-				contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
-					populate: {
-						subscriptions: {
-							populate: {
-								channel: true,
-							},
-						},
+		const email_channel = await adaptiveRateLimiter.execute(
+			() =>
+				channelsService.find(env.JOURNEYS_STRAPI_API_TOKEN, {
+					filters: {
+						name: { $eqi: "Email" },
 					},
 				}),
+			"channelsService.find (processTriggerMessage)",
+		);
+		if (email_channel.data) {
+			const contactUrl = buildContactUrl(contactId);
+			const contact = await adaptiveRateLimiter.execute(
+				() =>
+					contactsService.findOne(contactId, env.JOURNEYS_STRAPI_API_TOKEN, {
+						populate: {
+							subscriptions: {
+								populate: {
+									channel: true,
+								},
+							},
+						},
+					}),
+				`contactsService.findOne (processTriggerMessage) - ${contactUrl}`,
 			);
 			if (contact.data) {
 				const emailChannelId = email_channel.data[0].documentId;
 
 				// Check settings to see if subscription checking should be ignored
-				const settings = await adaptiveRateLimiter.execute(() =>
-					settingsService.find(env.JOURNEYS_STRAPI_API_TOKEN),
+				const settingsUrl = buildServiceUrl("settings");
+				const settings = await adaptiveRateLimiter.execute(
+					() => settingsService.find(env.JOURNEYS_STRAPI_API_TOKEN),
+					`settingsService.find (processTriggerMessage) - ${settingsUrl}`,
 				);
 				const shouldIgnoreSubscriptions =
 					settings.data?.[0]?.subscription === "ignore";
@@ -295,17 +318,20 @@ export async function processTriggerMessage(data: any) {
 
 				// Only create subscription if there's no subscription at all and settings don't ignore subscriptions
 				if (!existingSubscription && !shouldIgnoreSubscriptions) {
-					await adaptiveRateLimiter.execute(() =>
-						subscriptionsService.create(
-							{
-								channel: emailChannelId,
-								active: true,
-								contact: contactId,
-								subscribed_at: new Date(),
-								publishedAt: new Date(),
-							},
-							env.JOURNEYS_STRAPI_API_TOKEN,
-						),
+					const subscriptionUrl = buildServiceUrl("subscriptions");
+					await adaptiveRateLimiter.execute(
+						() =>
+							subscriptionsService.create(
+								{
+									channel: emailChannelId,
+									active: true,
+									contact: contactId,
+									subscribed_at: new Date(),
+									publishedAt: new Date(),
+								},
+								env.JOURNEYS_STRAPI_API_TOKEN,
+							),
+						`subscriptionsService.create (processTriggerMessage) - ${subscriptionUrl}`,
 					);
 				}
 			}

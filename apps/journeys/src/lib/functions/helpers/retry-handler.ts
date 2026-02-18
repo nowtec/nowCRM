@@ -1,4 +1,8 @@
 import { env } from "@/common/utils/env-config";
+import {
+	classifyError,
+	getBackoffMultiplier,
+} from "@/common/utils/error-classification";
 import type { JOURNEY_QUEUES, TRIGGER_QUEUES } from "@/config";
 import { logger } from "@/logger";
 import { publishToJourneyQueue, publishToTriggerQueue } from "@/rabbitmq";
@@ -60,28 +64,50 @@ function createRetryHeaders(
 }
 
 /**
- * Checks if error is a transaction/database error or 500 error that requires a delay before retry
- * 500 errors often indicate transient issues like transaction errors, deadlocks, etc.
+ * Checks if error is a transaction/database error
+ * Uses error classification for consistency
  */
 function isTransactionError(error: Error): boolean {
+	const classified = classifyError(error);
+	return classified.type === "transaction_error";
+}
+
+/**
+ * Checks if error indicates a timeout or slow response
+ * Uses error classification for consistency
+ */
+function isTimeoutOrSlowResponseError(error: Error): boolean {
+	const classified = classifyError(error);
+	return (
+		classified.type === "timeout" ||
+		classified.type === "slow_response" ||
+		classified.type === "network_error"
+	);
+}
+
+/**
+ * Checks if error should retry immediately (no backoff)
+ * Only for very specific errors that are likely to succeed on immediate retry
+ */
+function shouldRetryImmediately(error: Error): boolean {
 	const errorMessage = error.message || "";
-	const transactionErrorPatterns = [
-		"current transaction is aborted",
-		"transaction is aborted",
-		"deadlock detected",
-		"could not serialize access",
-		"lock not available",
-		"500", // 500 errors often indicate transaction errors or other transient issues
+
+	// Only retry immediately for very specific cases where immediate retry makes sense
+	// For example, temporary network hiccups that might resolve instantly
+	const immediateRetryPatterns: string[] = [
+		// Add patterns here if we identify errors that benefit from immediate retry
+		// Currently, we use backoff for all errors to be safe
 	];
-	return transactionErrorPatterns.some((pattern) =>
+
+	return immediateRetryPatterns.some((pattern) =>
 		errorMessage.toLowerCase().includes(pattern.toLowerCase()),
 	);
 }
 
 /**
  * Publishes message to retry queue with exponential backoff
- * For DELAYED queue messages, retries immediately (delay = 0) since original delay already passed
- * Exception: Transaction errors always get a delay to allow transaction rollback
+ * For DELAYED queue messages, uses backoff to prevent immediate retry failures
+ * Exception: Very specific errors that benefit from immediate retry (currently none)
  */
 async function republishWithRetry(
 	isJourneyQueue: boolean,
@@ -90,26 +116,80 @@ async function republishWithRetry(
 	metadata: RetryMetadata,
 	error: Error,
 ): Promise<void> {
-	// Check if this is a transaction error - these need a delay even for DELAYED queue
 	const isTransactionErr = isTransactionError(error);
+	const _isTimeoutOrSlow = isTimeoutOrSlowResponseError(error);
 	const isDelayedQueue = queueType === "DELAYED";
+	const shouldRetryNow = shouldRetryImmediately(error);
 
-	// Transaction errors always need a delay to allow transaction rollback
-	// For delayed messages, retry immediately unless it's a transaction error
-	// For other queues, use exponential backoff
-	const delay = isTransactionErr
-		? calculateBackoffDelay(
-				metadata.retryCount,
-				env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
-				env.RABBITMQ_RETRY_MAX_DELAY_MS,
-			)
-		: isDelayedQueue
-			? 0 // Retry immediately for delayed messages (non-transaction errors)
-			: calculateBackoffDelay(
-					metadata.retryCount,
-					env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
-					env.RABBITMQ_RETRY_MAX_DELAY_MS,
-				);
+	// Classify error for better handling
+	const classified = classifyError(error);
+	const backoffMultiplier = getBackoffMultiplier(error);
+	const isTimeoutOrSlowFromClassification =
+		classified.type === "timeout" ||
+		classified.type === "slow_response" ||
+		classified.type === "network_error";
+
+	// Calculate delay based on error type, classification, and queue type
+	let delay: number;
+
+	if (shouldRetryNow) {
+		// Very specific cases where immediate retry makes sense
+		delay = 0;
+	} else if (classified.type === "subscription_error") {
+		// Subscription errors: retry with fixed long delay (e.g., 24 hours)
+		// This allows periodic checks if contact gets subscription without spamming retries
+		// Use fixed delay instead of exponential backoff to avoid extremely long delays
+		delay = env.JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS;
+
+		logger.info(
+			{
+				contactId: data.contactId,
+				stepId: data.stepId,
+				journeyId: data.journeyId,
+				delayHours: delay / (60 * 60 * 1000),
+				retryCount: metadata.retryCount + 1,
+			},
+			"Subscription error - scheduling retry with long delay to check if subscription was added",
+		);
+	} else if (isTransactionErr) {
+		// Transaction errors always need a delay to allow transaction rollback
+		delay = calculateBackoffDelay(
+			metadata.retryCount,
+			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+			env.RABBITMQ_RETRY_MAX_DELAY_MS,
+		);
+		// Apply backoff multiplier for transaction errors
+		delay = Math.floor(delay * backoffMultiplier);
+	} else if (isDelayedQueue) {
+		// DELAYED queue errors now use backoff to prevent immediate retry failures
+		// This is especially important for timeout/slow response errors
+		// The original delay has already passed, so we add backoff for retries
+		delay = calculateBackoffDelay(
+			metadata.retryCount,
+			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+			env.RABBITMQ_RETRY_MAX_DELAY_MS,
+		);
+
+		// Apply error-type-specific backoff multiplier
+		delay = Math.floor(delay * backoffMultiplier);
+
+		// For timeout errors, use longer initial delay to give Strapi more time to recover
+		if (classified.type === "timeout" && metadata.retryCount === 0) {
+			delay = Math.max(
+				delay,
+				env.RABBITMQ_RETRY_INITIAL_DELAY_MS * 2, // Double initial delay for timeout errors
+			);
+		}
+	} else {
+		// Other queues use standard exponential backoff with error-type multiplier
+		delay = calculateBackoffDelay(
+			metadata.retryCount,
+			env.RABBITMQ_RETRY_INITIAL_DELAY_MS,
+			env.RABBITMQ_RETRY_MAX_DELAY_MS,
+		);
+		// Apply error-type-specific backoff multiplier
+		delay = Math.floor(delay * backoffMultiplier);
+	}
 
 	const retryHeaders = createRetryHeaders(metadata, error);
 	const retryData = {
@@ -123,21 +203,44 @@ async function republishWithRetry(
 			retryCount: metadata.retryCount + 1,
 			maxRetries: env.RABBITMQ_MAX_RETRIES,
 			delay,
+			delaySeconds: Math.floor(delay / 1000),
 			isDelayedQueue,
+			errorType: classified.type,
+			errorDescription: classified.description,
+			isRetryable: classified.isRetryable,
+			backoffMultiplier,
 			isTransactionError: isTransactionErr,
+			isTimeoutOrSlow: isTimeoutOrSlowFromClassification,
 			error: error.message,
 		},
-		`Republishing message to ${queueType} queue with retry${isTransactionErr ? " (transaction error - delayed retry)" : ""}`,
+		`Republishing message to ${queueType} queue with retry (${classified.type}: ${classified.description})`,
 	);
 
 	if (isJourneyQueue) {
-		// For delayed queue, republish back to DELAYED queue with delay=0 for immediate retry
-		// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue
-		await publishToJourneyQueue(
-			queueType as JourneyQueueType,
-			retryData,
-			delay, // delay=0 for DELAYED queue (immediate retry), exponential backoff for others
-		);
+		// For subscription errors from JOB queue, republish to DELAYED queue with long delay
+		// This allows periodic checks without blocking the JOB queue
+		if (classified.type === "subscription_error" && queueType === "JOB") {
+			logger.debug(
+				{
+					originalQueue: queueType,
+					newQueue: "DELAYED",
+					delayHours: delay / (60 * 60 * 1000),
+					contactId: data.contactId,
+					stepId: data.stepId,
+				},
+				"Subscription error from JOB queue - republishing to DELAYED queue with long delay",
+			);
+			await publishToJourneyQueue("DELAYED", retryData, delay);
+		} else {
+			// For delayed queue, republish back to DELAYED queue with calculated delay
+			// This ensures "wait" and "scheduler-trigger" steps stay in the correct queue
+			// Delay is now calculated with backoff to prevent immediate retry failures
+			await publishToJourneyQueue(
+				queueType as JourneyQueueType,
+				retryData,
+				delay, // Calculated delay with backoff for DELAYED queue retries
+			);
+		}
 	} else {
 		await publishToTriggerQueue(
 			queueType as TriggerQueueType,
@@ -149,41 +252,61 @@ async function republishWithRetry(
 
 /**
  * Determines if a message should be retried based on error type and retry count
+ * Uses error classification for consistent retry decisions
  */
 function shouldRetry(error: Error, retryCount: number): boolean {
-	// Don't retry if max retries exceeded
+	// Use error classification to determine if error is retryable
+	const classified = classifyError(error);
+
+	// Subscription errors: always retry (with long delay) regardless of retry count
+	// This allows periodic checks if contact gets subscription
+	if (classified.type === "subscription_error") {
+		logger.debug(
+			{
+				errorType: classified.type,
+				errorDescription: classified.description,
+				retryCount,
+			},
+			"Subscription error - will retry with long delay",
+		);
+		return true;
+	}
+
+	// Don't retry if max retries exceeded (except subscription errors handled above)
 	if (retryCount >= env.RABBITMQ_MAX_RETRIES) {
 		return false;
 	}
 
-	// Don't retry on certain error types (e.g., validation errors, wrong queue routing)
-	const nonRetryableErrorNames = [
-		"ValidationError",
-		"NotFoundError",
-		"UnauthorizedError",
-		"ForbiddenError",
-	];
+	// Don't retry non-retryable errors
+	if (!classified.isRetryable) {
+		logger.debug(
+			{
+				errorType: classified.type,
+				errorDescription: classified.description,
+				retryCount,
+			},
+			"Error is not retryable based on classification",
+		);
+		return false;
+	}
 
+	// Don't retry on certain error messages (application-level errors)
+	// Note: Subscription errors are handled separately with long delays
 	const nonRetryableErrorMessages = [
 		"Job processor can only handle",
 		"should only be called for",
 		"Step type",
 		"requires timing but none was provided",
 		"requires a composition but none was found",
-		// Note: Transaction errors are retryable but need a delay (handled in republishWithRetry)
 	];
-
-	const errorName = error.constructor.name;
-	if (nonRetryableErrorNames.includes(errorName)) {
-		return false;
-	}
 
 	const errorMessage = error.message || "";
 	if (nonRetryableErrorMessages.some((msg) => errorMessage.includes(msg))) {
 		return false;
 	}
 
-	// Retry on network errors, timeouts, and transient errors
+	// Subscription errors are retryable (with long delay)
+	// Other retryable errors: network errors, timeouts, and transient errors
 	return true;
 }
 

@@ -3,6 +3,7 @@ import helmet from "helmet";
 
 import { healthCheckRouter, webhooksRouter } from "@/api";
 import {
+	contactUpdateConsumer,
 	delayedConsumer,
 	jobConsumer,
 	journeyConsumer,
@@ -39,6 +40,7 @@ async function initJobs() {
 	jobConsumer();
 	ruleConsumer();
 	delayedConsumer();
+	contactUpdateConsumer();
 	triggerConsumer();
 	startJourneyScheduler();
 	logger.info("Job processing (RabbitMQ + cron) initialized");

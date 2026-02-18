@@ -1,3 +1,4 @@
+import { env } from "../../common/utils/env-config";
 import { JOURNEY_QUEUES } from "../../config";
 import { handleMessageRetry } from "../../lib/functions/helpers/retry-handler";
 import { logger } from "../../logger";
@@ -53,17 +54,19 @@ export function delayedConsumer() {
 				);
 
 				// Add timeout to prevent hanging forever
+				// Use configurable timeout that accommodates rate limiter queue waits and multiple Strapi API calls
+				const timeoutMs = env.JOURNEYS_DELAYED_CONSUMER_TIMEOUT_MS;
 				const processPromise = processDelayedMessage(data);
 				const timeoutPromise = new Promise((_, reject) => {
 					setTimeout(
 						() =>
 							reject(
 								new Error(
-									`Timeout processing delayed job ${data.jobId} after 30 seconds`,
+									`Timeout processing delayed job ${data.jobId} after ${Math.floor(timeoutMs / 1000)} seconds`,
 								),
 							),
-						30000,
-					); // 30 second timeout
+						timeoutMs,
+					);
 				});
 				await Promise.race([processPromise, timeoutPromise]);
 

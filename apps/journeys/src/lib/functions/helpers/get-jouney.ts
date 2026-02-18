@@ -6,23 +6,42 @@ import {
 import { journeysService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
+import { buildJourneyUrl } from "./build-service-url";
 
 export async function getJourney(
 	id: DocumentId,
 ): Promise<ServiceResponse<Journey | null>> {
-	const data = await adaptiveRateLimiter.execute(() =>
-		journeysService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
-			populate: {
-				journey_steps: {
-					populate: {
-						contacts: true,
-						channel: true,
-						composition: true,
+	const url = buildJourneyUrl(id);
+	const data = await adaptiveRateLimiter.execute(
+		() =>
+			journeysService.findOne(id, env.JOURNEYS_STRAPI_API_TOKEN, {
+				populate: {
+					journey_steps: {
+						populate: {
+							contacts: true,
+							channel: true,
+							composition: true,
+						},
 					},
 				},
-			},
-		}),
+			}),
+		`journeysService.findOne - ${url}`,
 	);
+
+	// Check if journey was deleted (404)
+	// Check both response.status and error structure from Strapi
+	if (!data.success) {
+		const isNotFound =
+			data.status === 404 ||
+			data.errorMessage?.toLowerCase().includes("404") ||
+			data.errorMessage?.toLowerCase().includes("not found") ||
+			data.errorMessage?.toLowerCase().includes("notfounderror");
+
+		if (isNotFound) {
+			return ServiceResponse.failure("Journey not found (deleted)", null);
+		}
+	}
+
 	if (!data.data)
 		return ServiceResponse.failure(
 			"Could not get journey .Probably strapi is down",

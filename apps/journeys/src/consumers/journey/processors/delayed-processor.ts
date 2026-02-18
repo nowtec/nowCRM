@@ -1,14 +1,20 @@
 import type { delayedProcessorJobData } from "@nowcrm/services";
+import { env } from "../../../common/utils/env-config";
 import {
 	closeJob,
 	createNextJob,
 	createRuleCheckJob,
 } from "../../../jobs/create-job";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
+import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
+import { checkJourneyStatus } from "../../../lib/functions/helpers/check-journey-active";
+import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passed";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
+import { hasConnectionsWithRules } from "../../../lib/functions/rules/process-connections";
 import { logger } from "../../../logger";
+import { publishToJourneyQueue } from "../../../rabbitmq";
 
 export async function processDelayedMessage(data: delayedProcessorJobData) {
 	const {
@@ -24,7 +30,69 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 	} = data;
 	logger.debug(`Processing delayed job: ${jobId}`);
 
+	// Check journey status before processing
+	const journeyStatus = await checkJourneyStatus(journeyId);
+
+	if (journeyStatus === "deleted") {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				type,
+			},
+			"Journey was deleted, closing delayed job",
+		);
+		await closeJob(jobId);
+		return; // Consumer will ack the message
+	}
+
+	if (journeyStatus === "paused") {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				type,
+				delayHours:
+					env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS / (60 * 60 * 1000),
+			},
+			"Journey is paused/inactive, republishing delayed job with delay to check if journey was reactivated",
+		);
+		// Republish to DELAYED queue with delay to check again later
+		// This allows the job to be processed when journey is reactivated
+		await publishToJourneyQueue(
+			"DELAYED",
+			data,
+			env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS,
+		);
+		return; // Consumer will ack the message after successful republish
+	}
+
+	// Extend job key TTL when processing starts to prevent expiration during long operations
+	// This ensures the job key doesn't expire if processing takes longer than expected
+	await extendJobKeyTTL(contactId, journeyId, stepId);
+
 	if (!timing) {
+		// Channel-type jobs should be in JOB queue, not DELAYED queue
+		// If they end up here (e.g., from retries), republish to correct queue
+		if (type === "channel") {
+			logger.warn(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+					type,
+				},
+				"Channel-type job found in DELAYED queue without timing - republishing to JOB queue",
+			);
+			await publishToJourneyQueue("JOB", data);
+			return; // Consumer will ack the message after successful republish
+		}
+		// For non-channel types, timing is required
 		const error = new Error(
 			`Job ${jobId} missing timing - delayed messages must have timing`,
 		);
@@ -35,17 +103,40 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 		// what we do here is that if we know its just a wait node(or a schedule node)
 		//all we need is to wait time and pass contact to the next step
 		//So when time is on and this function is runned we start job for all connected steps or ending if for some reason this is the last one node
-		const step = await getJourneyStep(stepId);
-		if (!step.success || !step.responseObject) throw new Error(step.message);
+		const stepResp = await getJourneyStep(stepId);
+		if (!stepResp.success) {
+			// Check if step was deleted (404)
+			if (
+				stepResp.message?.includes("not found") ||
+				stepResp.message?.includes("deleted")
+			) {
+				logger.info(
+					{
+						jobId,
+						contactId,
+						stepId,
+						journeyId,
+						type,
+					},
+					"Journey step was deleted, closing delayed job",
+				);
+				await closeJob(jobId);
+				return; // Consumer will ack the message
+			}
+			throw new Error(stepResp.message);
+		}
+		if (!stepResp.responseObject) {
+			throw new Error("Step response has no data");
+		}
+		const step = stepResp.responseObject;
 
 		// Mark wait step as passed (no composition/channel needed for wait steps)
 		await closeJob(jobId);
 
-		if (step.responseObject.connections_from_this_step?.length) {
+		if (step.connections_from_this_step?.length) {
 			// Process all connections from this step
 			let jobsCreated = 0;
-			for (const connection_step of step.responseObject
-				.connections_from_this_step) {
+			for (const connection_step of step.connections_from_this_step) {
 				try {
 					logger.debug(
 						{
@@ -58,6 +149,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 						"Creating next job from wait step",
 					);
 					// Add timeout to prevent hanging forever
+					// Use configurable timeout that accounts for rate limiter queue wait, Strapi API calls, and Redis operations
 					const createJobPromise = createNextJob(
 						{
 							contactId,
@@ -74,8 +166,8 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 										`Timeout creating next job for step ${connection_step.target_step.documentId}`,
 									),
 								),
-							15000,
-						); // 15 second timeout
+							env.JOURNEYS_CREATE_NEXT_JOB_TIMEOUT_MS,
+						);
 					});
 					await Promise.race([createJobPromise, timeoutPromise]);
 					jobsCreated++;
@@ -90,6 +182,36 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 						"Successfully created next job from wait step",
 					);
 				} catch (nextJobError) {
+					const isTimeoutError =
+						nextJobError instanceof Error &&
+						nextJobError.message.includes("Timeout creating next job");
+
+					if (isTimeoutError) {
+						// Timeout due to lock contention - republish message with delay to retry later
+						// This allows the lock queue to drain before retrying
+						// Use a delay that gives time for lock contention to decrease
+						const retryDelay = 60000; // 60 seconds delay - allows lock queue to drain
+						logger.warn(
+							{
+								contactId,
+								journeyId,
+								stepId,
+								targetStepId: connection_step.target_step.documentId,
+								type,
+								retryDelay,
+								error: nextJobError.message,
+							},
+							"Timeout creating next job due to lock contention, republishing delayed message with delay",
+						);
+						// Republish the entire delayed message so it can retry creating all next jobs
+						// Idempotency checks in createJob will prevent duplicate jobs if some connections already succeeded
+						await publishToJourneyQueue("DELAYED", data, retryDelay);
+						// Return successfully so consumer acks the original message
+						// The republished message will retry creating the next job later
+						return;
+					}
+
+					// For non-timeout errors, re-throw to let consumer handle retry
 					logger.error(
 						{
 							err: nextJobError,
@@ -101,7 +223,6 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 						},
 						"Failed to create next job from wait step",
 					);
-					// Re-throw to let consumer handle retry
 					throw nextJobError;
 				}
 			}
@@ -113,8 +234,7 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 					stepId,
 					type,
 					jobsCreated,
-					totalConnections:
-						step.responseObject.connections_from_this_step.length,
+					totalConnections: step.connections_from_this_step.length,
 				},
 				"Wait step completed, created jobs for all connected steps",
 			);
@@ -131,7 +251,104 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 			return;
 		}
 	}
-	await processJob(contactId, stepId, journeyId, ignoreSubscription);
+
+	// Idempotency check: Verify step hasn't already been passed
+	// This prevents duplicate processing if job is redelivered or processed multiple times
+	// Only check for channel steps (wait/scheduler-trigger/publish steps don't have composition/channel)
+	const hasPassed =
+		compositionId && channel
+			? await checkStepPassed(
+					stepId,
+					contactId,
+					journeyId,
+					compositionId,
+					channel,
+				)
+			: false;
+
+	// Fetch step data once - will be reused for processJob and final step processing
+	const stepResp = await getJourneyStep(stepId);
+	if (!stepResp.success) {
+		// Check if step was deleted (404)
+		if (
+			stepResp.message?.includes("not found") ||
+			stepResp.message?.includes("deleted")
+		) {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+					type,
+				},
+				"Journey step was deleted, closing delayed job",
+			);
+			await closeJob(jobId);
+			return; // Consumer will ack the message
+		}
+		throw new Error(stepResp.message);
+	}
+	if (!stepResp.responseObject) {
+		throw new Error("Step response has no data");
+	}
+
+	if (hasPassed) {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				type,
+				compositionId,
+				channel,
+			},
+			"Step has already been passed, skipping processing (idempotency check)",
+		);
+		// Close the job since it's already been processed
+		await closeJob(jobId);
+		// Still create next job/rule check if needed, as the step was already processed
+		// Reuse step data already fetched to avoid duplicate API call
+		if (stepResp.responseObject.connections_from_this_step?.length) {
+			// Only create rule check job if connections have rules
+			// If connections exist but have no rules, directly create next jobs
+			if (
+				hasConnectionsWithRules(
+					stepResp.responseObject.connections_from_this_step,
+				)
+			) {
+				await createRuleCheckJob(data);
+			} else {
+				// No rules - directly create jobs for all connections (like wait steps)
+				for (const connection_step of stepResp.responseObject
+					.connections_from_this_step) {
+					await createNextJob(
+						{
+							contactId,
+							journeyId,
+							stepId,
+						},
+						connection_step.target_step.documentId,
+					);
+				}
+			}
+		} else {
+			const scoreResp = await createContactActionAndScore(stepId, contactId);
+			if (!scoreResp.success) throw new Error(scoreResp.message);
+			await createNextJob(data, null);
+		}
+		return;
+	}
+
+	// Pass step data to processJob to avoid duplicate API call
+	await processJob(
+		contactId,
+		stepId,
+		journeyId,
+		ignoreSubscription,
+		stepResp.responseObject,
+	);
 	const passedStep = await addJourneyPassedStep(
 		stepId,
 		contactId,
@@ -145,12 +362,30 @@ export async function processDelayedMessage(data: delayedProcessorJobData) {
 	}
 	await closeJob(jobId);
 
-	const stepResp = await getJourneyStep(stepId);
-	if (!stepResp.success || !stepResp.responseObject)
-		throw new Error(stepResp.message);
-
+	// Reuse step data already fetched to avoid duplicate API call
 	if (stepResp.responseObject.connections_from_this_step?.length) {
-		await createRuleCheckJob(data);
+		// Only create rule check job if connections have rules
+		// If connections exist but have no rules, directly create next jobs
+		if (
+			hasConnectionsWithRules(
+				stepResp.responseObject.connections_from_this_step,
+			)
+		) {
+			await createRuleCheckJob(data);
+		} else {
+			// No rules - directly create jobs for all connections (like wait steps)
+			for (const connection_step of stepResp.responseObject
+				.connections_from_this_step) {
+				await createNextJob(
+					{
+						contactId,
+						journeyId,
+						stepId,
+					},
+					connection_step.target_step.documentId,
+				);
+			}
+		}
 	} else {
 		const scoreResp = await createContactActionAndScore(stepId, contactId);
 		if (!scoreResp.success) throw new Error(scoreResp.message);

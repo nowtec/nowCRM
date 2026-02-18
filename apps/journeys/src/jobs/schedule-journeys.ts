@@ -102,7 +102,7 @@ export async function scheduleJourneys() {
 				}
 				logger.debug("Finished checking for journeys to cancel");
 
-				// 4. For each active journey, check if 
+				// 4. For each active journey, check if
 				let scheduledCount = 0;
 				let skippedCount = 0;
 				logger.debug(

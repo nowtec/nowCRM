@@ -1,14 +1,20 @@
 import type { jobProcessorJobData } from "@nowcrm/services";
+import { env } from "../../../common/utils/env-config";
 import {
 	closeJob,
 	createNextJob,
 	createRuleCheckJob,
 } from "../../../jobs/create-job";
 import { addJourneyPassedStep } from "../../../lib/functions/add-journey-passed-step";
+import { extendJobKeyTTL } from "../../../lib/functions/helpers/check-job-exists";
+import { checkJourneyStatus } from "../../../lib/functions/helpers/check-journey-active";
+import { checkStepPassed } from "../../../lib/functions/helpers/check-step-passed";
 import { getJourneyStep } from "../../../lib/functions/helpers/get-journey-step";
 import { processJob } from "../../../lib/functions/process-job";
 import { createContactActionAndScore } from "../../../lib/functions/rules/create-action-and-score";
+import { hasConnectionsWithRules } from "../../../lib/functions/rules/process-connections";
 import { logger } from "../../../logger";
+import { publishToJourneyQueue } from "../../../rabbitmq";
 
 export async function processJobMessage(data: jobProcessorJobData) {
 	const {
@@ -22,12 +28,76 @@ export async function processJobMessage(data: jobProcessorJobData) {
 	} = data;
 	logger.debug(`Processing job ${jobId}`);
 
+	// Check journey status before processing
+	const journeyStatus = await checkJourneyStatus(journeyId);
+
+	if (journeyStatus === "deleted") {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+			},
+			"Journey was deleted, closing job",
+		);
+		await closeJob(jobId);
+		return; // Consumer will ack the message
+	}
+
+	if (journeyStatus === "paused") {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				delayHours:
+					env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS / (60 * 60 * 1000),
+			},
+			"Journey is paused/inactive, republishing job with delay to check if journey was reactivated",
+		);
+		// Republish to JOB queue with delay to check again later
+		// This allows the job to be processed when journey is reactivated
+		await publishToJourneyQueue(
+			"JOB",
+			data,
+			env.JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS,
+		);
+		return; // Consumer will ack the message after successful republish
+	}
+
+	// Extend job key TTL when processing starts to prevent expiration during long operations
+	// This ensures the job key doesn't expire if processing takes longer than expected
+	await extendJobKeyTTL(contactId, journeyId, stepId);
+
 	// Get step to verify it's a "channel" type
 	// JOB queue should only process "channel" type steps
 	// "wait", "scheduler-trigger", and "publish" steps should go through DELAYED queue
 	const stepResp = await getJourneyStep(stepId);
-	if (!stepResp.success || !stepResp.responseObject) {
+	if (!stepResp.success) {
+		// Check if step was deleted (404)
+		if (
+			stepResp.message?.includes("not found") ||
+			stepResp.message?.includes("deleted")
+		) {
+			logger.info(
+				{
+					jobId,
+					contactId,
+					stepId,
+					journeyId,
+				},
+				"Journey step was deleted, closing job",
+			);
+			await closeJob(jobId);
+			return; // Consumer will ack the message
+		}
 		throw new Error(stepResp.message);
+	}
+
+	if (!stepResp.responseObject) {
+		throw new Error("Step response has no data");
 	}
 
 	const stepType = stepResp.responseObject.type;
@@ -46,7 +116,67 @@ export async function processJobMessage(data: jobProcessorJobData) {
 		);
 	}
 
-	await processJob(contactId, stepId, journeyId, ignoreSubscription);
+	// Idempotency check: Verify step hasn't already been passed
+	// This prevents duplicate processing if job is redelivered or processed multiple times
+	const hasPassed = await checkStepPassed(
+		stepId,
+		contactId,
+		journeyId,
+		compositionId,
+		channel,
+	);
+
+	if (hasPassed) {
+		logger.info(
+			{
+				jobId,
+				contactId,
+				stepId,
+				journeyId,
+				compositionId,
+				channel,
+			},
+			"Step has already been passed, skipping processing (idempotency check)",
+		);
+		// Close the job since it's already been processed
+		await closeJob(jobId);
+		// Still create next job/rule check if needed, as the step was already processed
+		// Reuse step data already fetched to avoid duplicate API call
+		const step = stepResp.responseObject;
+		if (step.connections_from_this_step?.length) {
+			// Only create rule check job if connections have rules
+			// If connections exist but have no rules, directly create next jobs
+			if (hasConnectionsWithRules(step.connections_from_this_step)) {
+				await createRuleCheckJob(data);
+			} else {
+				// No rules - directly create jobs for all connections (like wait steps)
+				for (const connection_step of step.connections_from_this_step) {
+					await createNextJob(
+						{
+							contactId,
+							journeyId,
+							stepId,
+						},
+						connection_step.target_step.documentId,
+					);
+				}
+			}
+		} else {
+			const scoreResp = await createContactActionAndScore(stepId, contactId);
+			if (!scoreResp.success) throw new Error(scoreResp.message);
+			await createNextJob(data, null);
+		}
+		return;
+	}
+
+	// Pass step data to processJob to avoid duplicate API call
+	await processJob(
+		contactId,
+		stepId,
+		journeyId,
+		ignoreSubscription,
+		stepResp.responseObject,
+	);
 	const passedStep = await addJourneyPassedStep(
 		stepId,
 		contactId,
@@ -61,7 +191,23 @@ export async function processJobMessage(data: jobProcessorJobData) {
 
 	const step = stepResp.responseObject;
 	if (step.connections_from_this_step?.length) {
-		await createRuleCheckJob(data);
+		// Only create rule check job if connections have rules
+		// If connections exist but have no rules, directly create next jobs
+		if (hasConnectionsWithRules(step.connections_from_this_step)) {
+			await createRuleCheckJob(data);
+		} else {
+			// No rules - directly create jobs for all connections (like wait steps)
+			for (const connection_step of step.connections_from_this_step) {
+				await createNextJob(
+					{
+						contactId,
+						journeyId,
+						stepId,
+					},
+					connection_step.target_step.documentId,
+				);
+			}
+		}
 	} else {
 		const scoreResp = await createContactActionAndScore(stepId, contactId);
 		if (!scoreResp.success) throw new Error(scoreResp.message);

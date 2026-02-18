@@ -2,6 +2,7 @@ import type { DocumentId } from "@nowcrm/services";
 import { journeyStepsService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
+import { buildJourneyStepUrl } from "./build-service-url";
 
 /**
  * Checks if a step is valid for a contact in a journey
@@ -32,12 +33,15 @@ export async function checkStepValid(
 			hasComposition = !!stepData.composition;
 		} else {
 			// Fallback: fetch step if not provided (should be rare)
-			const step = await adaptiveRateLimiter.execute(() =>
-				journeyStepsService.findOne(stepId, env.JOURNEYS_STRAPI_API_TOKEN, {
-					populate: {
-						composition: true,
-					},
-				}),
+			const url = buildJourneyStepUrl(stepId);
+			const step = await adaptiveRateLimiter.execute(
+				() =>
+					journeyStepsService.findOne(stepId, env.JOURNEYS_STRAPI_API_TOKEN, {
+						populate: {
+							composition: true,
+						},
+					}),
+				`journeyStepsService.findOne (checkStepValid) - ${url}`,
 			);
 
 			if (!step.data) {
