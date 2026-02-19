@@ -1,5 +1,5 @@
 import type { DocumentId, JourneyStep } from "@nowcrm/services";
-import { contactsService } from "@nowcrm/services/server";
+import { composerService, contactsService } from "@nowcrm/services/server";
 import { adaptiveRateLimiter } from "@/common/utils/adaptive-rate-limiter";
 import { env } from "@/common/utils/env-config";
 import { logger } from "@/server";
@@ -113,14 +113,14 @@ export async function processJob(
 			},
 			"Composition sent",
 		);
-		// await adaptiveRateLimiter.execute(() =>
-		// 	composerService.sendComposition(compositionPayload, {
-		// 		stepId,
-		// 		contactId,
-		// 		token: env.JOURNEYS_STRAPI_API_TOKEN,
-		// 		compositionId: stepDataFinal.composition.documentId,
-		// 	}),
-		// );
+		await adaptiveRateLimiter.execute(() =>
+			composerService.sendComposition(compositionPayload, {
+				stepId,
+				contactId,
+				token: env.JOURNEYS_STRAPI_API_TOKEN,
+				compositionId: stepDataFinal.composition.documentId,
+			}),
+		);
 	} else {
 		logger.warn(
 			{
