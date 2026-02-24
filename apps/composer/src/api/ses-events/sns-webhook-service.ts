@@ -15,6 +15,14 @@ import { logger } from "@/server";
 import type { EmailRecord, SESMessage, SNSMessage } from "./sns-webhook-model";
 
 export class SNSWebhookServiceApi {
+	private readonly receivedByEventType = new Map<string, number>();
+
+	private nextEventTypeCount(eventType: string): number {
+		const next = (this.receivedByEventType.get(eventType) ?? 0) + 1;
+		this.receivedByEventType.set(eventType, next);
+		return next;
+	}
+
 	/**
 	 * Process an incoming SNS message
 	 */
@@ -115,38 +123,31 @@ export class SNSWebhookServiceApi {
 		notification: SNSMessage & { Type: "Notification" },
 	): Promise<ServiceResponse<{ message: string } | null>> {
 		try {
-			logger.info(
-				`Processing notification with MessageId: ${notification.MessageId}`,
-			);
+			logger.info(`SNS notification received: id=${notification.MessageId}`);
 
 			// Parse the SES message from the SNS notification
 			let sesMessage: SESMessage;
 			try {
 				sesMessage = JSON.parse(notification.Message) as SESMessage;
+				const eventTypeCount = this.nextEventTypeCount(sesMessage.eventType);
 				logger.info(
-					`Parsed SES message with eventType: ${sesMessage.eventType}`,
-				);
-				logger.info(
-					`SES message mail details: ${JSON.stringify(sesMessage.mail)}`,
+					`SES event received: type=${sesMessage.eventType} n=${eventTypeCount} from=${sesMessage.mail.source} recipients=${sesMessage.mail.destination.length}`,
 				);
 			} catch (parseError) {
-				logger.error(`Error parsing SES message: ${parseError}`);
-				logger.error(`Raw message content: ${notification.Message}`);
+				logger.error(
+					`SES parse failed: notificationId=${notification.MessageId} reason=${parseError}`,
+				);
 				throw new Error(`Failed to parse SES message: ${parseError}`);
 			}
 
 			// Extract email records from the SES message
 			const emailRecords = this.extractEmailRecords(sesMessage, notification);
-			logger.info(`Extracted ${emailRecords.length} email records`);
-
-			if (emailRecords.length > 0) {
-				logger.info(`First email record: ${JSON.stringify(emailRecords[0])}`);
-			}
+			logger.info(`SES records extracted: count=${emailRecords.length}`);
 
 			// If no records match our domain filter, return early
 			if (emailRecords.length === 0) {
 				logger.info(
-					`No records to process: source domain doesn't match ${env.COMPOSER_CUSTOMER_IDENTITY}`,
+					`SES event skipped: type=${sesMessage.eventType} from=${sesMessage.mail.source} reason=domain_filter`,
 				);
 				return ServiceResponse.success("No matching records to process", {
 					message: "Source domain filter applied, no matching records",
@@ -154,7 +155,6 @@ export class SNSWebhookServiceApi {
 			}
 
 			// Process each email record
-			logger.info(`Processing ${emailRecords.length} email records`);
 			const results = await Promise.all(
 				emailRecords.map((record) => this.sendToStrapi(record)),
 			);
@@ -163,7 +163,7 @@ export class SNSWebhookServiceApi {
 			const allSuccessful = results.every((result) => result.success);
 			const successCount = results.filter((result) => result.success).length;
 			logger.info(
-				`Processed ${successCount} out of ${results.length} records successfully`,
+				`SES event processed: type=${sesMessage.eventType} ok=${successCount} fail=${results.length - successCount}`,
 			);
 
 			if (allSuccessful) {
@@ -189,8 +189,7 @@ export class SNSWebhookServiceApi {
 				);
 			}
 		} catch (error: any) {
-			logger.error(`Error processing SNS notification: ${error.message}`);
-			logger.error(`Error stack: ${error.stack}`);
+			logger.error(`SNS notification failed: reason=${error.message}`);
 			return ServiceResponse.failure(
 				`Error processing SNS notification: ${error.message}`,
 				null,
@@ -259,56 +258,35 @@ export class SNSWebhookServiceApi {
 		// Get source domain
 		const sourceDomain = extractDomain(sesMessage.mail.source);
 
-		// Add detailed logging for domain comparison
-		logger.info(
-			`Comparing source domain "${sourceDomain}" with CUSTOMER_IDENTITIES "${env.COMPOSER_CUSTOMER_IDENTITY || "not set"}"`,
-		);
-
 		// Parse COMPOSER_CUSTOMER_IDENTITY into an array of allowed domains
 		const allowedDomains = (env.COMPOSER_CUSTOMER_IDENTITY || "")
 			.split(",")
 			.map((d) => d.trim().toLowerCase())
 			.filter(Boolean);
 
-		logger.info(
-			`Allowed COMPOSER_CUSTOMER_IDENTITY: ${allowedDomains.join(", ")}`,
-		);
-
 		// Check if the source domain is in the allowed list
 		if (allowedDomains.length > 0 && !allowedDomains.includes(sourceDomain)) {
 			logger.info(
-				`Skipping record with source domain "${sourceDomain}" not in allowed list ${allowedDomains}`,
+				`SES domain skip: fromDomain=${sourceDomain} allowed=${allowedDomains.join(",")}`,
 			);
 			return records;
 		}
 
-		// Log destination emails
-		logger.info(
-			`Processing ${sesMessage.mail.destination.length} destination emails`,
-		);
-
 		// For each destination email, create a separate record
 		for (const destination of sesMessage.mail.destination) {
-			logger.info(`Processing destination email: ${destination}`);
-
 			let status = "delivered";
 
 			// Determine status based on notification type
 			if (sesMessage.bounce) {
 				status = "bounced";
-				logger.info(`Email bounced: ${JSON.stringify(sesMessage.bounce)}`);
 			} else if (sesMessage.complaint) {
 				status = "complained";
-				logger.info(
-					`Email complained: ${JSON.stringify(sesMessage.complaint)}`,
-				);
 			}
 
 			// Get the status from headers if available
 			let headerStatus = status;
 			if (sesMessage.mail.headers && sesMessage.mail.headers.length > 0) {
 				headerStatus = sesMessage.mail.headers[0].name;
-				logger.info(`Found header status: ${headerStatus}`);
 			}
 
 			const record: EmailRecord = {
@@ -329,8 +307,6 @@ export class SNSWebhookServiceApi {
 				delivery_timestamp:
 					sesMessage.delivery?.timestamp || sesMessage.mail.timestamp,
 			};
-
-			logger.info(`Created email record: ${JSON.stringify(record)}`);
 			records.push(record);
 		}
 
@@ -345,7 +321,7 @@ export class SNSWebhookServiceApi {
 	): Promise<ServiceResponse<null>> {
 		try {
 			logger.info(
-				`Sending record to Strapi for destination: ${record.destination}`,
+				`Event write start: type=${record.status || "unknown"} action=${record.action || "unknown"} to=${record.destination} from=${record.source}`,
 			);
 
 			// First, find the contact ID by email
@@ -363,36 +339,20 @@ export class SNSWebhookServiceApi {
 					},
 				);
 
-				logger.info(
-					`Contact lookup response status: ${contactResponse.status}`,
-				);
-				logger.info(
-					`Contact lookup response data: ${JSON.stringify(contactResponse.data)}`,
-				);
-
 				if (
 					contactResponse.success &&
 					contactResponse.data &&
 					contactResponse.data.length > 0
 				) {
 					contactId = contactResponse.data[0].documentId;
-					logger.info(
-						`Found contact ID ${contactId} for email: ${record.destination}`,
-					);
 				} else {
-					logger.info(
-						`No existing contact found for email: ${record.destination}, will create one`,
-					);
+					logger.info(`Contact missing, creating: email=${record.destination}`);
 
 					// Create the contact if it doesn't exist
 					const createContactResult = await this.createContactFromEmail(
 						record.destination,
 					);
 					if (createContactResult.success) {
-						logger.info(
-							`Successfully created contact for email: ${record.destination}`,
-						);
-
 						// Fetch the newly created contact to get its ID
 						const newContactResponse = await contactsService.find(
 							env.COMPOSER_STRAPI_API_TOKEN,
@@ -405,35 +365,27 @@ export class SNSWebhookServiceApi {
 							},
 						);
 
-						logger.info(
-							`New contact lookup response: ${JSON.stringify(newContactResponse.data)}`,
-						);
-
 						if (
 							newContactResponse.success &&
 							newContactResponse.data &&
 							newContactResponse.data.length > 0
 						) {
 							contactId = newContactResponse.data[0].documentId;
-							logger.info(
-								`Created and found contact ID ${contactId} for email: ${record.destination}`,
-							);
 						} else {
 							logger.warn(
-								`Created contact but couldn't find it in subsequent lookup for: ${record.destination}`,
+								`Contact created but lookup failed: email=${record.destination}`,
 							);
 						}
 					} else {
 						logger.warn(
-							`Failed to create contact: ${createContactResult.message}`,
+							`Contact create failed: email=${record.destination} reason=${createContactResult.message}`,
 						);
 					}
 				}
 			} catch (error: any) {
 				logger.warn(
-					`Could not find or create contact for ${record.destination}: ${error.message}`,
+					`Contact resolve failed: email=${record.destination} reason=${error.message}`,
 				);
-				logger.warn(`Contact error stack: ${error.stack}`);
 				// Continue without contact ID if there's an error
 			}
 
@@ -453,7 +405,6 @@ export class SNSWebhookServiceApi {
 			// Add contact relation if we found a contact ID
 			if (contactId) {
 				eventData.contact = contactId;
-				logger.info(`Adding contact ID ${contactId} to event data`);
 			}
 
 			// Use eventsService to create the event
@@ -462,12 +413,10 @@ export class SNSWebhookServiceApi {
 				env.COMPOSER_STRAPI_API_TOKEN,
 			);
 
-			logger.info(`Strapi event creation response status: ${response.status}`);
-			logger.info(
-				`Strapi event creation response data: ${JSON.stringify(response.data)}`,
-			);
-
 			if (response.success) {
+				logger.info(
+					`Event saved: type=${record.status || "unknown"} action=${record.action || "unknown"} to=${record.destination} from=${record.source}`,
+				);
 				if (record.action?.includes("Permanent Bounce")) {
 					await eventsService.create(
 						{
@@ -564,7 +513,7 @@ export class SNSWebhookServiceApi {
 			}
 
 			logger.error(
-				`Failed to create event in Strapi: ${response.errorMessage || "Unknown error"}`,
+				`Event save failed: type=${record.status || "unknown"} action=${record.action || "unknown"} to=${record.destination} from=${record.source} reason=${response.errorMessage || "Unknown error"}`,
 			);
 			return ServiceResponse.failure(
 				`Failed to create email record in Strapi for ${record.destination}: ${response.errorMessage || "Unknown error"}`,
@@ -572,8 +521,9 @@ export class SNSWebhookServiceApi {
 				StatusCodes.BAD_GATEWAY,
 			);
 		} catch (error: any) {
-			logger.error(`Error sending to Strapi: ${error.message}`);
-			logger.error(`Strapi error stack: ${error.stack}`);
+			logger.error(
+				`Event save error: type=${record.status || "unknown"} action=${record.action || "unknown"} to=${record.destination} from=${record.source} reason=${error.message}`,
+			);
 			return ServiceResponse.failure(
 				`Error sending to Strapi: ${error.message}`,
 				null,
@@ -601,11 +551,6 @@ export class SNSWebhookServiceApi {
 				},
 			);
 
-			logger.info(`Contact check response status: ${checkResponse.status}`);
-			logger.info(
-				`Contact check response data: ${JSON.stringify(checkResponse.data)}`,
-			);
-
 			// If contact already exists, return success
 			if (
 				checkResponse.success &&
@@ -626,28 +571,21 @@ export class SNSWebhookServiceApi {
 				// publishedAt: new Date()  ,
 			};
 
-			logger.info(`Contact creation data: ${JSON.stringify(contactData)}`);
-
 			// Cast to Form_Contact when passing to the service
 			const response = await contactsService.create(
 				contactData,
 				env.COMPOSER_STRAPI_API_TOKEN,
 			);
 
-			logger.info(`Contact creation response status: ${response.status}`);
-			logger.info(
-				`Contact creation response data: ${JSON.stringify(response.data)}`,
-			);
-
 			if (response.success) {
-				logger.info(`Contact created in Strapi for ${email}`);
+				logger.info(`Contact created: email=${email}`);
 				return ServiceResponse.success(
 					`Contact created in Strapi for ${email}`,
 					null,
 				);
 			} else {
 				logger.error(
-					`Failed to create contact in Strapi for ${email}: ${response.errorMessage || "Unknown error"}`,
+					`Contact create failed: email=${email} reason=${response.errorMessage || "Unknown error"}`,
 				);
 				return ServiceResponse.failure(
 					`Failed to create contact in Strapi for ${email}: ${response.errorMessage || "Unknown error"}`,
@@ -656,8 +594,9 @@ export class SNSWebhookServiceApi {
 				);
 			}
 		} catch (error: any) {
-			logger.error(`Error creating contact from email: ${error.message}`);
-			logger.error(`Contact creation error stack: ${error.stack}`);
+			logger.error(
+				`Contact create error: email=${email} reason=${error.message}`,
+			);
 			return ServiceResponse.failure(
 				`Error creating contact from email: ${error.message}`,
 				null,

@@ -5,39 +5,62 @@ import type { SNSMessage } from "./sns-webhook-model";
 import { snsWebhookServiceApi } from "./sns-webhook-service";
 
 class SNSWebhookController {
+	private parseSNSMessage(wrapper: any): SNSMessage {
+		if (typeof wrapper?.body === "string") {
+			try {
+				return JSON.parse(wrapper.body) as SNSMessage;
+			} catch (parseError) {
+				logger.error(`SNS parse failed: ${parseError}`);
+				throw new Error("Invalid SNS message format");
+			}
+		}
+
+		return wrapper as SNSMessage;
+	}
+
 	public handleSNSWebhook: RequestHandler = async (
 		req: Request,
 		res: Response,
 	) => {
 		try {
-			logger.info("SNS Webhook received");
+			const wrappers: any[] = Array.isArray(req.body) ? req.body : [req.body];
+			logger.info(`SNS Webhook received: messages=${wrappers.length}`);
 
-			const wrapper: any = Array.isArray(req.body) ? req.body[0] : req.body;
-			let snsMessage: SNSMessage;
+			let lastResponse: Awaited<
+				ReturnType<typeof snsWebhookServiceApi.processSNSMessage>
+			> | null = null;
+			let failedCount = 0;
 
-			if (typeof wrapper.body === "string") {
-				try {
-					snsMessage = JSON.parse(wrapper.body);
-				} catch (parseError) {
-					logger.error(`Failed to parse SNS message: ${parseError}`);
-					throw new Error(`Invalid SNS message format`);
+			for (const wrapper of wrappers) {
+				const snsMessage = this.parseSNSMessage(wrapper);
+				const serviceResponse =
+					await snsWebhookServiceApi.processSNSMessage(snsMessage);
+
+				if (!serviceResponse.success) {
+					failedCount += 1;
+					logger.error(
+						`SNS message failed: type=${snsMessage.Type} reason=${serviceResponse.message}`,
+					);
 				}
-			} else {
-				snsMessage = wrapper as SNSMessage;
+
+				lastResponse = serviceResponse;
 			}
 
-			logger.info(`Processing SNS message of type: ${snsMessage.Type}`);
-
-			const serviceResponse =
-				await snsWebhookServiceApi.processSNSMessage(snsMessage);
-
-			if (!serviceResponse.success) {
-				logger.error(
-					`SNS message processing failed: ${serviceResponse.message}`,
-				);
+			if (wrappers.length === 1 && lastResponse) {
+				return handleServiceResponse(lastResponse, res);
 			}
 
-			handleServiceResponse(serviceResponse, res);
+			if (failedCount > 0) {
+				return res.status(207).json({
+					success: false,
+					message: `Processed ${wrappers.length - failedCount}/${wrappers.length} SNS messages`,
+				});
+			}
+
+			return res.status(200).json({
+				success: true,
+				message: `Processed ${wrappers.length} SNS messages`,
+			});
 		} catch (error: any) {
 			logger.error(`SNS Webhook Error: ${error.message}`);
 			res.status(400).json({
