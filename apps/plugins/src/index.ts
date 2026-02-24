@@ -1,11 +1,14 @@
 import { env } from "@/common/utils/env-config";
 import { initializePlugins } from "@/lib/plugin-manager";
+import { startPluginScheduler, stopPluginScheduler } from "@/lib/plugin-scheduler";
 import { app, logger } from "@/server";
 
 // Initialize plugins on startup
 initializePlugins()
 	.then(() => {
 		logger.info("Plugins initialized successfully");
+		// Start plugin scheduler after plugins are initialized
+		startPluginScheduler();
 	})
 	.catch((error) => {
 		logger.error({ error }, "Failed to initialize plugins");
@@ -21,6 +24,7 @@ const server = app.listen(env.PLUGINS_PORT, () => {
 
 const onCloseSignal = () => {
 	logger.info("sigint received, shutting down");
+	stopPluginScheduler();
 	server.close(() => {
 		logger.info("server closed");
 		process.exit();
