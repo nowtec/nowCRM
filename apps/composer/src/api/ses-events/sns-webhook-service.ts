@@ -346,9 +346,7 @@ export class SNSWebhookServiceApi {
 				) {
 					contactId = contactResponse.data[0].documentId;
 				} else {
-					logger.info(
-						`Contact missing, creating: email=${record.destination}`,
-					);
+					logger.info(`Contact missing, creating: email=${record.destination}`);
 
 					// Create the contact if it doesn't exist
 					const createContactResult = await this.createContactFromEmail(
@@ -596,7 +594,9 @@ export class SNSWebhookServiceApi {
 				);
 			}
 		} catch (error: any) {
-			logger.error(`Contact create error: email=${email} reason=${error.message}`);
+			logger.error(
+				`Contact create error: email=${email} reason=${error.message}`,
+			);
 			return ServiceResponse.failure(
 				`Error creating contact from email: ${error.message}`,
 				null,
