@@ -57,6 +57,20 @@ jobs:
       - name: Run Biome
         working-directory: libs/services
         run: biome ci
+    
+
+  quality-plugins:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: 2.2.7
+      - name: Run Biome
+        working-directory: apps/plugins
+        run: biome ci
 
   quality-nowcrm-dal:
     runs-on: ubuntu-latest

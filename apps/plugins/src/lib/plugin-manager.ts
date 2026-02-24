@@ -55,7 +55,10 @@ const extractPluginNameFromGitUrl = (gitUrl: string): string => {
  */
 const maskGitUrlSecret = (url: string): string => {
 	// mask anything between scheme and @github.com/
-	return url.replace(/^(git\+https:\/\/)([^@]+)@github\.com\//, "$1***@github.com/");
+	return url.replace(
+		/^(git\+https:\/\/)([^@]+)@github\.com\//,
+		"$1***@github.com/",
+	);
 };
 
 /**
@@ -184,29 +187,43 @@ const installNodePlugin = (
 const ensurePythonVenv = (venvDir: string): void => {
 	// Resolve to absolute path
 	const absoluteVenvDir = resolvePath(venvDir);
-	
+
 	// Check if venv exists and is valid
 	const venvExists = existsSync(absoluteVenvDir);
 	const pythonExecutable = getPythonExecutable(absoluteVenvDir);
 	const pipExecutable = getPipExecutable(absoluteVenvDir);
-	const venvIsValid = venvExists && existsSync(pythonExecutable) && existsSync(pipExecutable);
-	
+	const venvIsValid =
+		venvExists && existsSync(pythonExecutable) && existsSync(pipExecutable);
+
 	if (!venvExists) {
-		logger.info({ venvDir: absoluteVenvDir }, "Creating Python virtual environment");
+		logger.info(
+			{ venvDir: absoluteVenvDir },
+			"Creating Python virtual environment",
+		);
 		try {
 			// Ensure parent directory exists
 			mkdirSync(absoluteVenvDir, { recursive: true });
 			execSync(`${env.PLUGINS_PYTHON_PATH} -m venv "${absoluteVenvDir}"`, {
 				stdio: "inherit",
 			});
-			logger.info({ venvDir: absoluteVenvDir }, "Python virtual environment created");
+			logger.info(
+				{ venvDir: absoluteVenvDir },
+				"Python virtual environment created",
+			);
 		} catch (error) {
-			logger.error({ venvDir: absoluteVenvDir, error }, "Failed to create Python virtual environment");
+			logger.error(
+				{ venvDir: absoluteVenvDir, error },
+				"Failed to create Python virtual environment",
+			);
 			throw error;
 		}
 	} else if (!venvIsValid) {
 		logger.warn(
-			{ venvDir: absoluteVenvDir, pythonExists: existsSync(pythonExecutable), pipExists: existsSync(pipExecutable) },
+			{
+				venvDir: absoluteVenvDir,
+				pythonExists: existsSync(pythonExecutable),
+				pipExists: existsSync(pipExecutable),
+			},
 			"Python virtual environment exists but is incomplete, will attempt to fix",
 		);
 		// If venv exists but is incomplete, try to recreate it
@@ -214,21 +231,33 @@ const ensurePythonVenv = (venvDir: string): void => {
 			// Remove incomplete venv
 			const { rmSync } = require("node:fs");
 			rmSync(absoluteVenvDir, { recursive: true, force: true });
-			logger.info({ venvDir: absoluteVenvDir }, "Removed incomplete venv, recreating");
+			logger.info(
+				{ venvDir: absoluteVenvDir },
+				"Removed incomplete venv, recreating",
+			);
 			// Recreate
 			mkdirSync(absoluteVenvDir, { recursive: true });
 			execSync(`${env.PLUGINS_PYTHON_PATH} -m venv "${absoluteVenvDir}"`, {
 				stdio: "inherit",
 			});
-			logger.info({ venvDir: absoluteVenvDir }, "Python virtual environment recreated");
+			logger.info(
+				{ venvDir: absoluteVenvDir },
+				"Python virtual environment recreated",
+			);
 		} catch (error) {
-			logger.error({ venvDir: absoluteVenvDir, error }, "Failed to recreate Python virtual environment");
+			logger.error(
+				{ venvDir: absoluteVenvDir, error },
+				"Failed to recreate Python virtual environment",
+			);
 			throw error;
 		}
 	} else {
-		logger.debug({ venvDir: absoluteVenvDir }, "Python virtual environment already exists and is valid");
+		logger.debug(
+			{ venvDir: absoluteVenvDir },
+			"Python virtual environment already exists and is valid",
+		);
 	}
-	
+
 	// Verify pip exists and bootstrap if needed (double-check after potential recreation)
 	if (!existsSync(pipExecutable)) {
 		logger.warn(
@@ -238,36 +267,57 @@ const ensurePythonVenv = (venvDir: string): void => {
 		try {
 			// Method 1: Try ensurepip (may not work in Alpine but worth trying)
 			try {
-				logger.debug({ venvDir: absoluteVenvDir }, "Trying ensurepip to bootstrap pip");
+				logger.debug(
+					{ venvDir: absoluteVenvDir },
+					"Trying ensurepip to bootstrap pip",
+				);
 				execSync(`${pythonExecutable} -m ensurepip --upgrade --default-pip`, {
 					stdio: "inherit",
 				});
 				if (existsSync(pipExecutable)) {
-					logger.info({ venvDir: absoluteVenvDir }, "pip bootstrapped successfully using ensurepip");
+					logger.info(
+						{ venvDir: absoluteVenvDir },
+						"pip bootstrapped successfully using ensurepip",
+					);
 					return;
 				}
-				logger.debug({ venvDir: absoluteVenvDir }, "ensurepip completed but pip still not found");
+				logger.debug(
+					{ venvDir: absoluteVenvDir },
+					"ensurepip completed but pip still not found",
+				);
 			} catch (ensurepipError) {
-				logger.debug({ venvDir: absoluteVenvDir, error: ensurepipError }, "ensurepip not available, trying get-pip.py");
+				logger.debug(
+					{ venvDir: absoluteVenvDir, error: ensurepipError },
+					"ensurepip not available, trying get-pip.py",
+				);
 			}
-			
+
 			// Method 2: Download and run get-pip.py (official bootstrap script)
 			const { unlinkSync } = require("node:fs");
 			const getPipPath = join(absoluteVenvDir, "get-pip.py");
-			
-			logger.info({ venvDir: absoluteVenvDir }, "Downloading get-pip.py to bootstrap pip");
+
+			logger.info(
+				{ venvDir: absoluteVenvDir },
+				"Downloading get-pip.py to bootstrap pip",
+			);
 			try {
 				// Download get-pip.py using curl
-				execSync(`curl -sSL https://bootstrap.pypa.io/get-pip.py -o "${getPipPath}"`, {
-					stdio: "inherit",
-				});
-				
-				logger.info({ venvDir: absoluteVenvDir }, "Running get-pip.py to install pip");
+				execSync(
+					`curl -sSL https://bootstrap.pypa.io/get-pip.py -o "${getPipPath}"`,
+					{
+						stdio: "inherit",
+					},
+				);
+
+				logger.info(
+					{ venvDir: absoluteVenvDir },
+					"Running get-pip.py to install pip",
+				);
 				// Run get-pip.py with venv's python to install pip into the venv
 				execSync(`${pythonExecutable} "${getPipPath}"`, {
 					stdio: "inherit",
 				});
-				
+
 				// Clean up
 				if (existsSync(getPipPath)) {
 					unlinkSync(getPipPath);
@@ -281,32 +331,56 @@ const ensurePythonVenv = (venvDir: string): void => {
 						// Ignore cleanup errors
 					}
 				}
-				logger.error({ venvDir: absoluteVenvDir, error: getPipError }, "get-pip.py failed");
+				logger.error(
+					{ venvDir: absoluteVenvDir, error: getPipError },
+					"get-pip.py failed",
+				);
 				throw getPipError;
 			}
-			
-			logger.info({ venvDir: absoluteVenvDir }, "pip installed successfully via get-pip.py");
-			
+
+			logger.info(
+				{ venvDir: absoluteVenvDir },
+				"pip installed successfully via get-pip.py",
+			);
+
 			// Verify pip now exists
 			if (!existsSync(pipExecutable)) {
 				// Check for pip3 as fallback
 				const pip3Executable = join(absoluteVenvDir, "bin", "pip3");
 				if (existsSync(pip3Executable)) {
-					logger.info({ venvDir: absoluteVenvDir }, "Found pip3, creating pip symlink");
+					logger.info(
+						{ venvDir: absoluteVenvDir },
+						"Found pip3, creating pip symlink",
+					);
 					// Create symlink from pip3 to pip
 					try {
 						execSync(`ln -sf pip3 "${pipExecutable}"`, {
 							cwd: join(absoluteVenvDir, "bin"),
 						});
-						logger.info({ venvDir: absoluteVenvDir }, "Created pip symlink from pip3");
+						logger.info(
+							{ venvDir: absoluteVenvDir },
+							"Created pip symlink from pip3",
+						);
 					} catch (symlinkError) {
-						logger.warn({ venvDir: absoluteVenvDir, error: symlinkError }, "Failed to create pip symlink");
+						logger.warn(
+							{ venvDir: absoluteVenvDir, error: symlinkError },
+							"Failed to create pip symlink",
+						);
 					}
 				}
-				
+
 				if (!existsSync(pipExecutable)) {
-					const error = new Error(`pip installation completed but executable still not found at ${pipExecutable}`);
-					logger.error({ venvDir: absoluteVenvDir, pipExecutable, pip3Exists: existsSync(pip3Executable) }, error.message);
+					const error = new Error(
+						`pip installation completed but executable still not found at ${pipExecutable}`,
+					);
+					logger.error(
+						{
+							venvDir: absoluteVenvDir,
+							pipExecutable,
+							pip3Exists: existsSync(pip3Executable),
+						},
+						error.message,
+					);
 					throw error;
 				}
 			}
@@ -315,10 +389,15 @@ const ensurePythonVenv = (venvDir: string): void => {
 				{ venvDir: absoluteVenvDir, error: pipError },
 				"Failed to bootstrap pip in venv",
 			);
-			throw new Error(`Python venv created but pip could not be installed: ${pipError}`);
+			throw new Error(
+				`Python venv created but pip could not be installed: ${pipError}`,
+			);
 		}
 	} else {
-		logger.debug({ venvDir: absoluteVenvDir }, "pip executable found, no bootstrap needed");
+		logger.debug(
+			{ venvDir: absoluteVenvDir },
+			"pip executable found, no bootstrap needed",
+		);
 	}
 };
 
@@ -344,50 +423,72 @@ const getPipExecutable = (venvDir: string): string => {
 		: join(absoluteVenvDir, "bin", "pip");
 };
 
-const installPythonPlugin = (venvDir: string, pluginConfig: PluginConfig): void => {
+const installPythonPlugin = (
+	venvDir: string,
+	pluginConfig: PluginConfig,
+): void => {
 	const absoluteVenvDir = resolvePath(venvDir);
 	ensurePythonVenv(absoluteVenvDir);
 	const pipExecutable = getPipExecutable(absoluteVenvDir);
-	
+
 	// Verify pip exists
 	if (!existsSync(pipExecutable)) {
 		const errorMsg = `pip executable not found at ${pipExecutable}. Virtual environment may be incomplete.`;
 		logger.error({ venvDir: absoluteVenvDir, pipExecutable }, errorMsg);
 		throw new Error(errorMsg);
 	}
-  
+
 	let installCommand: string;
 	let logSpecSafe: string;
-  
+
 	if (pluginConfig.isGitUrl && pluginConfig.gitUrl) {
-	  let gitUrl = pluginConfig.gitUrl;
-  
-	  // Use a dedicated token for cloning repos
-	  if (env.PLUGINS_GIT_TOKEN && gitUrl.includes("github.com")) {
-		gitUrl = injectGitToken(gitUrl, env.PLUGINS_GIT_TOKEN);
-	  }
-  
-	  installCommand = `"${pipExecutable}" install "${gitUrl}"`;
-	  logSpecSafe = maskGitUrlSecret(gitUrl);
-  
-	  logger.info({ gitUrl: logSpecSafe, type: "python", venvDir: absoluteVenvDir }, "Installing Python plugin from Git");
+		let gitUrl = pluginConfig.gitUrl;
+
+		// Use a dedicated token for cloning repos
+		if (env.PLUGINS_GIT_TOKEN && gitUrl.includes("github.com")) {
+			gitUrl = injectGitToken(gitUrl, env.PLUGINS_GIT_TOKEN);
+		}
+
+		installCommand = `"${pipExecutable}" install "${gitUrl}"`;
+		logSpecSafe = maskGitUrlSecret(gitUrl);
+
+		logger.info(
+			{ gitUrl: logSpecSafe, type: "python", venvDir: absoluteVenvDir },
+			"Installing Python plugin from Git",
+		);
 	} else {
-	  const pkg = pluginConfig.version ? `${pluginConfig.name}==${pluginConfig.version}` : pluginConfig.name;
-	  installCommand = `"${pipExecutable}" install "${pkg}"`;
-	  logSpecSafe = pkg;
-  
-	  logger.info({ packageSpec: logSpecSafe, type: "python", venvDir: absoluteVenvDir }, "Installing Python plugin from PyPI");
+		const pkg = pluginConfig.version
+			? `${pluginConfig.name}==${pluginConfig.version}`
+			: pluginConfig.name;
+		installCommand = `"${pipExecutable}" install "${pkg}"`;
+		logSpecSafe = pkg;
+
+		logger.info(
+			{ packageSpec: logSpecSafe, type: "python", venvDir: absoluteVenvDir },
+			"Installing Python plugin from PyPI",
+		);
 	}
-  
+
 	try {
-	  execSync(installCommand, { stdio: "inherit", cwd: absoluteVenvDir });
-	  logger.info({ packageSpec: logSpecSafe, type: "python" }, "Python plugin installed successfully");
+		execSync(installCommand, { stdio: "inherit", cwd: absoluteVenvDir });
+		logger.info(
+			{ packageSpec: logSpecSafe, type: "python" },
+			"Python plugin installed successfully",
+		);
 	} catch (error) {
-	  // Never log raw command or unmasked URLs
-	  logger.error({ packageSpec: logSpecSafe, type: "python", error, venvDir: absoluteVenvDir }, "Failed to install Python plugin");
-	  throw error;
+		// Never log raw command or unmasked URLs
+		logger.error(
+			{
+				packageSpec: logSpecSafe,
+				type: "python",
+				error,
+				venvDir: absoluteVenvDir,
+			},
+			"Failed to install Python plugin",
+		);
+		throw error;
 	}
-  };
+};
 
 /**
  * Installs a plugin based on its type
@@ -460,7 +561,10 @@ const loadNodePlugins = async (pluginsDir: string): Promise<void> => {
 				);
 			}
 		} catch (error) {
-			logger.error({ pluginName, error, type: "node" }, "Failed to load Node.js plugin");
+			logger.error(
+				{ pluginName, error, type: "node" },
+				"Failed to load Node.js plugin",
+			);
 		}
 	}
 };
@@ -488,41 +592,44 @@ const executePythonPlugin = async (
 	return new Promise((resolve, reject) => {
 		// Resolve venvDir to absolute path
 		const absoluteVenvDir: string = resolvePath(venvDir);
-		
+
 		// Use the separate Python script file instead of inline code
 		// Resolve script path relative to dist directory (more reliable than __dirname)
 		const distDir = process.cwd();
 		const scriptPath = join(distDir, "dist", "lib", "plugin-loader.py");
-		
+
 		if (!existsSync(scriptPath)) {
 			const errorMsg = `Plugin loader script not found at ${scriptPath}`;
 			pluginLogger.error({ pluginName, scriptPath }, errorMsg);
 			reject(new Error(errorMsg));
 			return;
 		}
-		
+
 		// Verify Python executable exists
 		if (!existsSync(pythonExecutable)) {
 			const errorMsg = `Python executable not found at ${pythonExecutable}. Virtual environment may not be properly set up.`;
-			pluginLogger.error({ pluginName, pythonExecutable, venvDir: absoluteVenvDir }, errorMsg);
+			pluginLogger.error(
+				{ pluginName, pythonExecutable, venvDir: absoluteVenvDir },
+				errorMsg,
+			);
 			reject(new Error(errorMsg));
 			return;
 		}
-		
+
 		// Get site-packages directory from venv using pip show
 		const isWindows = process.platform === "win32";
 		let actualSitePackages: string = isWindows
 			? join(absoluteVenvDir, "Lib", "site-packages")
 			: join(absoluteVenvDir, "lib", "python3", "site-packages");
-		
+
 		pluginLogger.debug(
 			{ pluginName, venvDir: absoluteVenvDir, defaultPath: actualSitePackages },
 			"Locating Python site-packages directory",
 		);
-		
+
 		try {
 			const pipExecutable = getPipExecutable(absoluteVenvDir);
-			
+
 			// Verify pip exists before using it
 			if (!existsSync(pipExecutable)) {
 				pluginLogger.warn(
@@ -534,11 +641,11 @@ const executePythonPlugin = async (
 					{ pluginName, pipExecutable },
 					"Querying pip for package location",
 				);
-				
-				const output = execSync(
-					`"${pipExecutable}" show ${pluginName}`,
-					{ encoding: "utf-8", cwd: absoluteVenvDir },
-				);
+
+				const output = execSync(`"${pipExecutable}" show ${pluginName}`, {
+					encoding: "utf-8",
+					cwd: absoluteVenvDir,
+				});
 				// Parse Location from pip show output
 				const locationMatch = output.match(/^Location:\s*(.+)$/m);
 				if (locationMatch) {
@@ -555,19 +662,23 @@ const executePythonPlugin = async (
 				"Could not query pip, will try fallback paths",
 			);
 		}
-		
+
 		// If pip show didn't work, try to discover site-packages manually
 		if (!existsSync(actualSitePackages)) {
 			pluginLogger.debug(
 				{ pluginName, attemptedPath: actualSitePackages },
 				"Default site-packages path doesn't exist, searching for Python version directory",
 			);
-			
+
 			const libDir = join(absoluteVenvDir, isWindows ? "Lib" : "lib");
 			if (existsSync(libDir)) {
 				try {
 					// Try to find Python version directory
-					const libContents = execSync(`ls -1 "${libDir}"`, { encoding: "utf-8" }).trim().split("\n");
+					const libContents = execSync(`ls -1 "${libDir}"`, {
+						encoding: "utf-8",
+					})
+						.trim()
+						.split("\n");
 					pluginLogger.debug(
 						{ pluginName, libDir, contents: libContents },
 						"Checking lib directory for Python version",
@@ -591,14 +702,14 @@ const executePythonPlugin = async (
 				}
 			}
 		}
-		
+
 		// Verify the path exists before running Python script
 		if (!existsSync(actualSitePackages)) {
 			const errorMsg = `Site-packages directory does not exist: ${actualSitePackages}. Virtual environment may not be properly set up. Please ensure plugins are installed.`;
 			pluginLogger.error(
-				{ 
-					pluginName, 
-					sitePackages: actualSitePackages, 
+				{
+					pluginName,
+					sitePackages: actualSitePackages,
 					venvDir: absoluteVenvDir,
 					pythonExecutable,
 					venvExists: existsSync(absoluteVenvDir),
@@ -608,7 +719,7 @@ const executePythonPlugin = async (
 			reject(new Error(errorMsg));
 			return;
 		}
-		
+
 		pluginLogger.info(
 			{
 				pluginName,
@@ -618,22 +729,26 @@ const executePythonPlugin = async (
 			},
 			"Executing Python plugin loader script",
 		);
-		
+
 		// Use unbuffered Python output (-u flag) to ensure print statements are flushed immediately
 		// Pass environment variables to Python subprocess
-		const child = spawn(pythonExecutable, ["-u", scriptPath, pluginName, actualSitePackages], {
-			stdio: ["pipe", "pipe", "pipe"],
-			env: {
-				...process.env,
+		const child = spawn(
+			pythonExecutable,
+			["-u", scriptPath, pluginName, actualSitePackages],
+			{
+				stdio: ["pipe", "pipe", "pipe"],
+				env: {
+					...process.env,
+				},
 			},
-		});
+		);
 
-		let stdout = "";
+		let _stdout = "";
 		let stderr = "";
 
 		child.stdout.on("data", (data) => {
 			const output = data.toString();
-			stdout += output;
+			_stdout += output;
 			// Log plugin output line by line
 			output
 				.split("\n")
@@ -673,7 +788,10 @@ const executePythonPlugin = async (
 							{ pluginName, message, type: "python" },
 							`Python plugin ${level}`,
 						);
-					} else if (trimmed.startsWith("Error:") || trimmed.startsWith("Warning:")) {
+					} else if (
+						trimmed.startsWith("Error:") ||
+						trimmed.startsWith("Warning:")
+					) {
 						const level = trimmed.startsWith("Error:") ? "error" : "warn";
 						const message = trimmed.replace(/^(Error|Warning):\s*/, "");
 						pluginLogger[level](
@@ -702,7 +820,11 @@ const executePythonPlugin = async (
 					);
 					resolve();
 				} else {
-					reject(new Error(`Python plugin ${pluginName} exited with code ${code}: ${stderr}`));
+					reject(
+						new Error(
+							`Python plugin ${pluginName} exited with code ${code}: ${stderr}`,
+						),
+					);
 				}
 			}
 		});
@@ -722,7 +844,7 @@ const loadPythonPlugins = async (
 	configuredPlugins: PluginConfig[],
 ): Promise<void> => {
 	const absoluteVenvDir = resolvePath(venvDir);
-	
+
 	// Ensure venv exists and pip is bootstrapped before trying to use it
 	ensurePythonVenv(absoluteVenvDir);
 
@@ -734,7 +856,10 @@ const loadPythonPlugins = async (
 			encoding: "utf-8",
 		});
 
-		const packages = JSON.parse(output) as Array<{ name: string; version: string }>;
+		const packages = JSON.parse(output) as Array<{
+			name: string;
+			version: string;
+		}>;
 
 		if (packages.length === 0) return;
 
@@ -769,16 +894,16 @@ const loadPythonPlugins = async (
 			// Execute plugin initialization and capture output
 			try {
 				await executePythonPlugin(pythonExecutable, pkg.name, absoluteVenvDir);
-				
+
 				// Register plugin for scheduling
 				const { registerPlugin } = await import("./plugin-scheduler");
-				registerPlugin(
-					pkg.name,
-					"python",
-					async () => {
-						await executePythonPluginMain(pythonExecutable, pkg.name, absoluteVenvDir);
-					},
-				);
+				registerPlugin(pkg.name, "python", async () => {
+					await executePythonPluginMain(
+						pythonExecutable,
+						pkg.name,
+						absoluteVenvDir,
+					);
+				});
 			} catch (error) {
 				logger.error(
 					{ pluginName: pkg.name, error, type: "python" },
@@ -844,7 +969,10 @@ export const initializePlugins = async (): Promise<void> => {
 			installPlugin(pluginsDir, pythonVenvDir, pluginConfig);
 		} catch (error) {
 			failed++;
-			logger.error({ pluginConfig, error }, "Failed to install Node.js plugin, continuing");
+			logger.error(
+				{ pluginConfig, error },
+				"Failed to install Node.js plugin, continuing",
+			);
 		}
 	}
 
@@ -853,7 +981,7 @@ export const initializePlugins = async (): Promise<void> => {
 			installPlugin(pluginsDir, pythonVenvDir, pluginConfig);
 		} catch (error) {
 			failed++;
-			logger.error({  error }, "Failed to install Python plugin, continuing");
+			logger.error({ error }, "Failed to install Python plugin, continuing");
 		}
 	}
 
@@ -882,50 +1010,54 @@ const executePythonPluginMain = async (
 		// Resolve script path relative to dist directory (more reliable than __dirname)
 		const distDir = process.cwd();
 		const scriptPath = join(distDir, "dist", "lib", "plugin-runner.py");
-		
+
 		if (!existsSync(scriptPath)) {
 			const errorMsg = `Plugin runner script not found at ${scriptPath}`;
 			pluginLogger.error({ pluginName, scriptPath }, errorMsg);
 			reject(new Error(errorMsg));
 			return;
 		}
-		
+
 		if (!existsSync(pythonExecutable)) {
 			const errorMsg = `Python executable not found at ${pythonExecutable}`;
 			pluginLogger.error({ pluginName, pythonExecutable }, errorMsg);
 			reject(new Error(errorMsg));
 			return;
 		}
-		
+
 		// Get site-packages directory
 		const isWindows = process.platform === "win32";
 		let actualSitePackages: string = isWindows
 			? join(absoluteVenvDir, "Lib", "site-packages")
 			: join(absoluteVenvDir, "lib", "python3", "site-packages");
-		
+
 		// Try to discover site-packages
 		try {
 			const pipExecutable = getPipExecutable(absoluteVenvDir);
 			if (existsSync(pipExecutable)) {
-				const output = execSync(
-					`"${pipExecutable}" show ${pluginName}`,
-					{ encoding: "utf-8", cwd: absoluteVenvDir },
-				);
+				const output = execSync(`"${pipExecutable}" show ${pluginName}`, {
+					encoding: "utf-8",
+					cwd: absoluteVenvDir,
+				});
 				const locationMatch = output.match(/^Location:\s*(.+)$/m);
 				if (locationMatch) {
 					actualSitePackages = locationMatch[1].trim();
 				}
 			}
-		} catch (error) {
+		} catch (_error) {
 			// Fallback to default path
 		}
-		
+
 		// If default path doesn't exist, try to find it
 		if (!existsSync(actualSitePackages)) {
 			const libDir = join(absoluteVenvDir, isWindows ? "Lib" : "lib");
 			if (existsSync(libDir)) {
 				try {
-					const libContents = execSync(`ls -1 "${libDir}"`, { encoding: "utf-8" }).trim().split("\n");
+					const libContents = execSync(`ls -1 "${libDir}"`, {
+						encoding: "utf-8",
+					})
+						.trim()
+						.split("\n");
 					for (const item of libContents) {
 						const testPath = join(libDir, item, "site-packages");
 						if (existsSync(testPath)) {
@@ -938,17 +1070,26 @@ const executePythonPluginMain = async (
 				}
 			}
 		}
-		
+
 		if (!existsSync(actualSitePackages)) {
-			reject(new Error(`Site-packages directory does not exist: ${actualSitePackages}`));
+			reject(
+				new Error(
+					`Site-packages directory does not exist: ${actualSitePackages}`,
+				),
+			);
 			return;
 		}
-		
+
 		pluginLogger.info(
-			{ pluginName, scriptPath, pythonExecutable, sitePackages: actualSitePackages },
+			{
+				pluginName,
+				scriptPath,
+				pythonExecutable,
+				sitePackages: actualSitePackages,
+			},
 			"Executing Python plugin main() function",
 		);
-		
+
 		// Pass environment variables to the Python subprocess
 		// Include all current process environment variables
 		// Map plugin-specific env vars to plugin-expected names
@@ -958,15 +1099,19 @@ const executePythonPluginMain = async (
 			STRAPI_API_TOKEN: env.PLUGINS_STRAPI_API_TOKEN || "",
 			STRAPI_API_URL: env.STRAPI_URL || "http://localhost:1337/api",
 		};
-		
-		const child = spawn(pythonExecutable, ["-u", scriptPath, pluginName, actualSitePackages], {
-			stdio: ["pipe", "pipe", "pipe"],
-			env: childEnv,
-		});
-		
+
+		const child = spawn(
+			pythonExecutable,
+			["-u", scriptPath, pluginName, actualSitePackages],
+			{
+				stdio: ["pipe", "pipe", "pipe"],
+				env: childEnv,
+			},
+		);
+
 		let stdout = "";
 		let stderr = "";
-		
+
 		child.stdout.on("data", (data) => {
 			const output = data.toString();
 			stdout += output;
@@ -980,7 +1125,7 @@ const executePythonPluginMain = async (
 					);
 				});
 		});
-		
+
 		child.stderr.on("data", (data) => {
 			const output = data.toString();
 			stderr += output;
@@ -1002,7 +1147,11 @@ const executePythonPluginMain = async (
 							{ pluginName, error: message, type: "python" },
 							"Python plugin error",
 						);
-					} else if (trimmed.includes("Traceback") || trimmed.includes("Exception") || trimmed.includes("Error")) {
+					} else if (
+						trimmed.includes("Traceback") ||
+						trimmed.includes("Exception") ||
+						trimmed.includes("Error")
+					) {
 						// Log tracebacks and exceptions as errors
 						pluginLogger.error(
 							{ pluginName, error: trimmed, type: "python" },
@@ -1016,13 +1165,16 @@ const executePythonPluginMain = async (
 					}
 				});
 		});
-		
+
 		child.on("close", (code) => {
 			if (code === 0) {
 				resolve();
 			} else {
-				const errorMessage = stderr.trim() || stdout.trim() || `Process exited with code ${code}`;
-				const error = new Error(`Python plugin ${pluginName} main() exited with code ${code}: ${errorMessage}`);
+				const errorMessage =
+					stderr.trim() || stdout.trim() || `Process exited with code ${code}`;
+				const error = new Error(
+					`Python plugin ${pluginName} main() exited with code ${code}: ${errorMessage}`,
+				);
 				pluginLogger.error(
 					{ pluginName, exitCode: code, stderr, stdout, type: "python" },
 					"Python plugin main() execution failed",
@@ -1030,7 +1182,7 @@ const executePythonPluginMain = async (
 				reject(error);
 			}
 		});
-		
+
 		child.on("error", (error) => {
 			pluginLogger.error(
 				{ pluginName, error: error.message, type: "python" },

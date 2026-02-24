@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { env } from "@/common/utils/env-config";
-import { pluginLogger } from "./plugin-manager";
 import { logger } from "@/server";
+import { pluginLogger } from "./plugin-manager";
 
 type PluginInstance = {
 	name: string;
@@ -20,7 +20,7 @@ const scheduledTasks = new Map<string, cron.ScheduledTask>();
 const parsePluginSchedules = (): Record<string, string> => {
 	try {
 		let schedulesJson = env.PLUGINS_SCHEDULES || "{}";
-		
+
 		// Remove surrounding quotes if present (common in .env files)
 		schedulesJson = schedulesJson.trim();
 		if (
@@ -29,12 +29,12 @@ const parsePluginSchedules = (): Record<string, string> => {
 		) {
 			schedulesJson = schedulesJson.slice(1, -1);
 		}
-		
+
 		// Unescape quotes if they were escaped
 		schedulesJson = schedulesJson.replace(/\\"/g, '"').replace(/\\'/g, "'");
-		
+
 		const parsed = JSON.parse(schedulesJson) as Record<string, string>;
-		
+
 		// Validate that all values are strings
 		const result: Record<string, string> = {};
 		for (const [key, value] of Object.entries(parsed)) {
@@ -47,7 +47,7 @@ const parsePluginSchedules = (): Record<string, string> => {
 				);
 			}
 		}
-		
+
 		return result;
 	} catch (error) {
 		logger.error(
@@ -80,15 +80,24 @@ export const registerPlugin = (
 const executeScheduledPlugin = async (pluginName: string): Promise<void> => {
 	const plugin = pluginInstances.get(pluginName);
 	if (!plugin) {
-		pluginLogger.warn({ pluginName }, "Plugin not found for scheduled execution");
+		pluginLogger.warn(
+			{ pluginName },
+			"Plugin not found for scheduled execution",
+		);
 		return;
 	}
 
-	pluginLogger.info({ pluginName, type: plugin.type }, "Executing scheduled plugin");
-	
+	pluginLogger.info(
+		{ pluginName, type: plugin.type },
+		"Executing scheduled plugin",
+	);
+
 	try {
 		await plugin.execute();
-		pluginLogger.info({ pluginName, type: plugin.type }, "Scheduled plugin execution completed");
+		pluginLogger.info(
+			{ pluginName, type: plugin.type },
+			"Scheduled plugin execution completed",
+		);
 	} catch (error) {
 		pluginLogger.error(
 			{ pluginName, type: plugin.type, error },
@@ -102,7 +111,7 @@ const executeScheduledPlugin = async (pluginName: string): Promise<void> => {
  */
 export const startPluginScheduler = (): void => {
 	const schedules = parsePluginSchedules();
-	
+
 	if (Object.keys(schedules).length === 0) {
 		logger.info("No plugin schedules configured");
 		return;
@@ -132,7 +141,10 @@ export const startPluginScheduler = (): void => {
 		// Schedule the plugin
 		const task = cron.schedule(cronExpression, () => {
 			executeScheduledPlugin(pluginName).catch((error) => {
-				logger.error({ pluginName, error }, "Unhandled error in scheduled plugin");
+				logger.error(
+					{ pluginName, error },
+					"Unhandled error in scheduled plugin",
+				);
 			});
 		});
 

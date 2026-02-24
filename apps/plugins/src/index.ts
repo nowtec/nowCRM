@@ -1,6 +1,9 @@
 import { env } from "@/common/utils/env-config";
 import { initializePlugins } from "@/lib/plugin-manager";
-import { startPluginScheduler, stopPluginScheduler } from "@/lib/plugin-scheduler";
+import {
+	startPluginScheduler,
+	stopPluginScheduler,
+} from "@/lib/plugin-scheduler";
 import { app, logger } from "@/server";
 
 // Initialize plugins on startup
