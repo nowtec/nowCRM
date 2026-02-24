@@ -2,17 +2,33 @@ import express, { type Express } from "express";
 import helmet from "helmet";
 import { pino } from "pino";
 import { healthCheckRouter } from "@/api/health-check/health-check-router";
-import { pluginsRouter } from "@/api/plugins/plugins-router";
+import errorHandler from "@/common/middleware/error-handler";
+import rateLimiter from "@/common/middleware/rate-limiter";
+import requestLogger from "@/common/middleware/request-logger";
 
-const logger = pino({ name: "plugins-server" });
+const logger = pino({ name: "server start" });
+
 const app: Express = express();
 
+// Set the application to trust the reverse proxy
 app.set("trust proxy", true);
-app.use(express.json({ type: ["application/json", "text/plain"] }));
+
+// Middlewares
+app.use(
+	express.json({
+		type: ["application/json", "text/plain"],
+	}),
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
+app.use(rateLimiter);
+
+// Request logging
+app.use(requestLogger);
 
 app.use("/health-check", healthCheckRouter);
-app.use("/plugins", pluginsRouter);
+
+// Error handlers
+app.use(errorHandler());
 
 export { app, logger };
