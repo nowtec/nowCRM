@@ -213,6 +213,33 @@ services:
     networks:
       - my_net
 
+  plugins:
+    container_name: plugins-prod
+    image: ghcr.io/nowtec/nowcrm/plugins:${VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "3030:3030"
+    environment:
+      PLUGINS_PORT: ${PLUGINS_PORT}
+      PLUGINS_HOST: ${PLUGINS_HOST}
+      PLUGINS_CORS_ORIGIN: ${PLUGINS_CORS_ORIGIN}
+      PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      PLUGINS_NPMRC_TOKEN: ${PLUGINS_NPMRC_TOKEN}
+      PLUGINS_GIT_TOKEN: ${PLUGINS_GIT_TOKEN}
+      PLUGINS_PACKAGE_NAMES: ${PLUGINS_PACKAGE_NAMES}
+      PLUGINS_INSTALL_DIR: ${PLUGINS_INSTALL_DIR}
+      PLUGINS_PYTHON_PATH: ${PLUGINS_PYTHON_PATH}
+      PLUGINS_PYTHON_VENV_DIR: ${PLUGINS_PYTHON_VENV_DIR}
+      PLUGINS_SCHEDULES: ${PLUGINS_SCHEDULES}
+      NODE_ENV: production
+      API_GATEWAY: ${API_GATEWAY}
+      PLUGINS_STRAPI_API_TOKEN: ${PLUGINS_STRAPI_API_TOKEN}
+      STRAPI_URL: ${STRAPI_URL}
+    depends_on:
+      - strapi
+    networks:
+      - my_net
+
   krakend:
     container_name: krakend-prod
     image: ghcr.io/nowtec/nowcrm/dal:${VERSION:-latest}

@@ -244,6 +244,36 @@ services:
     networks:
       - my_net
 
+  plugins:
+    container_name: plugins
+    image: nowcrm-plugins
+    build:
+      context: .
+      dockerfile: ./apps/plugins/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PLUGINS_PORT: ${PLUGINS_PORT}
+      PLUGINS_HOST: ${PLUGINS_HOST}
+      PLUGINS_CORS_ORIGIN: ${PLUGINS_CORS_ORIGIN}
+      PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      PLUGINS_NPMRC_TOKEN: ${PLUGINS_NPMRC_TOKEN}
+      PLUGINS_GIT_TOKEN: ${PLUGINS_GIT_TOKEN}
+      PLUGINS_PACKAGE_NAMES: ${PLUGINS_PACKAGE_NAMES}
+      PLUGINS_INSTALL_DIR: ${PLUGINS_INSTALL_DIR}
+      PLUGINS_PYTHON_PATH: ${PLUGINS_PYTHON_PATH}
+      PLUGINS_PYTHON_VENV_DIR: ${PLUGINS_PYTHON_VENV_DIR}
+      PLUGINS_SCHEDULES: ${PLUGINS_SCHEDULES}
+      NODE_ENV: ${NODE_ENV}
+      API_GATEWAY: ${API_GATEWAY}
+      PLUGINS_STRAPI_API_TOKEN: ${PLUGINS_STRAPI_API_TOKEN}
+      STRAPI_URL: ${STRAPI_URL}
+    depends_on:
+      - strapi
+    networks:
+      - my_net
+
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:4.1.2-management

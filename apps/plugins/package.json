@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "description": "plugins application",
+  "files": [
+    "dist/**/*",
+    "package.json"
+  ],
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts | pino-pretty",
     "build": "tsup",

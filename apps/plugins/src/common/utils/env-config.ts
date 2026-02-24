@@ -17,11 +17,11 @@ export const env = cleanEnv(process.env, {
 	PLUGINS_NPMRC_TOKEN: str({ devDefault: testOnly("") }),
 	PLUGINS_GIT_TOKEN: str({ devDefault: testOnly("") }),
 	PLUGINS_PACKAGE_NAMES: str({ devDefault: testOnly("") }),
-	PLUGINS_INSTALL_DIR: str({ devDefault: testOnly("./plugins") }),
+	PLUGINS_INSTALL_DIR: str({ devDefault: testOnly("./plugins-internal") }),
 	
 	// Python plugin configuration
 	PLUGINS_PYTHON_PATH: str({ devDefault: testOnly("python3") }),
-	PLUGINS_PYTHON_VENV_DIR: str({ devDefault: testOnly("./plugins/python-venv") }),
+	PLUGINS_PYTHON_VENV_DIR: str({ devDefault: testOnly("./plugins-internal/python-venv") }),
 
 	API_GATEWAY: str({ devDefault: testOnly("http://localhost:8080/") }),
 	PLUGINS_STRAPI_API_TOKEN: str({ devDefault: testOnly("") }),

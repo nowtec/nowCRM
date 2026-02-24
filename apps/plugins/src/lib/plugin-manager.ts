@@ -185,7 +185,13 @@ const ensurePythonVenv = (venvDir: string): void => {
 	// Resolve to absolute path
 	const absoluteVenvDir = resolvePath(venvDir);
 	
-	if (!existsSync(absoluteVenvDir)) {
+	// Check if venv exists and is valid
+	const venvExists = existsSync(absoluteVenvDir);
+	const pythonExecutable = getPythonExecutable(absoluteVenvDir);
+	const pipExecutable = getPipExecutable(absoluteVenvDir);
+	const venvIsValid = venvExists && existsSync(pythonExecutable) && existsSync(pipExecutable);
+	
+	if (!venvExists) {
 		logger.info({ venvDir: absoluteVenvDir }, "Creating Python virtual environment");
 		try {
 			// Ensure parent directory exists
@@ -198,17 +204,121 @@ const ensurePythonVenv = (venvDir: string): void => {
 			logger.error({ venvDir: absoluteVenvDir, error }, "Failed to create Python virtual environment");
 			throw error;
 		}
+	} else if (!venvIsValid) {
+		logger.warn(
+			{ venvDir: absoluteVenvDir, pythonExists: existsSync(pythonExecutable), pipExists: existsSync(pipExecutable) },
+			"Python virtual environment exists but is incomplete, will attempt to fix",
+		);
+		// If venv exists but is incomplete, try to recreate it
+		try {
+			// Remove incomplete venv
+			const { rmSync } = require("node:fs");
+			rmSync(absoluteVenvDir, { recursive: true, force: true });
+			logger.info({ venvDir: absoluteVenvDir }, "Removed incomplete venv, recreating");
+			// Recreate
+			mkdirSync(absoluteVenvDir, { recursive: true });
+			execSync(`${env.PLUGINS_PYTHON_PATH} -m venv "${absoluteVenvDir}"`, {
+				stdio: "inherit",
+			});
+			logger.info({ venvDir: absoluteVenvDir }, "Python virtual environment recreated");
+		} catch (error) {
+			logger.error({ venvDir: absoluteVenvDir, error }, "Failed to recreate Python virtual environment");
+			throw error;
+		}
 	} else {
-		logger.debug({ venvDir: absoluteVenvDir }, "Python virtual environment already exists");
+		logger.debug({ venvDir: absoluteVenvDir }, "Python virtual environment already exists and is valid");
 	}
 	
-	// Verify pip exists
-	const pipExecutable = getPipExecutable(absoluteVenvDir);
+	// Verify pip exists and bootstrap if needed (double-check after potential recreation)
 	if (!existsSync(pipExecutable)) {
 		logger.warn(
 			{ venvDir: absoluteVenvDir, pipExecutable },
-			"pip executable not found in venv, venv may be incomplete",
+			"pip executable not found in venv, bootstrapping pip",
 		);
+		try {
+			// Method 1: Try ensurepip (may not work in Alpine but worth trying)
+			try {
+				logger.debug({ venvDir: absoluteVenvDir }, "Trying ensurepip to bootstrap pip");
+				execSync(`${pythonExecutable} -m ensurepip --upgrade --default-pip`, {
+					stdio: "inherit",
+				});
+				if (existsSync(pipExecutable)) {
+					logger.info({ venvDir: absoluteVenvDir }, "pip bootstrapped successfully using ensurepip");
+					return;
+				}
+				logger.debug({ venvDir: absoluteVenvDir }, "ensurepip completed but pip still not found");
+			} catch (ensurepipError) {
+				logger.debug({ venvDir: absoluteVenvDir, error: ensurepipError }, "ensurepip not available, trying get-pip.py");
+			}
+			
+			// Method 2: Download and run get-pip.py (official bootstrap script)
+			const { unlinkSync } = require("node:fs");
+			const getPipPath = join(absoluteVenvDir, "get-pip.py");
+			
+			logger.info({ venvDir: absoluteVenvDir }, "Downloading get-pip.py to bootstrap pip");
+			try {
+				// Download get-pip.py using curl
+				execSync(`curl -sSL https://bootstrap.pypa.io/get-pip.py -o "${getPipPath}"`, {
+					stdio: "inherit",
+				});
+				
+				logger.info({ venvDir: absoluteVenvDir }, "Running get-pip.py to install pip");
+				// Run get-pip.py with venv's python to install pip into the venv
+				execSync(`${pythonExecutable} "${getPipPath}"`, {
+					stdio: "inherit",
+				});
+				
+				// Clean up
+				if (existsSync(getPipPath)) {
+					unlinkSync(getPipPath);
+				}
+			} catch (getPipError) {
+				// Clean up on error
+				if (existsSync(getPipPath)) {
+					try {
+						unlinkSync(getPipPath);
+					} catch {
+						// Ignore cleanup errors
+					}
+				}
+				logger.error({ venvDir: absoluteVenvDir, error: getPipError }, "get-pip.py failed");
+				throw getPipError;
+			}
+			
+			logger.info({ venvDir: absoluteVenvDir }, "pip installed successfully via get-pip.py");
+			
+			// Verify pip now exists
+			if (!existsSync(pipExecutable)) {
+				// Check for pip3 as fallback
+				const pip3Executable = join(absoluteVenvDir, "bin", "pip3");
+				if (existsSync(pip3Executable)) {
+					logger.info({ venvDir: absoluteVenvDir }, "Found pip3, creating pip symlink");
+					// Create symlink from pip3 to pip
+					try {
+						execSync(`ln -sf pip3 "${pipExecutable}"`, {
+							cwd: join(absoluteVenvDir, "bin"),
+						});
+						logger.info({ venvDir: absoluteVenvDir }, "Created pip symlink from pip3");
+					} catch (symlinkError) {
+						logger.warn({ venvDir: absoluteVenvDir, error: symlinkError }, "Failed to create pip symlink");
+					}
+				}
+				
+				if (!existsSync(pipExecutable)) {
+					const error = new Error(`pip installation completed but executable still not found at ${pipExecutable}`);
+					logger.error({ venvDir: absoluteVenvDir, pipExecutable, pip3Exists: existsSync(pip3Executable) }, error.message);
+					throw error;
+				}
+			}
+		} catch (pipError) {
+			logger.error(
+				{ venvDir: absoluteVenvDir, error: pipError },
+				"Failed to bootstrap pip in venv",
+			);
+			throw new Error(`Python venv created but pip could not be installed: ${pipError}`);
+		}
+	} else {
+		logger.debug({ venvDir: absoluteVenvDir }, "pip executable found, no bootstrap needed");
 	}
 };
 
@@ -380,8 +490,9 @@ const executePythonPlugin = async (
 		const absoluteVenvDir: string = resolvePath(venvDir);
 		
 		// Use the separate Python script file instead of inline code
-		// The script is in the same directory as this file
-		const scriptPath = join(__dirname, "plugin-loader.py");
+		// Resolve script path relative to dist directory (more reliable than __dirname)
+		const distDir = process.cwd();
+		const scriptPath = join(distDir, "dist", "lib", "plugin-loader.py");
 		
 		if (!existsSync(scriptPath)) {
 			const errorMsg = `Plugin loader script not found at ${scriptPath}`;
@@ -610,12 +721,13 @@ const loadPythonPlugins = async (
 	venvDir: string,
 	configuredPlugins: PluginConfig[],
 ): Promise<void> => {
-	if (!existsSync(venvDir)) {
-		return;
-	}
+	const absoluteVenvDir = resolvePath(venvDir);
+	
+	// Ensure venv exists and pip is bootstrapped before trying to use it
+	ensurePythonVenv(absoluteVenvDir);
 
-	const pipExecutable = getPipExecutable(venvDir);
-	const pythonExecutable = getPythonExecutable(venvDir);
+	const pipExecutable = getPipExecutable(absoluteVenvDir);
+	const pythonExecutable = getPythonExecutable(absoluteVenvDir);
 
 	try {
 		const output = execSync(`${pipExecutable} list --format=json`, {
@@ -656,7 +768,7 @@ const loadPythonPlugins = async (
 
 			// Execute plugin initialization and capture output
 			try {
-				await executePythonPlugin(pythonExecutable, pkg.name, venvDir);
+				await executePythonPlugin(pythonExecutable, pkg.name, absoluteVenvDir);
 				
 				// Register plugin for scheduling
 				const { registerPlugin } = await import("./plugin-scheduler");
@@ -664,7 +776,7 @@ const loadPythonPlugins = async (
 					pkg.name,
 					"python",
 					async () => {
-						await executePythonPluginMain(pythonExecutable, pkg.name, venvDir);
+						await executePythonPluginMain(pythonExecutable, pkg.name, absoluteVenvDir);
 					},
 				);
 			} catch (error) {
@@ -767,7 +879,9 @@ const executePythonPluginMain = async (
 ): Promise<void> => {
 	return new Promise((resolve, reject) => {
 		const absoluteVenvDir: string = resolvePath(venvDir);
-		const scriptPath = join(__dirname, "plugin-runner.py");
+		// Resolve script path relative to dist directory (more reliable than __dirname)
+		const distDir = process.cwd();
+		const scriptPath = join(distDir, "dist", "lib", "plugin-runner.py");
 		
 		if (!existsSync(scriptPath)) {
 			const errorMsg = `Plugin runner script not found at ${scriptPath}`;
