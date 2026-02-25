@@ -1674,6 +1674,20 @@ function JourneyBuilderContent({
 					<div className="flex h-16 items-center justify-between border-b p-4">
 						<h3 className="font-semibold text-lg">Configure Step</h3>
 						<div className="flex gap-2">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => {
+									if (!selectedNode) return;
+									setPendingNodeId(selectedNode.id);
+									setPendingConnection(null);
+									setSelectedEdge(null);
+									setShowStepSelectorPanel(true);
+								}}
+								title="Change step type"
+							>
+								Change type
+							</Button>
 							{!isStartNode && (
 								<Button
 									variant="outline"
