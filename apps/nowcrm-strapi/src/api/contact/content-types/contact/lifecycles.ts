@@ -22,7 +22,7 @@ export default {
     }
   },
 
-  async beforeUpdate(event) {
+  async afterUpdate(event) {
     try {
       const { data, where } = event.params;
       let description = '';

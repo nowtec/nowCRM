@@ -113,14 +113,15 @@ export async function processJob(
 			},
 			"Composition sent",
 		);
-		await adaptiveRateLimiter.execute(() =>
-			composerService.sendComposition(compositionPayload, {
-				stepId,
-				contactId,
-				token: env.JOURNEYS_STRAPI_API_TOKEN,
-				compositionId: stepDataFinal.composition.documentId,
-			}),
-		);
+		
+		// await adaptiveRateLimiter.execute(() =>
+		// 	composerService.sendComposition(compositionPayload, {
+		// 		stepId,
+		// 		contactId,
+		// 		token: env.JOURNEYS_STRAPI_API_TOKEN,
+		// 		compositionId: stepDataFinal.composition.documentId,
+		// 	}),
+		// );
 	} else {
 		logger.warn(
 			{
