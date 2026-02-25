@@ -1721,18 +1721,7 @@ function JourneyBuilderContent({
 								<X className="h-4 w-4" />
 							</Button>
 						</div>
-					</div>
-					{isTriggerType(selectedEdge?.data.sourceType) ||
-					selectedEdge.data.ruleNotAllowed ? (
-						<div className="p-4">
-							<Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-								<Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-								<AlertDescription className="text-blue-800 dark:text-blue-200">
-									Triggers do not support connection rules or conditions.
-								</AlertDescription>
-							</Alert>
-						</div>
-					) : (
+					</div>				
 						<ConnectionPanel
 							key={selectedEdge.id}
 							edge={selectedEdge}
@@ -1740,7 +1729,6 @@ function JourneyBuilderContent({
 								updateEdgeConditions(selectedEdge.id, data)
 							}
 						/>
-					)}
 				</div>
 			)}
 		</div>
