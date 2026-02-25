@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+   "target": "ESNext",
+   "module": "nodenext",
+   "baseUrl": ".",
+   "paths": {
+   "@/*": ["src/*"],
+   "@nowcrm/services": ["../../libs/services/src/index.ts"],
+   "@nowcrm/services/server": ["../../libs/services/src/server.ts"],
+   "@nowcrm/services/client": ["../../libs/services/src/client.ts"]
+   },
+   "moduleResolution": "nodenext",
+   "outDir": "dist",
+   "importsNotUsedAsValues": "remove",
+   "strict": true,
+   "esModuleInterop": true,
+   "skipLibCheck": true,
+   "forceConsistentCasingInFileNames": true,
+   "types": ["node"],
+ },
+ "include": ["src/**/*"],
+ "exclude": ["node_modules","**/*.test.*", "**/__mocks__/*", "**/__tests__/*"],
+  "references": [
+   {
+     "path": "../../libs/services"
+   }
+ ]
+}
