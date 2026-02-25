@@ -896,6 +896,7 @@ const loadPythonPlugins = async (
 				await executePythonPlugin(pythonExecutable, pkg.name, absoluteVenvDir);
 
 				// Register plugin for scheduling
+				//@ts-expect-error
 				const { registerPlugin } = await import("./plugin-scheduler");
 				registerPlugin(pkg.name, "python", async () => {
 					await executePythonPluginMain(
