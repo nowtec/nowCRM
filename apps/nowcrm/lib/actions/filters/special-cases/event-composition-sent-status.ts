@@ -16,6 +16,16 @@ export interface FieldGroup {
 	operator?: string;
 }
 
+function normalizeSentStatuses(value: any): Array<"sent" | "not_sent"> {
+	if (Array.isArray(value)) {
+		const normalized = value.filter(
+			(v): v is "sent" | "not_sent" => v === "sent" || v === "not_sent",
+		);
+		return [...new Set(normalized)];
+	}
+	return value === "sent" || value === "not_sent" ? [value] : [];
+}
+
 /**
  * Checks if both event_composition and event_composition_sent_status are present in field groups
  */
@@ -37,7 +47,7 @@ export function hasEventCompositionSentStatusCombination(
 			(inst) =>
 				inst.value !== "" &&
 				inst.value != null &&
-				(inst.value === "sent" || inst.value === "not_sent"),
+				normalizeSentStatuses(inst.value).length === 1,
 		);
 
 	return { hasEventComposition, hasEventCompositionSentStatus };
@@ -48,11 +58,13 @@ export function hasEventCompositionSentStatusCombination(
  */
 export function buildEventCompositionSentStatusCondition(
 	compositionValue: any,
-	sentStatusValue: string,
+	sentStatusValue: string | string[],
 ): any | null {
-	if (sentStatusValue !== "sent" && sentStatusValue !== "not_sent") {
+	const statuses = normalizeSentStatuses(sentStatusValue);
+	if (statuses.length !== 1) {
 		return null;
 	}
+	const [normalizedStatus] = statuses;
 
 	// Extract documentId from relation object (value property contains the ID)
 	const compositionId = isRelObject(compositionValue)
@@ -69,7 +81,7 @@ export function buildEventCompositionSentStatusCondition(
 	// Build condition based on event action field
 	// Events with action = "email_sent" means the email was really sent
 	// If contact doesn't have such event, they didn't get email sent
-	if (sentStatusValue === "sent") {
+	if (normalizedStatus === "sent") {
 		// Contacts that HAVE events with the selected composition AND action = "email_sent"
 		return {
 			events: {
@@ -92,13 +104,15 @@ export function buildEventCompositionSentStatusCondition(
  * Builds filter condition for event_composition_sent_status when used alone (without composition)
  */
 export function buildEventCompositionSentStatusAloneCondition(
-	sentStatusValue: string,
+	sentStatusValue: string | string[],
 ): any | null {
-	if (sentStatusValue !== "sent" && sentStatusValue !== "not_sent") {
+	const statuses = normalizeSentStatuses(sentStatusValue);
+	if (statuses.length !== 1) {
 		return null;
 	}
+	const [normalizedStatus] = statuses;
 
-	if (sentStatusValue === "sent") {
+	if (normalizedStatus === "sent") {
 		// Contacts that HAVE events with action = "email_sent"
 		return {
 			events: {

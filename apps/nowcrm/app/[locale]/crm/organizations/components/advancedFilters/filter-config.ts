@@ -213,3 +213,29 @@ export const organizationsFilterConfig: FilterConfig = {
 		},
 	},
 };
+
+export const FIELD_CONFIGS: Record<
+	string,
+	{
+		hasOperator?: boolean;
+		multiValue?: boolean;
+		multiValuePlaceholder?: string;
+		enumValues?: string[];
+	}
+> = Object.fromEntries(
+	Object.entries(organizationsFilterConfig.fieldConfigs).map(([key, config]) => [
+		key,
+		{
+			hasOperator: (config as { hasOperator?: boolean }).hasOperator,
+			multiValue:
+				(config as { multiValue?: boolean }).multiValue ??
+				["text", "number", "enum", "relation"].includes(
+					(config as { type?: "text" | "number" | "date" | "relation" | "enum" })
+						.type || "text",
+				),
+			multiValuePlaceholder: (config as { multiValuePlaceholder?: string })
+				.multiValuePlaceholder,
+			enumValues: (config as { enumValues?: string[] }).enumValues,
+		},
+	]),
+);

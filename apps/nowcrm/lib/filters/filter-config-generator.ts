@@ -11,6 +11,8 @@ export interface FilterFieldConfig {
 	filterKey?: string; // For relation fields - specifies which field to filter on in the related entity
 	enumValues?: string[]; // For enum fields
 	hasOperator?: boolean; // Default true for text/number/date
+	multiValue?: boolean; // Enables reusable chips-style multi-value input for scalar fields
+	multiValuePlaceholder?: string;
 }
 
 export interface FilterCategory {
@@ -44,21 +46,37 @@ export function generateFilterSchema(config: FilterConfig): z.ZodObject<any> {
 	Object.entries(config.fieldTypes).forEach(([fieldName, fieldType]) => {
 		const fieldConfig = config.fieldConfigs[fieldName];
 		const hasOperator = fieldConfig?.hasOperator ?? true;
+		const multiValueEnabled =
+			fieldConfig?.multiValue ??
+			(["text", "number", "enum", "relation"] as FieldType[]).includes(fieldType);
 
 		if (fieldType === "relation") {
 			// Relation fields use object with value and label
-			schemaFields[fieldName] = z
-				.object({
-					value: z.number(),
-					label: z.string(),
-				})
-				.optional();
+			const relationValueSchema = z.object({
+				value: z.union([z.number(), z.string()]),
+				label: z.string(),
+			});
+			schemaFields[fieldName] = multiValueEnabled
+				? z.union([relationValueSchema, z.array(relationValueSchema)]).optional()
+				: relationValueSchema.optional();
 		} else if (fieldType === "enum") {
-			// Enum fields are just strings (no operator)
-			schemaFields[fieldName] = z.string().optional();
+			// Enum fields are strings; multiValue enum fields support chips-array shape
+			schemaFields[fieldName] = multiValueEnabled
+				? z.union([z.string(), z.array(z.string())]).optional()
+				: z.string().optional();
 		} else {
 			// Text, number, date fields have value and optional operator
-			schemaFields[fieldName] = z.string().optional();
+			// multiValue scalar fields support a single value or chips-array shape
+			const isMultiScalarField =
+				multiValueEnabled && (fieldType === "text" || fieldType === "number");
+			schemaFields[fieldName] = isMultiScalarField
+				? z
+						.union([
+							z.string(),
+							z.array(z.union([z.string(), z.number()])),
+						])
+						.optional()
+				: z.string().optional();
 			if (hasOperator) {
 				schemaFields[`${fieldName}_operator`] = z.string().optional();
 			}

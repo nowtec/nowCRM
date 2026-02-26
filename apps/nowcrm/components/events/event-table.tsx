@@ -5,21 +5,25 @@ import {
 	AlertCircle,
 	BellOff,
 	Link as LinkIcon,
+	Loader2,
 	MailOpen,
 	MousePointerClick,
 	Package,
 	Send,
+	Trash2,
 	Upload,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Session } from "next-auth";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { columns } from "@/app/[locale]/crm/contacts/[id]/(tabs)/events/components/columns/event-columns";
 import EventsMassActions, {
 	setEventsForMassActions,
 } from "@/app/[locale]/crm/contacts/[id]/(tabs)/events/components/massActions/mass-actions";
 import DataTable from "@/components/dataTable/data-table";
 import ErrorMessage from "@/components/error-message";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Table,
@@ -30,6 +34,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { deleteEventsByCompositionItemAction } from "@/lib/actions/events/delete-events-by-composition-item";
 import { getEventsByCompositionId } from "@/lib/actions/events/get-event";
 
 interface EventTableProps {
@@ -150,7 +155,9 @@ export default function EventTable({
 	const [session, _setSession] = useState<Session | null>(null);
 	const [error, setError] = useState<any>(null);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [isClearingAll, setIsClearingAll] = useState(false);
 	const [activeTab, setActiveTab] = useState<string>(ACTION_TABS[0].keys[0]);
+	const [reloadKey, setReloadKey] = useState(0);
 
 	const [tabData, setTabData] = useState<Record<string, TabState>>({});
 
@@ -167,6 +174,55 @@ export default function EventTable({
 		const params = new URLSearchParams(searchParams.toString());
 		params.set("page", "1");
 		router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+	};
+
+	const handleClearAllEvents = async () => {
+		if (isClearingAll) return;
+
+		const isConfirmed = window.confirm(
+			"Delete all events for this composition item? This will remove all event types.",
+		);
+		if (!isConfirmed) return;
+
+		setIsClearingAll(true);
+		setError(null);
+
+		try {
+			const response = await deleteEventsByCompositionItemAction(
+				compositionItemId,
+				channelName,
+			);
+
+			setTabData({});
+			setEventsForMassActions([]);
+			setReloadKey((prev) => prev + 1);
+
+			if (response.success) {
+				const deletedCount = response.data?.deletedCount ?? 0;
+				toast.success(
+					deletedCount > 0
+						? `Deleted ${deletedCount} events`
+						: "No events to delete",
+				);
+				return;
+			}
+
+			setError(response);
+			const result = response.data;
+			if (result && result.deletedCount > 0) {
+				toast.error(
+					`Deleted ${result.deletedCount}/${result.totalCount} events. ${response.errorMessage || ""}`.trim(),
+				);
+				return;
+			}
+
+			toast.error(response.errorMessage || "Failed to clear events");
+		} catch (err) {
+			console.error("[EventTable] Error clearing events:", err);
+			toast.error("Failed to clear events");
+		} finally {
+			setIsClearingAll(false);
+		}
 	};
 
 	useEffect(() => {
@@ -211,14 +267,30 @@ export default function EventTable({
 			.finally(() => {
 				setLoading(false);
 			});
-	}, [activeTab, compositionItemId, channelName, page, pageSize]);
+	}, [activeTab, compositionItemId, channelName, page, pageSize, reloadKey]);
 
 	const linksData = getLinksData(tabData.click?.events || []);
 
 	return (
 		<Card className="mt-8 w-full">
 			<CardHeader>
-				<CardTitle className="font-semibold text-2xl">Events</CardTitle>
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<CardTitle className="font-semibold text-2xl">Events</CardTitle>
+					<Button
+						type="button"
+						variant="destructive"
+						size="sm"
+						onClick={handleClearAllEvents}
+						disabled={isClearingAll}
+					>
+						{isClearingAll ? (
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+						) : (
+							<Trash2 className="mr-2 h-4 w-4" />
+						)}
+						Clear all events
+					</Button>
+				</div>
 			</CardHeader>
 			<CardContent>
 				{error && <ErrorMessage response={error} />}
