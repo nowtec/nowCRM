@@ -91,6 +91,21 @@ class ComposerService {
 		try {
 			const base = envServices.API_GATEWAY;
 			const url = new URL(API_ROUTES_COMPOSER.SEND_TO_CHANNELS, base);
+			const payloadLogSummary = {
+				composition_id: payload.composition_id,
+				channels: payload.channels,
+				type: payload.type,
+				toType: Array.isArray(payload.to) ? "array" : typeof payload.to,
+				toCount: Array.isArray(payload.to) ? payload.to.length : undefined,
+				toPreview:
+					typeof payload.to === "string" || typeof payload.to === "number"
+						? payload.to
+						: undefined,
+				hasAccount: !!payload.account,
+				unipileAccountId: payload.account?.account_id,
+				interval: payload.interval,
+				throttle: payload.throttle,
+			};
 
 			if (journeys_data?.stepId) {
 				const check = await journeyStepsService.checkPassedStep(
@@ -115,6 +130,15 @@ class ComposerService {
 					};
 			}
 
+			console.info(
+				"[ComposerService.sendComposition] Sending request to composer",
+				{
+					url: url.toString(),
+					payload: payloadLogSummary,
+					hasJourneysContext: !!journeys_data,
+				},
+			);
+
 			const response = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -123,24 +147,101 @@ class ComposerService {
 				},
 				body: JSON.stringify(payload),
 			});
-			const data = (await response.json()) as ServiceResponse<null>;
+			const rawBody = await response.text();
+			let parsedBody: unknown = null;
 
-			if (!data.success) {
+			try {
+				parsedBody = rawBody ? JSON.parse(rawBody) : null;
+			} catch (parseError: any) {
+				console.error(
+					"[ComposerService.sendComposition] Failed to parse composer response JSON",
+					{
+						status: response.status,
+						statusText: response.statusText,
+						parseError: parseError?.message || String(parseError),
+						rawBody,
+						payload: payloadLogSummary,
+					},
+				);
 				return {
-					errorMessage: `Failed to send composition:${data.message} - ${data.statusCode}`,
+					errorMessage: `Failed to send composition: invalid JSON response from composer (${response.status})`,
 					data: null,
-					status: data.statusCode,
+					status: response.status || 500,
+					success: false,
+				};
+			}
+
+			const data = (parsedBody || {}) as Partial<ServiceResponse<null>> & {
+				error?: { message?: string; status?: number };
+				errorMessage?: string;
+				status?: number;
+			};
+			const responseStatus =
+				typeof data.statusCode === "number"
+					? data.statusCode
+					: typeof data.status === "number"
+						? data.status
+						: typeof data.error?.status === "number"
+							? data.error.status
+							: response.status;
+			const responseMessage =
+				(typeof data.message === "string" && data.message) ||
+				(typeof data.errorMessage === "string" && data.errorMessage) ||
+				(typeof data.error?.message === "string" && data.error.message) ||
+				(typeof rawBody === "string" && rawBody.trim()) ||
+				response.statusText ||
+				"Unknown composer error";
+
+			console.info(
+				"[ComposerService.sendComposition] Composer response received",
+				{
+					httpStatus: response.status,
+					httpStatusText: response.statusText,
+					serviceSuccess: data.success,
+					serviceStatus: data.statusCode,
+					serviceMessage: data.message,
+					payload: payloadLogSummary,
+				},
+			);
+
+			if (!response.ok || data.success === false) {
+				console.error(
+					"[ComposerService.sendComposition] Composer send failed",
+					{
+						httpStatus: response.status,
+						httpStatusText: response.statusText,
+						payload: payloadLogSummary,
+						parsedBody: data,
+						rawBody,
+					},
+				);
+				return {
+					errorMessage: `Failed to send composition: ${responseMessage} - ${responseStatus}`,
+					data: null,
+					status: responseStatus,
 					success: false,
 				};
 			}
 
 			return {
-				data: data.responseObject,
-				status: data.statusCode,
-				success: data.success,
-				errorMessage: data.message,
+				data: (data.responseObject ?? null) as null,
+				status: responseStatus,
+				success: true,
+				errorMessage: responseMessage,
 			};
 		} catch (error: any) {
+			console.error(
+				"[ComposerService.sendComposition] Request threw an error",
+				{
+					error: error?.message || String(error),
+					stack: error?.stack,
+					payload: {
+						composition_id: payload.composition_id,
+						channels: payload.channels,
+						type: payload.type,
+					},
+				},
+			);
 			return handleError(error);
 		}
 	}
