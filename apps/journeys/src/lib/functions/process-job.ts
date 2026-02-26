@@ -113,7 +113,7 @@ export async function processJob(
 			},
 			"Composition sent",
 		);
-		
+
 		await adaptiveRateLimiter.execute(() =>
 			composerService.sendComposition(compositionPayload, {
 				stepId,
