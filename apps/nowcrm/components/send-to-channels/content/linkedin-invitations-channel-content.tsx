@@ -307,9 +307,21 @@ export function LinkedinInvitesChannelContent({
 			rawThrottle,
 			values.throttleUnit as any,
 		);
+		console.info("[LinkedIn Invitations UI] Resolving Unipile identity", {
+			selectedIdentityId: values.identity?.value,
+			useDefaultIdentity: values.useDefaultIdentity,
+			compositionId: compId,
+		});
 		const unipileAccount = values.identity
 			? (await getUnipileIdentity(values.identity.value)).data
 			: null;
+		console.info("[LinkedIn Invitations UI] Unipile identity response", {
+			found: !!unipileAccount,
+			documentId: unipileAccount?.documentId,
+			name: unipileAccount?.name,
+			account_id: unipileAccount?.account_id,
+			status: unipileAccount?.unipile_status,
+		});
 		if (!unipileAccount) {
 			toast.error("Failed to fetch Unipile identity.");
 			return;
@@ -382,24 +394,71 @@ export function LinkedinInvitesChannelContent({
 			// Composer mode: send right away
 			try {
 				setIsLoading(true);
+				console.groupCollapsed(
+					"[LinkedIn Invitations UI] Send from composition view",
+				);
+				console.log("Form values:", values);
+				console.log("Submission payload summary:", {
+					composition_id: submissionData.composition_id,
+					channels: submissionData.channels,
+					type: submissionData.type,
+					toType: Array.isArray(submissionData.to)
+						? "array"
+						: typeof submissionData.to,
+					toCount: Array.isArray(submissionData.to)
+						? submissionData.to.length
+						: undefined,
+					toPreview:
+						typeof submissionData.to === "string" ||
+						typeof submissionData.to === "number"
+							? submissionData.to
+							: undefined,
+					throttle: submissionData.throttle,
+					interval: submissionData.interval,
+					unipileIdentity: submissionData.account
+						? {
+								documentId: submissionData.account.documentId,
+								name: submissionData.account.name,
+								account_id: submissionData.account.account_id,
+								unipile_status: submissionData.account.unipile_status,
+							}
+						: null,
+				});
 				const { sendToChannelAction } = await import(
 					"../send-to-channel-action"
 				);
+				console.log("sendToChannelAction imported");
 				const answer = await sendToChannelAction(submissionData);
+				console.log("sendToChannelAction response:", answer);
 
 				if (answer.success) {
+					console.info(
+						"[LinkedIn Invitations UI] Invitation send request accepted",
+					);
 					toast.success(
 						"The Linkdein Invitations sending process has started. Depending on the number of selected contacts, it may take up to 10–15 minutes.",
 					);
 					closeOnSubmit?.();
 					router.refresh();
 				} else {
+					console.error(
+						"[LinkedIn Invitations UI] Invitation send request failed",
+						{
+							answer,
+							errorMessage: answer.errorMessage,
+							status: answer.status,
+						},
+					);
 					toast.error(answer.errorMessage || "Failed to send invitations");
 				}
 			} catch (error) {
 				toast.error("An error occurred while sending the invitations");
-				console.error(error);
+				console.error(
+					"[LinkedIn Invitations UI] Unexpected error while sending invitations",
+					error,
+				);
 			} finally {
+				console.groupEnd();
 				setIsLoading(false);
 			}
 		}

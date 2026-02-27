@@ -35,6 +35,26 @@ export class SendToChannelsService {
 		data: sendToChannelsData,
 	): Promise<ServiceResponse<boolean | null>> {
 		try {
+			logger.info(
+				{
+					compositionId: data.composition_id,
+					channels: data.channels,
+					type: data.type,
+					toType: Array.isArray(data.to) ? "array" : typeof data.to,
+					toCount: Array.isArray(data.to) ? data.to.length : undefined,
+					toPreview:
+						typeof data.to === "string" || typeof data.to === "number"
+							? data.to
+							: undefined,
+					hasUnipileAccount: !!data.account,
+					unipileAccountId: data.account?.account_id,
+					unipileIdentityName: data.account?.name,
+					interval: data.interval,
+					throttle: data.throttle,
+					hasSearchMask: !!data.searchMask,
+				},
+				"[SendToChannels] Received send request",
+			);
 			if (!data.title && typeof data.to === "number") {
 				if (data.type === "list") {
 					const list = await listsService.findOne(
@@ -232,13 +252,39 @@ export class SendToChannelsService {
 					}
 
 					case CommunicationChannel.LINKEDIN_INVTITATIONS.toLowerCase(): {
+						logger.info(
+							{
+								compositionId: data.composition_id,
+								type: data.type,
+								toType: Array.isArray(data.to) ? "array" : typeof data.to,
+								toCount: Array.isArray(data.to) ? data.to.length : undefined,
+								unipileAccountId: data.account?.account_id,
+								unipileIdentityName: data.account?.name,
+							},
+							"[SendToChannels] Starting LinkedIn invitations processing",
+						);
 						const result = await processLinkedInInvitationsChannel(
 							data,
 							composition.data as Composition,
 						);
 						if (!result.success) {
+							logger.warn(
+								{
+									compositionId: data.composition_id,
+									message: result.message,
+									statusCode: result.statusCode,
+								},
+								"[SendToChannels] LinkedIn invitations processing failed",
+							);
 							return result;
 						}
+						logger.info(
+							{
+								compositionId: data.composition_id,
+								message: result.message,
+							},
+							"[SendToChannels] LinkedIn invitations processing finished",
+						);
 						break;
 					}
 
@@ -256,7 +302,16 @@ export class SendToChannelsService {
 			return ServiceResponse.success("Messages sent successfully", null);
 		} catch (ex) {
 			const errorMessage = `Error sending messages to channels: ${(ex as Error).message}`;
-			logger.error(errorMessage);
+			logger.error(
+				{
+					error: (ex as Error).message,
+					stack: (ex as Error).stack,
+					compositionId: data.composition_id,
+					channels: data.channels,
+					type: data.type,
+				},
+				"[SendToChannels] Unhandled exception while sending",
+			);
 			return ServiceResponse.failure(
 				errorMessage,
 				null,
