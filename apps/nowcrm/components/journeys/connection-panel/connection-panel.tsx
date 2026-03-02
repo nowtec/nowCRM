@@ -39,6 +39,7 @@ export type Condition = {
 	conditionField?: string;
 	additionalCondition?: string;
 	additional_data?: any;
+	documentType?: string; // Document type for document-related rules
 };
 
 export type ConnectionData = {
@@ -50,6 +51,7 @@ export type ConnectionData = {
 interface ConnectionPanelProps {
 	edge: Edge;
 	updateEdgeConditions: (data: ConnectionData) => void;
+	nodes?: any[];
 }
 
 const CONDITION_TYPES = [
@@ -172,6 +174,28 @@ const ConditionItem = ({
 					/>
 				)}
 
+				{/* Document Type field - shown for all rule types */}
+				<div>
+					<label className="mb-1 block text-muted-foreground text-sm">
+						Document Type (optional)
+					</label>
+					<Input
+						type="text"
+						value={condition.documentType || ""}
+						onChange={(e) =>
+							updateCondition(condition.id, {
+								documentType: e.target.value || undefined,
+							})
+						}
+						placeholder="e.g., pdf, image, document (leave empty for no type)"
+						className="w-full"
+					/>
+					<p className="mt-1 text-muted-foreground text-xs">
+						Specify document type filter for this rule. Leave empty to match any
+						document type.
+					</p>
+				</div>
+
 				{/* Scores section (unchanged) */}
 				<div>
 					{condition.showScores && (
@@ -280,6 +304,7 @@ const ConditionItem = ({
 export function ConnectionPanel({
 	edge,
 	updateEdgeConditions,
+	nodes = [],
 }: ConnectionPanelProps) {
 	const [data, setData] = useState<ConnectionData>(
 		edge.data || {
@@ -289,6 +314,14 @@ export function ConnectionPanel({
 	);
 
 	const [hasChanges, setHasChanges] = useState(false);
+
+	// Check if source node is a trigger
+	const sourceNode = nodes.find((n) => n.id === edge.source);
+	const isFromTrigger =
+		sourceNode?.type === "trigger" ||
+		sourceNode?.type === "scheduler-trigger" ||
+		sourceNode?.data?.type === "trigger" ||
+		sourceNode?.data?.type === "scheduler-trigger";
 
 	useEffect(() => {
 		const newData = edge.data || {
@@ -368,9 +401,39 @@ export function ConnectionPanel({
 		handleDataChange({ conditions: updatedConditions });
 	};
 
+	// Helper function to get rule display text
+	const getRuleDisplayText = (condition: Condition): string => {
+		const typeLabel =
+			CONDITION_TYPES.find((t) => t.value === condition.type)?.label ||
+			condition.type;
+		if (condition.label) {
+			return `${typeLabel}: ${condition.label}`;
+		}
+		return typeLabel;
+	};
+
 	return (
 		<div className="relative min-h-0 flex-1 overflow-hidden">
 			<div className="h-full overflow-y-auto p-4">
+				{/* Show rule summary box when connecting from trigger */}
+				{isFromTrigger && data.conditions.length > 0 && (
+					<div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+						<div className="mb-2 font-medium text-blue-900 text-sm dark:text-blue-100">
+							Connection Rules from Trigger:
+						</div>
+						<div className="space-y-1">
+							{data.conditions.map((condition, _idx) => (
+								<div
+									key={condition.id}
+									className="text-blue-800 text-sm dark:text-blue-200"
+								>
+									• {getRuleDisplayText(condition)}
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
 				<div className="mb-4 flex items-center justify-between border-border border-b pb-4">
 					<span className="font-medium text-base text-foreground">
 						Conditional Logic:

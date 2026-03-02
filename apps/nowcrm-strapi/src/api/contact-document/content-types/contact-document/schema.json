@@ -29,6 +29,9 @@
       "relation": "manyToOne",
       "target": "api::contact.contact",
       "inversedBy": "contact_documents"
+    },
+    "type": {
+      "type": "text"
     }
   }
 }

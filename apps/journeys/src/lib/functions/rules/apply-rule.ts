@@ -24,6 +24,28 @@ export async function applyRule(
 		);
 	}
 
+	// Handle document type filtering from additional_data
+	const additionalData =
+		typeof rule.additional_data === "string"
+			? JSON.parse(rule.additional_data)
+			: rule.additional_data || {};
+	const documentType = additionalData.documentType;
+
+	// If document type is specified and condition involves contact_documents,
+	// ensure the filter is included in readyCondition
+	if (documentType && rule.condition === "[contact_documents]") {
+		// Check if document type filter is already in readyCondition
+		if (!readyCondition.includes("[type]")) {
+			// Count existing $and conditions to determine index
+			const andMatches = readyCondition.match(/\[$and\]/g);
+			const nextIndex = andMatches ? andMatches.length : 0;
+			
+			// Add document type filter
+			const separator = readyCondition.includes("?") ? "&" : "?";
+			readyCondition += `${separator}filters[$and][${nextIndex}][contact_documents][type][$eqi]=${encodeURIComponent(documentType)}`;
+		}
+	}
+
 	let url: URL;
 	if (readyCondition.startsWith("/api")) {
 		url = new URL(readyCondition.replace("CONTACT_ID", contactId), base);

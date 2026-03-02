@@ -729,7 +729,7 @@ export function ChannelPanel({
 				<SendTestDialog
 					open={isTestDialogOpen}
 					onOpenChange={setIsTestDialogOpen}
-					compositionId={(config.composition.value)}
+					compositionId={config.composition.value}
 					channel={
 						config.channel.label?.toLowerCase().includes("email")
 							? "email"

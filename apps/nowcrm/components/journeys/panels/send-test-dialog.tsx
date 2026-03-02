@@ -1,5 +1,6 @@
 "use client";
 
+import type { DocumentId } from "@nowcrm/services";
 import { Loader2, Mail } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -15,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { sendTestEmailAction } from "@/lib/actions/journeys/send-test-email";
-import { DocumentId } from "@nowcrm/services";
 
 interface SendTestDialogProps {
 	open: boolean;

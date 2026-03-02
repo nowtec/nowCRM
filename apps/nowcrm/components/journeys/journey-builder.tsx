@@ -1738,6 +1738,7 @@ function JourneyBuilderContent({
 					<ConnectionPanel
 						key={selectedEdge.id}
 						edge={selectedEdge}
+						nodes={nodes}
 						updateEdgeConditions={(data) =>
 							updateEdgeConditions(selectedEdge.id, data)
 						}
