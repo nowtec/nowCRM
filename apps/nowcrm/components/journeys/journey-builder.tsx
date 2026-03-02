@@ -522,10 +522,9 @@ function JourneyBuilderContent({
 					condition_type: "all",
 					priority: newPriority,
 					ruleNotAllowed: isTriggerType(sourceNode.data.type),
+					sourceType: sourceNode.data.type, // Store source type for trigger detection
 				},
-				label: isTriggerType(sourceNode.data.type)
-					? ""
-					: "Configure Connection",
+				label: "Configure Connection",
 				labelStyle: {
 					fill: "#fff",
 					fontSize: 12,
@@ -1528,10 +1527,9 @@ function JourneyBuilderContent({
 													ruleNotAllowed: isTriggerType(
 														finalSourceNode.data.type,
 													),
+													sourceType: finalSourceNode.data.type, // Store source type for trigger detection
 												},
-												label: isTriggerType(finalSourceNode.data.type)
-													? ""
-													: "Configure Connection",
+												label: "Configure Connection",
 												labelStyle: {
 													fill: "#fff",
 													fontSize: 12,

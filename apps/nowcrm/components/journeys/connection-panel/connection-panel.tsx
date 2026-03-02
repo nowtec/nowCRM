@@ -174,27 +174,29 @@ const ConditionItem = ({
 					/>
 				)}
 
-				{/* Document Type field - shown for all rule types */}
-				<div>
-					<label className="mb-1 block text-muted-foreground text-sm">
-						Document Type (optional)
-					</label>
-					<Input
-						type="text"
-						value={condition.documentType || ""}
-						onChange={(e) =>
-							updateCondition(condition.id, {
-								documentType: e.target.value || undefined,
-							})
-						}
-						placeholder="e.g., pdf, image, document (leave empty for no type)"
-						className="w-full"
-					/>
-					<p className="mt-1 text-muted-foreground text-xs">
-						Specify document type filter for this rule. Leave empty to match any
-						document type.
-					</p>
-				</div>
+				{/* Document Type field - shown only for document-related rules */}
+				{condition.type === "[contact_documents]" && (
+					<div>
+						<label className="mb-1 block text-muted-foreground text-sm">
+							Document Type (optional)
+						</label>
+						<Input
+							type="text"
+							value={condition.documentType || ""}
+							onChange={(e) =>
+								updateCondition(condition.id, {
+									documentType: e.target.value || undefined,
+								})
+							}
+							placeholder="e.g., pdf, image, document (leave empty for no type)"
+							className="w-full"
+						/>
+						<p className="mt-1 text-muted-foreground text-xs">
+							Specify document type filter for this rule. Leave empty to match
+							any document type.
+						</p>
+					</div>
+				)}
 
 				{/* Scores section (unchanged) */}
 				<div>
@@ -315,19 +317,15 @@ export function ConnectionPanel({
 
 	const [hasChanges, setHasChanges] = useState(false);
 
-	// Check if source node is a trigger
-	const sourceNode = nodes.find((n) => n.id === edge.source);
-	const isFromTrigger =
-		sourceNode?.type === "trigger" ||
-		sourceNode?.type === "scheduler-trigger" ||
-		sourceNode?.data?.type === "trigger" ||
-		sourceNode?.data?.type === "scheduler-trigger";
-
 	useEffect(() => {
 		const newData = edge.data || {
 			conditions: [],
 			condition_type: "all",
 		};
+		// Ensure conditions is always an array
+		if (!Array.isArray(newData.conditions)) {
+			newData.conditions = [];
+		}
 		setData(newData);
 		setHasChanges(false);
 	}, [edge.data, edge.id]);
@@ -406,20 +404,115 @@ export function ConnectionPanel({
 		const typeLabel =
 			CONDITION_TYPES.find((t) => t.value === condition.type)?.label ||
 			condition.type;
-		if (condition.label) {
-			return `${typeLabel}: ${condition.label}`;
+
+		// Build detailed display text based on rule type
+		switch (condition.type) {
+			case "[surveys][form_id]": {
+				const form = condition.additional_data?.form as
+					| { label: string; value: string }
+					| undefined;
+				if (form?.label) {
+					return `${typeLabel}: ${form.label}`;
+				}
+				return typeLabel;
+			}
+
+			case "[contact_documents]": {
+				const operator = condition.operator || "$lt";
+				const days =
+					condition.additional_data?.days ??
+					(typeof condition.value === "string"
+						? parseInt(condition.value, 10)
+						: null) ??
+					90;
+				const documentType = condition.documentType
+					? ` (type: ${condition.documentType})`
+					: "";
+
+				const operatorText =
+					operator === "$lt"
+						? "older than"
+						: operator === "$lte"
+							? "older than or equal to"
+							: operator === "$gt"
+								? "newer than"
+								: operator === "$gte"
+									? "newer than or equal to"
+									: "exactly";
+				return `${typeLabel}: ${operatorText} ${days} days${documentType}`;
+			}
+
+			case "[surveys][survey_items]": {
+				const form = condition.additional_data?.form as
+					| { label: string; value: string }
+					| undefined;
+				const formAnswer = condition.additional_data?.formAnswer as
+					| { label: string }
+					| undefined;
+				const value = condition.additionalCondition?.split("/")[2];
+				const operator = condition.operator || "$eqi";
+
+				if (form?.label && formAnswer?.label) {
+					const operatorText =
+						operator === "$eqi"
+							? "equals"
+							: operator === "$nei"
+								? "not equals"
+								: operator === "$gte"
+									? "greater or equal"
+									: operator === "$gt"
+										? "greater than"
+										: operator === "$lte"
+											? "less or equal"
+											: operator === "$lt"
+												? "less than"
+												: operator;
+					return `${typeLabel}: ${form.label} - ${formAnswer.label} ${operatorText} ${value || ""}`;
+				}
+				return typeLabel;
+			}
+
+			case "[actions][action_type]": {
+				const actionType = condition.additional_data?.action_type as
+					| { label: string }
+					| undefined;
+				const externalId = condition.additionalCondition?.split("/")[2];
+				if (actionType?.label) {
+					return `${typeLabel}: ${actionType.label}${externalId ? ` (external_id: ${externalId})` : ""}`;
+				}
+				return typeLabel;
+			}
+
+			case "[actions][external_id]": {
+				if (condition.label) {
+					return `${typeLabel}: ${condition.label}`;
+				}
+				return typeLabel;
+			}
+
+			case "[donation_transactions]": {
+				if (condition.label) {
+					return `${typeLabel}: ${condition.label}`;
+				}
+				return typeLabel;
+			}
+
+			default:
+				if (condition.label) {
+					return `${typeLabel}: ${condition.label}`;
+				}
+				return typeLabel;
 		}
-		return typeLabel;
 	};
 
 	return (
 		<div className="relative min-h-0 flex-1 overflow-hidden">
 			<div className="h-full overflow-y-auto p-4">
-				{/* Show rule summary box when connecting from trigger */}
-				{isFromTrigger && data.conditions.length > 0 && (
+				{/* Show rule summary box when there are conditions */}
+				{data.conditions.length > 0 && (
 					<div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
 						<div className="mb-2 font-medium text-blue-900 text-sm dark:text-blue-100">
-							Connection Rules from Trigger:
+							Connection Rules:
 						</div>
 						<div className="space-y-1">
 							{data.conditions.map((condition, _idx) => (

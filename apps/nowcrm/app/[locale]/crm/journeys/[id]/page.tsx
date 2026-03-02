@@ -402,14 +402,11 @@ function convertJourneyToReactFlow(
 							sourceType: connection.source_step.type,
 						},
 						label:
-							connection.source_step.type === "trigger" ||
-							connection.source_step.type === "scheduler-trigger"
-								? ""
-								: conditions.length > 0
-									? conditions.length === 1
-										? conditions[0].label
-										: `All of ${conditions.length} conditions`
-									: "No conditions (click to configure)",
+							conditions.length > 0
+								? conditions.length === 1
+									? conditions[0].label
+									: `All of ${conditions.length} conditions`
+								: "No conditions (click to configure)",
 						labelStyle: {
 							fill: "#fff",
 							fontSize: 12,
