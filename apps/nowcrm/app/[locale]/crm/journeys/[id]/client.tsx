@@ -471,6 +471,21 @@ export default function JourneyClient({
 				}
 
 				function getReadyCondition(condition: any): string {
+					// Special handling for contact document age condition
+					// The date needs to be calculated at evaluation time, so we use a special format
+					if (condition.type === "[contact_documents]") {
+						const days =
+							condition.additional_data?.days ??
+							(typeof condition.value === "string"
+								? parseInt(condition.value, 10)
+								: null) ??
+							90;
+						const operator = condition.operator || "$lt";
+						// Store days in additional_data for backend processing
+						// The backend will calculate the date dynamically
+						return `filters[$and][0][contact_documents][createdAt][${operator}]=DAYS_AGO:${days}`;
+					}
+
 					const formatSingleCondition = (
 						field: string,
 						operator: string,

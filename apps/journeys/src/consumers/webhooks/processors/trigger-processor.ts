@@ -165,6 +165,7 @@ async function getContactIdFromWebhook(
 		}
 	}
 
+	// For related entities (contact-document, survey, etc.), extract contact from relation
 	if (data?.entry?.contact?.documentId) {
 		return data.entry.contact.documentId;
 	}

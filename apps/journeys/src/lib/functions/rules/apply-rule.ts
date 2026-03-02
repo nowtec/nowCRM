@@ -8,12 +8,28 @@ export async function applyRule(
 	contactId: DocumentId,
 ): Promise<boolean> {
 	const base = env.STRAPI_URL;
+	let readyCondition = rule.ready_condition;
+
+	// Handle DAYS_AGO format for dynamic date calculation
+	// Replace DAYS_AGO:X with actual date (now - X days)
+	const daysAgoMatch = readyCondition.match(/DAYS_AGO:(\d+)/);
+	if (daysAgoMatch) {
+		const days = parseInt(daysAgoMatch[1], 10);
+		const targetDate = new Date();
+		targetDate.setDate(targetDate.getDate() - days);
+		const isoDate = targetDate.toISOString();
+		readyCondition = readyCondition.replace(
+			/DAYS_AGO:\d+/,
+			encodeURIComponent(isoDate),
+		);
+	}
+
 	let url: URL;
-	if (rule.ready_condition.startsWith("/api")) {
-		url = new URL(rule.ready_condition.replace("CONTACT_ID", contactId), base);
+	if (readyCondition.startsWith("/api")) {
+		url = new URL(readyCondition.replace("CONTACT_ID", contactId), base);
 	} else {
 		url = new URL(
-			`/api/contacts/?${rule.ready_condition}&[filters][documentId]=${contactId}`,
+			`/api/contacts/?${readyCondition}&[filters][documentId]=${contactId}`,
 			base,
 		);
 	}

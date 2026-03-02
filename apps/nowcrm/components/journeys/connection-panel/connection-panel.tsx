@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { ActionRule } from "./rules/action-rule";
+import { ContactDocumentAgeRule } from "./rules/contact-document-age-rule";
 import { DonationTransactionRule } from "./rules/donation-transaction-rule";
 import { FinishedJourneyRule } from "./rules/finished-journey";
 import { FormAnswerRule } from "./rules/form-answer-rule";
@@ -57,6 +58,7 @@ const CONDITION_TYPES = [
 	{ value: "[actions][external_id]", label: "Journey Finished" },
 	{ value: "[surveys][survey_items]", label: "Form Answer" },
 	{ value: "[donation_transactions]", label: "Donation transaction" },
+	{ value: "[contact_documents]", label: "Contact Document Age" },
 ];
 
 const CONDITION_CONFIG = {
@@ -161,6 +163,13 @@ const ConditionItem = ({
 
 				{condition.type === "[actions][action_type]" && (
 					<ActionRule condition={condition} updateCondition={updateCondition} />
+				)}
+
+				{condition.type === "[contact_documents]" && (
+					<ContactDocumentAgeRule
+						condition={condition}
+						updateCondition={updateCondition}
+					/>
 				)}
 
 				{/* Scores section (unchanged) */}

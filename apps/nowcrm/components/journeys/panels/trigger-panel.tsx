@@ -8,6 +8,7 @@ import {
 	ChevronRight,
 	Contact,
 	CreditCardIcon,
+	FileText,
 	FormInputIcon,
 	Mail,
 	Power,
@@ -47,7 +48,8 @@ type TriggerEntity =
 	| "action"
 	| "survey"
 	| "subscription"
-	| "donation-transaction";
+	| "donation-transaction"
+	| "contact-document";
 
 export type EventValue = "entry.create" | "entry.update" | "entry.unpublish";
 
@@ -202,6 +204,24 @@ const ENTITY_OPTIONS: EntityOption[] = [
 				label: "Deactivated subscription",
 				description: "When contact deactivates existing subscription",
 				presetAttribute: { label: "active", value: false },
+			},
+		],
+	},
+	{
+		value: "contact-document",
+		label: "Contact Document",
+		description: "Monitor when contacts create or update documents",
+		icon: FileText,
+		event_options: [
+			{
+				value: "entry.create",
+				label: "Document Created",
+				description: "When a contact creates a new document",
+			},
+			{
+				value: "entry.update",
+				label: "Document Updated",
+				description: "When a contact document is updated",
 			},
 		],
 	},
