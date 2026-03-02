@@ -1,7 +1,7 @@
 "use server";
 
 import type { StandardResponse } from "@nowcrm/services";
-import type { sendToChannelsData } from "@nowcrm/services/client";
+import type { DocumentId, sendToChannelsData } from "@nowcrm/services/client";
 import {
 	composerService,
 	compositionsService,
@@ -10,7 +10,7 @@ import {
 import { auth } from "@/auth";
 
 export async function sendTestEmailAction(
-	compositionId: number,
+	compositionId: DocumentId,
 	email: string,
 	channel: string,
 	subject?: string,

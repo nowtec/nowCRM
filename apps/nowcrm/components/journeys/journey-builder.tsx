@@ -26,10 +26,9 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import type { DocumentId } from "@nowcrm/services";
-import { Info, Trash2, X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "../ui/alert";
 import { ConnectionPanel } from "./connection-panel/connection-panel";
 import { HeaderBar } from "./header-bar";
 import { initialEdges, initialNodes } from "./initial-data";

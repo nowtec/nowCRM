@@ -15,11 +15,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { sendTestEmailAction } from "@/lib/actions/journeys/send-test-email";
+import { DocumentId } from "@nowcrm/services";
 
 interface SendTestDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	compositionId: number;
+	compositionId: DocumentId;
 	channel: string;
 	channelLabel?: string;
 	subject?: string;
