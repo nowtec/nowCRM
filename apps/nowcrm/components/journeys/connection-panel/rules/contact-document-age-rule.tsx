@@ -22,7 +22,9 @@ export function ContactDocumentAgeRule({
 	// Get days value from condition.value or additional_data
 	const daysValue =
 		condition.additional_data?.days ??
-		(typeof condition.value === "string" ? parseInt(condition.value, 10) : null) ??
+		(typeof condition.value === "string"
+			? parseInt(condition.value, 10)
+			: null) ??
 		90;
 
 	// Get operator from condition.operator or default to $lt (less than = older than)

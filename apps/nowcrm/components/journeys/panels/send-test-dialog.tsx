@@ -1,6 +1,8 @@
 "use client";
 
-import { sendTestEmailAction } from "@/lib/actions/journeys/send-test-email";
+import { Loader2, Mail } from "lucide-react";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -12,9 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Mail } from "lucide-react";
-import { useState } from "react";
-import { toast } from "react-hot-toast";
+import { sendTestEmailAction } from "@/lib/actions/journeys/send-test-email";
 
 interface SendTestDialogProps {
 	open: boolean;
@@ -64,7 +64,9 @@ export function SendTestDialog({
 				toast.error(result.errorMessage || "Failed to send test email");
 			}
 		} catch (error: any) {
-			toast.error(error.message || "An error occurred while sending test email");
+			toast.error(
+				error.message || "An error occurred while sending test email",
+			);
 		} finally {
 			setIsLoading(false);
 		}

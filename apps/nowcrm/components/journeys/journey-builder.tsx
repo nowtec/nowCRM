@@ -1735,14 +1735,14 @@ function JourneyBuilderContent({
 								<X className="h-4 w-4" />
 							</Button>
 						</div>
-					</div>				
-						<ConnectionPanel
-							key={selectedEdge.id}
-							edge={selectedEdge}
-							updateEdgeConditions={(data) =>
-								updateEdgeConditions(selectedEdge.id, data)
-							}
-						/>
+					</div>
+					<ConnectionPanel
+						key={selectedEdge.id}
+						edge={selectedEdge}
+						updateEdgeConditions={(data) =>
+							updateEdgeConditions(selectedEdge.id, data)
+						}
+					/>
 				</div>
 			)}
 		</div>

@@ -40,7 +40,7 @@ export async function sendTestEmailAction(
 
 		// Fetch composition to get subject if not provided
 		let finalSubject = subject;
-		let finalFrom = from;
+		const finalFrom = from;
 
 		if (!finalSubject) {
 			const compositionResult = await compositionsService.findOne(
