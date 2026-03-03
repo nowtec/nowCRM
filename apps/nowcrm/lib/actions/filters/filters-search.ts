@@ -105,9 +105,7 @@ const isRelArray = (v: any) =>
 	Array.isArray(v) &&
 	v.length > 0 &&
 	v.every((x) => x && typeof x === "object" && "value" in x);
-const isScalarArray = (
-	v: unknown,
-): v is Array<string | number | boolean> =>
+const isScalarArray = (v: unknown): v is Array<string | number | boolean> =>
 	Array.isArray(v) &&
 	v.length > 0 &&
 	v.every(
