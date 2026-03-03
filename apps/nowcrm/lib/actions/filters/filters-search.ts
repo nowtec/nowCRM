@@ -105,13 +105,44 @@ const isRelArray = (v: any) =>
 	Array.isArray(v) &&
 	v.length > 0 &&
 	v.every((x) => x && typeof x === "object" && "value" in x);
+const isScalarArray = (v: unknown): v is Array<string | number | boolean> =>
+	Array.isArray(v) &&
+	v.length > 0 &&
+	v.every(
+		(x) =>
+			typeof x === "string" || typeof x === "number" || typeof x === "boolean",
+	);
 const DATE_EQ_FIELDS = new Set([
 	"donation_subscriptions_from",
 	"donation_transactions_from",
 ]);
 
+function normalizeSubscriptionActiveValue(value: any): boolean | null {
+	if (typeof value === "boolean") return value;
+	if (typeof value === "number") {
+		if (value === 1) return true;
+		if (value === 0) return false;
+	}
+	if (typeof value === "string") {
+		const normalized = value.trim().toLowerCase();
+		if (["active", "true", "1"].includes(normalized)) return true;
+		if (
+			["not_active", "not active", "inactive", "false", "0"].includes(
+				normalized,
+			)
+		) {
+			return false;
+		}
+	}
+	return null;
+}
+
 /* Build a single Strapi condition object for a field */
-function buildFieldCondition(key: string, rawValue: any, operator?: string) {
+function buildFieldCondition(
+	key: string,
+	rawValue: any,
+	operator?: string,
+): Record<string, any> {
 	let op = operator || "$eqi";
 	const cond: any = {};
 
@@ -119,6 +150,36 @@ function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 	if (op === "$null" || op === "$notNull") {
 		const aliased = FIELD_ALIASES[key] || key;
 		setNested(cond, aliased, { [op]: true });
+		return cond;
+	}
+
+	// Synthetic field used by UI to filter relation boolean flag:
+	// subscriptions_active -> subscriptions.active
+	if (key === "subscriptions_active") {
+		const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+		const normalizedValues = [
+			...new Set(
+				values
+					.map((value) => normalizeSubscriptionActiveValue(value))
+					.filter((value): value is boolean => value !== null),
+			),
+		];
+
+		if (normalizedValues.length === 0) {
+			return cond;
+		}
+
+		const isNegative = ["$ne", "$nei", "$notIn"].includes(op);
+		if (normalizedValues.length === 1) {
+			setNested(cond, "subscriptions.active", {
+				[isNegative ? "$ne" : "$eq"]: normalizedValues[0],
+			});
+			return cond;
+		}
+
+		setNested(cond, "subscriptions.active", {
+			[isNegative ? "$notIn" : "$in"]: normalizedValues,
+		});
 		return cond;
 	}
 
@@ -143,29 +204,125 @@ function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 	if (isRelObject(rawValue)) {
 		const v = rawValue.label;
 		const overridePath = FIELD_OVERRIDES[key];
-		const aliased = FIELD_ALIASES[key] || key;
+		const aliased = FIELD_ALIASES[key];
+		const isNegativeRelation = ["$ne", "$nei", "$notIn"].includes(op);
+		const relationCond: any = {};
 
 		if (overridePath) {
 			// subscriptions.channel.name -> { subscriptions: { channel: { name: { $eq: v } } } }
-			cond[key] = buildNestedObject(overridePath, { [op]: v });
+			relationCond[key] = buildNestedObject(overridePath, {
+				[isNegativeRelation ? "$eqi" : op]: v,
+			});
+		} else if (aliased) {
+			setNested(relationCond, aliased, {
+				[isNegativeRelation ? "$eqi" : op]: v,
+			});
 		} else {
-			setNested(cond, aliased, { [op]: v });
+			relationCond[key] = { documentId: { $eq: rawValue.value } };
 		}
-		return cond;
+
+		if (isNegativeRelation) {
+			return { $not: relationCond };
+		}
+		return relationCond;
 	}
 
 	// relation multi
 	if (isRelArray(rawValue)) {
-		const values = rawValue.map((x: any) => x.label);
-		op = op === "$notIn" ? "$notIn" : "$in";
+		const labels = rawValue.map((x: any) => x.label).filter(Boolean);
+		const ids = rawValue.map((x: any) => x.value).filter(Boolean);
 		const overridePath = FIELD_OVERRIDES[key];
+		const aliased = FIELD_ALIASES[key];
+		const isNegativeRelation = ["$ne", "$nei", "$notIn"].includes(op);
+		const relationCond: any = {};
 		if (overridePath) {
-			cond[key] = buildNestedObject(overridePath, { [op]: values });
+			relationCond[key] = buildNestedObject(overridePath, { $in: labels });
+		} else if (aliased) {
+			setNested(relationCond, aliased, { $in: labels });
 		} else {
-			// default to id in list
-			cond[key] = { id: { [op]: values } };
+			// default to relation documentId in list
+			relationCond[key] = { documentId: { $in: ids } };
 		}
-		return cond;
+
+		if (isNegativeRelation) {
+			return { $not: relationCond };
+		}
+		return relationCond;
+	}
+
+	// language arrays need the same flexible matching as single-value language filters
+	if (
+		(key === "language" || key === "language_free_form") &&
+		isScalarArray(rawValue)
+	) {
+		const rawValues = rawValue
+			.map((v) => (typeof v === "string" ? v.trim() : String(v)))
+			.filter(Boolean);
+		const aliased = FIELD_ALIASES[key] || key;
+		const cmpOp = ["$ne", "$nei", "$notIn"].includes(op) ? "$nei" : "$eqi";
+		const combineWith = ["$ne", "$nei", "$notIn"].includes(op) ? "$and" : "$or";
+
+		const expandedVariants = rawValues.flatMap((raw) => {
+			const normalized = normalizeLanguageValue(raw);
+			if (!normalized) return [raw];
+			const languageInfo = languages.find((l: any) => l.code === normalized);
+			const variants = [normalized];
+			if (languageInfo?.name) variants.push(languageInfo.name);
+			if (
+				languageInfo?.nativeName &&
+				languageInfo.nativeName !== languageInfo.name
+			) {
+				variants.push(languageInfo.nativeName);
+			}
+			return variants;
+		});
+
+		const uniqueVariants = [...new Set(expandedVariants.filter(Boolean))];
+		if (uniqueVariants.length === 0) return cond;
+
+		const conditions = uniqueVariants.map((variant) =>
+			buildNestedObject(aliased.split("."), { [cmpOp]: variant }),
+		);
+		if (conditions.length === 1) return conditions[0];
+		return { [combineWith]: conditions };
+	}
+
+	// scalar multi-value (chips input for text/number/enum fields) -> IN/NOT IN
+	if (isScalarArray(rawValue)) {
+		const values = rawValue
+			.map((v) => (typeof v === "string" ? v.trim() : v))
+			.filter((v) => v !== "" && v != null);
+
+		if (values.length === 0) {
+			return cond;
+		}
+
+		// Preserve scalar operator semantics when the UI currently holds exactly one value.
+		if (values.length === 1) {
+			const aliased = FIELD_ALIASES[key] || key;
+			setNested(cond, aliased, { [op]: values[0] });
+			return cond;
+		}
+
+		// Equality-like operators can be compacted into IN / NOT IN
+		if (["$eq", "$eqi", "$in", "$ne", "$nei", "$notIn"].includes(op)) {
+			op = ["$ne", "$nei", "$notIn"].includes(op) ? "$notIn" : "$in";
+			const aliased = FIELD_ALIASES[key] || key;
+			setNested(cond, aliased, { [op]: values });
+			return cond;
+		}
+
+		// For operators like contains/startsWith/< etc., preserve semantics by
+		// expanding into logical combinations of single-value conditions.
+		const expandedConditions = values
+			.map((singleValue) => buildFieldCondition(key, singleValue, op))
+			.filter((c) => Object.keys(c || {}).length > 0);
+
+		if (expandedConditions.length === 0) return cond;
+		if (expandedConditions.length === 1) return expandedConditions[0];
+
+		const useAnd = ["$notContains", "$notContainsi"].includes(op);
+		return useAnd ? { $and: expandedConditions } : { $or: expandedConditions };
 	}
 
 	// CSV string → IN/NOT IN
@@ -178,10 +335,7 @@ function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 			.split(",")
 			.map((v) => v.trim())
 			.filter(Boolean);
-		op = op === "$notIn" ? "$notIn" : "$in";
-		const aliased = FIELD_ALIASES[key] || key;
-		setNested(cond, aliased, { [op]: values });
-		return cond;
+		return buildFieldCondition(key, values, op);
 	}
 
 	// Handle language field with flexible matching (code OR name formats)
@@ -277,6 +431,13 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 
 			if (!treatAsPresent) continue;
 
+			// Synthetic field handled only by the dedicated special-case logic below.
+			// Never let it fall through to generic field handling because there is no
+			// real Strapi field named event_composition_sent_status.
+			if (baseField === "event_composition_sent_status") {
+				continue;
+			}
+
 			// Special handling for event_composition when combined with sent_status
 			if (
 				baseField === "event_composition" &&
@@ -323,11 +484,7 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 		fieldGroups.event_composition_sent_status
 	) {
 		for (const instance of fieldGroups.event_composition_sent_status) {
-			if (
-				instance.value !== "" &&
-				instance.value != null &&
-				(instance.value === "sent" || instance.value === "not_sent")
-			) {
+			if (instance.value !== "" && instance.value != null) {
 				const condition = buildEventCompositionSentStatusAloneCondition(
 					instance.value,
 				);

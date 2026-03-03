@@ -30,7 +30,7 @@ export interface FilterGroupConfig {
 		{
 			serviceName: string;
 			labelKey: string;
-			filterKey?: string;
+			filterKey?: string | string[];
 			filter?: string;
 			deduplicateByLabel?: boolean;
 		}
@@ -39,6 +39,9 @@ export interface FilterGroupConfig {
 		string,
 		{
 			hasOperator?: boolean;
+			multiValue?: boolean;
+			multiValuePlaceholder?: string;
+			enumValues?: string[];
 		}
 	>;
 }
@@ -108,10 +111,10 @@ const FilterGroupComponent = <
 
 		newFilters[fieldKey] = "";
 
-		// Only for non-relation fields that have operators enabled
+		// Add default operator for fields that support operators
 		const fieldConfig = config.FIELD_CONFIGS?.[selectedField];
 		const hasOperator = fieldConfig?.hasOperator !== false; // Default to true if not specified
-		if (config.FIELD_TYPES[selectedField] !== "relation" && hasOperator) {
+		if (hasOperator) {
 			newFilters[`${fieldKey}_operator`] = getOperatorsForField(
 				selectedField,
 				config.FIELD_TYPES,
@@ -153,7 +156,10 @@ const FilterGroupComponent = <
 		const val = group.filters?.[key];
 		const op = group.filters?.[`${key}_operator`];
 		const isNullOp = op === "$null" || op === "$notNull";
-		return isNullOp || (val !== "" && val != null);
+		return (
+			isNullOp ||
+			(Array.isArray(val) ? val.length > 0 : val !== "" && val != null)
+		);
 	}).length;
 
 	return (

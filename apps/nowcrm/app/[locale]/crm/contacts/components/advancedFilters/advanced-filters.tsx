@@ -168,7 +168,10 @@ const AdvancedFilters = forwardRef<
 				const val = group.filters?.[k];
 				const op = group.filters?.[`${k}_operator`];
 				const isNullOp = op === "$null" || op === "$notNull";
-				return isNullOp || (val !== "" && val != null);
+				return (
+					isNullOp ||
+					(Array.isArray(val) ? val.length > 0 : val !== "" && val != null)
+				);
 			}).length;
 			return total + count;
 		}, 0);

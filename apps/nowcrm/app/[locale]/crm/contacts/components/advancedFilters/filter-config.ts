@@ -30,6 +30,7 @@ export const contactsFilterConfig: FilterConfig = {
 		contact_types: "relation",
 		contact_interests: "relation",
 		subscriptions: "relation",
+		subscriptions_active: "enum",
 		ranks: "relation",
 		salutation: "relation",
 		title: "relation",
@@ -99,7 +100,7 @@ export const contactsFilterConfig: FilterConfig = {
 			type: "enum",
 			label: "Gender",
 			enumValues: ["male", "female", "other"],
-			hasOperator: false,
+			hasOperator: true,
 		},
 		email: { name: "email", type: "text", label: "Email" },
 		phone: { name: "phone", type: "text", label: "Phone" },
@@ -162,6 +163,14 @@ export const contactsFilterConfig: FilterConfig = {
 			type: "relation",
 			label: "Subscriptions",
 			serviceName: "channelsService",
+		},
+		subscriptions_active: {
+			name: "subscriptions_active",
+			type: "enum",
+			label: "Subscriptions Active",
+			enumValues: ["active", "inactive"],
+			hasOperator: false,
+			multiValue: false,
 		},
 		ranks: {
 			name: "ranks",
@@ -443,6 +452,7 @@ export const contactsFilterConfig: FilterConfig = {
 				"contact_types",
 				"contact_interests",
 				"subscriptions",
+				"subscriptions_active",
 				"ranks",
 				"salutation",
 				"title",
@@ -627,12 +637,27 @@ export const FIELD_CONFIGS: Record<
 	string,
 	{
 		hasOperator?: boolean;
+		multiValue?: boolean;
+		multiValuePlaceholder?: string;
+		enumValues?: string[];
 	}
 > = Object.fromEntries(
 	Object.entries(contactsFilterConfig.fieldConfigs).map(([key, config]) => [
 		key,
 		{
 			hasOperator: (config as { hasOperator?: boolean }).hasOperator,
+			multiValue:
+				(config as { multiValue?: boolean }).multiValue ??
+				["text", "number", "enum", "relation"].includes(
+					(
+						config as {
+							type?: "text" | "number" | "date" | "relation" | "enum";
+						}
+					).type || "text",
+				),
+			multiValuePlaceholder: (config as { multiValuePlaceholder?: string })
+				.multiValuePlaceholder,
+			enumValues: (config as { enumValues?: string[] }).enumValues,
 		},
 	]),
 );
