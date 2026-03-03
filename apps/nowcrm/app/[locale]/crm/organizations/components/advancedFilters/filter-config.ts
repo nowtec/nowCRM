@@ -223,19 +223,24 @@ export const FIELD_CONFIGS: Record<
 		enumValues?: string[];
 	}
 > = Object.fromEntries(
-	Object.entries(organizationsFilterConfig.fieldConfigs).map(([key, config]) => [
-		key,
-		{
-			hasOperator: (config as { hasOperator?: boolean }).hasOperator,
-			multiValue:
-				(config as { multiValue?: boolean }).multiValue ??
-				["text", "number", "enum", "relation"].includes(
-					(config as { type?: "text" | "number" | "date" | "relation" | "enum" })
-						.type || "text",
-				),
-			multiValuePlaceholder: (config as { multiValuePlaceholder?: string })
-				.multiValuePlaceholder,
-			enumValues: (config as { enumValues?: string[] }).enumValues,
-		},
-	]),
+	Object.entries(organizationsFilterConfig.fieldConfigs).map(
+		([key, config]) => [
+			key,
+			{
+				hasOperator: (config as { hasOperator?: boolean }).hasOperator,
+				multiValue:
+					(config as { multiValue?: boolean }).multiValue ??
+					["text", "number", "enum", "relation"].includes(
+						(
+							config as {
+								type?: "text" | "number" | "date" | "relation" | "enum";
+							}
+						).type || "text",
+					),
+				multiValuePlaceholder: (config as { multiValuePlaceholder?: string })
+					.multiValuePlaceholder,
+				enumValues: (config as { enumValues?: string[] }).enumValues,
+			},
+		],
+	),
 );

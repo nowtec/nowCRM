@@ -48,7 +48,9 @@ export function generateFilterSchema(config: FilterConfig): z.ZodObject<any> {
 		const hasOperator = fieldConfig?.hasOperator ?? true;
 		const multiValueEnabled =
 			fieldConfig?.multiValue ??
-			(["text", "number", "enum", "relation"] as FieldType[]).includes(fieldType);
+			(["text", "number", "enum", "relation"] as FieldType[]).includes(
+				fieldType,
+			);
 
 		if (fieldType === "relation") {
 			// Relation fields use object with value and label
@@ -57,7 +59,9 @@ export function generateFilterSchema(config: FilterConfig): z.ZodObject<any> {
 				label: z.string(),
 			});
 			schemaFields[fieldName] = multiValueEnabled
-				? z.union([relationValueSchema, z.array(relationValueSchema)]).optional()
+				? z
+						.union([relationValueSchema, z.array(relationValueSchema)])
+						.optional()
 				: relationValueSchema.optional();
 		} else if (fieldType === "enum") {
 			// Enum fields are strings; multiValue enum fields support chips-array shape
@@ -71,10 +75,7 @@ export function generateFilterSchema(config: FilterConfig): z.ZodObject<any> {
 				multiValueEnabled && (fieldType === "text" || fieldType === "number");
 			schemaFields[fieldName] = isMultiScalarField
 				? z
-						.union([
-							z.string(),
-							z.array(z.union([z.string(), z.number()])),
-						])
+						.union([z.string(), z.array(z.union([z.string(), z.number()]))])
 						.optional()
 				: z.string().optional();
 			if (hasOperator) {

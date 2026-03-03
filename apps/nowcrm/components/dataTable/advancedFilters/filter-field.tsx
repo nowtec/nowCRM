@@ -6,9 +6,12 @@ import { debounce } from "lodash";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
-import { AutoComplete, type Option } from "@/components/autoComplete/auto-complete";
 import type { UseFormReturn } from "react-hook-form";
 import { AsyncSelectField } from "@/components/autoComplete/async-select-field";
+import {
+	AutoComplete,
+	type Option,
+} from "@/components/autoComplete/auto-complete";
 import { findData } from "@/components/autoComplete/find-data";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { SearchableComboboxDialog } from "@/components/searchable-combobox-dialog";
@@ -212,7 +215,9 @@ function MultiEnumValueInput({
 }: MultiEnumValueInputProps) {
 	const [selectKey, setSelectKey] = React.useState(0);
 	const values = normalizeMultiScalarValue(value);
-	const availableValues = enumValues.filter((enumValue) => !values.includes(enumValue));
+	const availableValues = enumValues.filter(
+		(enumValue) => !values.includes(enumValue),
+	);
 
 	const emit = (nextValues: string[]) => emitScalarValues(nextValues, onChange);
 
@@ -248,7 +253,11 @@ function MultiEnumValueInput({
 				)}
 			</div>
 
-			<Select key={selectKey} onValueChange={addValue} disabled={availableValues.length === 0}>
+			<Select
+				key={selectKey}
+				onValueChange={addValue}
+				disabled={availableValues.length === 0}
+			>
 				<SelectTrigger className="h-8">
 					<SelectValue
 						placeholder={
@@ -303,7 +312,10 @@ function normalizeRelationValues(value: any): Option[] {
 	return single ? [single] : [];
 }
 
-function emitRelationValues(nextValues: Option[], onChange: (value: any) => void) {
+function emitRelationValues(
+	nextValues: Option[],
+	onChange: (value: any) => void,
+) {
 	if (nextValues.length === 0) {
 		onChange(null);
 		return;
@@ -343,7 +355,8 @@ function AsyncRelationMultiValueInput({
 		(option: Option) => {
 			const nextValues = [...selectedValues, option].filter(
 				(item, index, arr) =>
-					arr.findIndex((candidate) => candidate.value === item.value) === index,
+					arr.findIndex((candidate) => candidate.value === item.value) ===
+					index,
 			);
 			emit(nextValues);
 			setSearch("");
@@ -378,10 +391,13 @@ function AsyncRelationMultiValueInput({
 						}
 					: {};
 
-				const response = await findData(relationMeta.serviceName as BaseServiceName, {
-					filters: searchFilters as any,
-					pagination: { page: 1, pageSize: 20 },
-				});
+				const response = await findData(
+					relationMeta.serviceName as BaseServiceName,
+					{
+						filters: searchFilters as any,
+						pagination: { page: 1, pageSize: 20 },
+					},
+				);
 
 				const fetched = (response.data ?? [])
 					.map((item: any) => {
@@ -416,7 +432,9 @@ function AsyncRelationMultiValueInput({
 	}, [search, relationMeta]);
 
 	const selectedSet = new Set(selectedValues.map((item) => item.value));
-	const availableOptions = options.filter((item) => !selectedSet.has(item.value));
+	const availableOptions = options.filter(
+		(item) => !selectedSet.has(item.value),
+	);
 
 	return (
 		<div className="space-y-1">
@@ -435,7 +453,9 @@ function AsyncRelationMultiValueInput({
 					</Badge>
 				))}
 				{selectedValues.length === 0 && (
-					<span className="text-muted-foreground text-sm">Select one or more</span>
+					<span className="text-muted-foreground text-sm">
+						Select one or more
+					</span>
 				)}
 			</div>
 
@@ -482,9 +502,13 @@ const FilterField = <
 		fieldConfig?.multiValue === true &&
 		(fieldType === "text" || fieldType === "number");
 	const isMultiEnumField =
-		fieldConfig?.multiValue === true && fieldType === "enum" && enumValues.length > 0;
+		fieldConfig?.multiValue === true &&
+		fieldType === "enum" &&
+		enumValues.length > 0;
 	const isMultiRelationField =
-		fieldConfig?.multiValue === true && fieldType === "relation" && !!relationMeta;
+		fieldConfig?.multiValue === true &&
+		fieldType === "relation" &&
+		!!relationMeta;
 	const relationPath = `groups.${groupIndex}.filters.${fieldName}` as any;
 
 	const getEnumOptionLabel = React.useCallback(
@@ -503,7 +527,9 @@ const FilterField = <
 					return t("AdvancedFilters.fields.event_composition_sent_status.sent");
 				}
 				if (enumValue === "not_sent") {
-					return t("AdvancedFilters.fields.event_composition_sent_status.not_sent");
+					return t(
+						"AdvancedFilters.fields.event_composition_sent_status.not_sent",
+					);
 				}
 			}
 			return enumValue
