@@ -186,7 +186,7 @@ function MultiScalarValueInput({
 					onBlur={commitDraft}
 					placeholder={
 						values.length === 0
-							? (placeholder ?? "Enter values and press Enter (comma supported)")
+							? (placeholder ?? "Enter value and press Enter")
 							: ""
 					}
 				/>
