@@ -105,7 +105,9 @@ const isRelArray = (v: any) =>
 	Array.isArray(v) &&
 	v.length > 0 &&
 	v.every((x) => x && typeof x === "object" && "value" in x);
-const isScalarArray = (v: any) =>
+const isScalarArray = (
+	v: unknown,
+): v is Array<string | number | boolean> =>
 	Array.isArray(v) &&
 	v.length > 0 &&
 	v.every(
@@ -138,7 +140,11 @@ function normalizeSubscriptionActiveValue(value: any): boolean | null {
 }
 
 /* Build a single Strapi condition object for a field */
-function buildFieldCondition(key: string, rawValue: any, operator?: string) {
+function buildFieldCondition(
+	key: string,
+	rawValue: any,
+	operator?: string,
+): Record<string, any> {
 	let op = operator || "$eqi";
 	const cond: any = {};
 
