@@ -14,6 +14,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { ActionRule } from "./rules/action-rule";
+import { ContactDocumentAgeRule } from "./rules/contact-document-age-rule";
 import { DonationTransactionRule } from "./rules/donation-transaction-rule";
 import { FinishedJourneyRule } from "./rules/finished-journey";
 import { FormAnswerRule } from "./rules/form-answer-rule";
@@ -38,6 +39,7 @@ export type Condition = {
 	conditionField?: string;
 	additionalCondition?: string;
 	additional_data?: any;
+	documentType?: string; // Document type for document-related rules
 };
 
 export type ConnectionData = {
@@ -49,6 +51,7 @@ export type ConnectionData = {
 interface ConnectionPanelProps {
 	edge: Edge;
 	updateEdgeConditions: (data: ConnectionData) => void;
+	nodes?: any[];
 }
 
 const CONDITION_TYPES = [
@@ -57,6 +60,7 @@ const CONDITION_TYPES = [
 	{ value: "[actions][external_id]", label: "Journey Finished" },
 	{ value: "[surveys][survey_items]", label: "Form Answer" },
 	{ value: "[donation_transactions]", label: "Donation transaction" },
+	{ value: "[contact_documents]", label: "Contact Document Age" },
 ];
 
 const CONDITION_CONFIG = {
@@ -161,6 +165,37 @@ const ConditionItem = ({
 
 				{condition.type === "[actions][action_type]" && (
 					<ActionRule condition={condition} updateCondition={updateCondition} />
+				)}
+
+				{condition.type === "[contact_documents]" && (
+					<ContactDocumentAgeRule
+						condition={condition}
+						updateCondition={updateCondition}
+					/>
+				)}
+
+				{/* Document Type field - shown only for document-related rules */}
+				{condition.type === "[contact_documents]" && (
+					<div>
+						<label className="mb-1 block text-muted-foreground text-sm">
+							Document Type (optional)
+						</label>
+						<Input
+							type="text"
+							value={condition.documentType || ""}
+							onChange={(e) =>
+								updateCondition(condition.id, {
+									documentType: e.target.value || undefined,
+								})
+							}
+							placeholder="e.g., pdf, image, document (leave empty for no type)"
+							className="w-full"
+						/>
+						<p className="mt-1 text-muted-foreground text-xs">
+							Specify document type filter for this rule. Leave empty to match
+							any document type.
+						</p>
+					</div>
 				)}
 
 				{/* Scores section (unchanged) */}
@@ -271,6 +306,7 @@ const ConditionItem = ({
 export function ConnectionPanel({
 	edge,
 	updateEdgeConditions,
+	nodes = [],
 }: ConnectionPanelProps) {
 	const [data, setData] = useState<ConnectionData>(
 		edge.data || {
@@ -286,6 +322,10 @@ export function ConnectionPanel({
 			conditions: [],
 			condition_type: "all",
 		};
+		// Ensure conditions is always an array
+		if (!Array.isArray(newData.conditions)) {
+			newData.conditions = [];
+		}
 		setData(newData);
 		setHasChanges(false);
 	}, [edge.data, edge.id]);
@@ -359,9 +399,134 @@ export function ConnectionPanel({
 		handleDataChange({ conditions: updatedConditions });
 	};
 
+	// Helper function to get rule display text
+	const getRuleDisplayText = (condition: Condition): string => {
+		const typeLabel =
+			CONDITION_TYPES.find((t) => t.value === condition.type)?.label ||
+			condition.type;
+
+		// Build detailed display text based on rule type
+		switch (condition.type) {
+			case "[surveys][form_id]": {
+				const form = condition.additional_data?.form as
+					| { label: string; value: string }
+					| undefined;
+				if (form?.label) {
+					return `${typeLabel}: ${form.label}`;
+				}
+				return typeLabel;
+			}
+
+			case "[contact_documents]": {
+				const operator = condition.operator || "$lt";
+				const days =
+					condition.additional_data?.days ??
+					(typeof condition.value === "string"
+						? parseInt(condition.value, 10)
+						: null) ??
+					90;
+				const documentType = condition.documentType
+					? ` (type: ${condition.documentType})`
+					: "";
+
+				const operatorText =
+					operator === "$lt"
+						? "older than"
+						: operator === "$lte"
+							? "older than or equal to"
+							: operator === "$gt"
+								? "newer than"
+								: operator === "$gte"
+									? "newer than or equal to"
+									: "exactly";
+				return `${typeLabel}: ${operatorText} ${days} days${documentType}`;
+			}
+
+			case "[surveys][survey_items]": {
+				const form = condition.additional_data?.form as
+					| { label: string; value: string }
+					| undefined;
+				const formAnswer = condition.additional_data?.formAnswer as
+					| { label: string }
+					| undefined;
+				const value = condition.additionalCondition?.split("/")[2];
+				const operator = condition.operator || "$eqi";
+
+				if (form?.label && formAnswer?.label) {
+					const operatorText =
+						operator === "$eqi"
+							? "equals"
+							: operator === "$nei"
+								? "not equals"
+								: operator === "$gte"
+									? "greater or equal"
+									: operator === "$gt"
+										? "greater than"
+										: operator === "$lte"
+											? "less or equal"
+											: operator === "$lt"
+												? "less than"
+												: operator;
+					return `${typeLabel}: ${form.label} - ${formAnswer.label} ${operatorText} ${value || ""}`;
+				}
+				return typeLabel;
+			}
+
+			case "[actions][action_type]": {
+				const actionType = condition.additional_data?.action_type as
+					| { label: string }
+					| undefined;
+				const externalId = condition.additionalCondition?.split("/")[2];
+				if (actionType?.label) {
+					return `${typeLabel}: ${actionType.label}${externalId ? ` (external_id: ${externalId})` : ""}`;
+				}
+				return typeLabel;
+			}
+
+			case "[actions][external_id]": {
+				if (condition.label) {
+					return `${typeLabel}: ${condition.label}`;
+				}
+				return typeLabel;
+			}
+
+			case "[donation_transactions]": {
+				if (condition.label) {
+					return `${typeLabel}: ${condition.label}`;
+				}
+				return typeLabel;
+			}
+
+			default:
+				if (condition.label) {
+					return `${typeLabel}: ${condition.label}`;
+				}
+				return typeLabel;
+		}
+	};
+
 	return (
 		<div className="relative min-h-0 flex-1 overflow-hidden">
 			<div className="h-full overflow-y-auto p-4">
+				{/* Show rule summary box when there are conditions */}
+				{data.conditions.length > 0 && (
+					<div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+						<div className="mb-2 font-medium text-blue-900 text-sm dark:text-blue-100">
+							Connection Rules:
+						</div>
+						<div className="space-y-1">
+							{data.conditions.map((condition, _idx) => (
+								<div
+									key={condition.id}
+									className="text-blue-800 text-sm dark:text-blue-200"
+								>
+									• {getRuleDisplayText(condition)}
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
 				<div className="mb-4 flex items-center justify-between border-border border-b pb-4">
 					<span className="font-medium text-base text-foreground">
 						Conditional Logic:

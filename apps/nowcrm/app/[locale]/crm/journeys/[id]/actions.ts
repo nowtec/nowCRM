@@ -401,7 +401,7 @@ export async function updateConnectionRules(
 		condition_operator: string;
 		ready_condition: string;
 		additional_condition: string;
-		additional_data: string;
+		additional_data: string | object;
 		label: string;
 		condition_value: string;
 		scores?: { documentId?: DocumentId; attribute: string; value: string }[];
@@ -483,7 +483,10 @@ export async function updateConnectionRules(
 						condition: rule.condition,
 						condition_operator: rule.condition_operator,
 						ready_condition: rule.ready_condition,
-						additional_data: rule.additional_data,
+						additional_data:
+							typeof rule.additional_data === "object"
+								? JSON.stringify(rule.additional_data)
+								: rule.additional_data,
 						additional_condition: rule.additional_condition,
 						condition_value:
 							typeof rule.condition_value === "object"
@@ -587,7 +590,10 @@ export async function updateConnectionRules(
 								: rule.condition_value,
 						label: rule.label,
 						ready_condition: rule.ready_condition,
-						additional_data: rule.additional_data,
+						additional_data:
+							typeof rule.additional_data === "object"
+								? JSON.stringify(rule.additional_data)
+								: rule.additional_data,
 						additional_condition: rule.additional_condition,
 						publishedAt: new Date(),
 					},
