@@ -278,6 +278,7 @@ export function SearchHistoryPanel({
 					$eq: "equals",
 					$eqi: "equals",
 					$ne: "not equals",
+					$nei: "not equals",
 					$lt: "less than",
 					$lte: "less than or equal to",
 					$gt: "greater than",

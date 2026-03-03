@@ -117,6 +117,26 @@ const DATE_EQ_FIELDS = new Set([
 	"donation_transactions_from",
 ]);
 
+function normalizeSubscriptionActiveValue(value: any): boolean | null {
+	if (typeof value === "boolean") return value;
+	if (typeof value === "number") {
+		if (value === 1) return true;
+		if (value === 0) return false;
+	}
+	if (typeof value === "string") {
+		const normalized = value.trim().toLowerCase();
+		if (["active", "true", "1"].includes(normalized)) return true;
+		if (
+			["not_active", "not active", "inactive", "false", "0"].includes(
+				normalized,
+			)
+		) {
+			return false;
+		}
+	}
+	return null;
+}
+
 /* Build a single Strapi condition object for a field */
 function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 	let op = operator || "$eqi";
@@ -126,6 +146,36 @@ function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 	if (op === "$null" || op === "$notNull") {
 		const aliased = FIELD_ALIASES[key] || key;
 		setNested(cond, aliased, { [op]: true });
+		return cond;
+	}
+
+	// Synthetic field used by UI to filter relation boolean flag:
+	// subscriptions_active -> subscriptions.active
+	if (key === "subscriptions_active") {
+		const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+		const normalizedValues = [
+			...new Set(
+				values
+					.map((value) => normalizeSubscriptionActiveValue(value))
+					.filter((value): value is boolean => value !== null),
+			),
+		];
+
+		if (normalizedValues.length === 0) {
+			return cond;
+		}
+
+		const isNegative = ["$ne", "$nei", "$notIn"].includes(op);
+		if (normalizedValues.length === 1) {
+			setNested(cond, "subscriptions.active", {
+				[isNegative ? "$ne" : "$eq"]: normalizedValues[0],
+			});
+			return cond;
+		}
+
+		setNested(cond, "subscriptions.active", {
+			[isNegative ? "$notIn" : "$in"]: normalizedValues,
+		});
 		return cond;
 	}
 
@@ -160,7 +210,9 @@ function buildFieldCondition(key: string, rawValue: any, operator?: string) {
 				[isNegativeRelation ? "$eqi" : op]: v,
 			});
 		} else if (aliased) {
-			setNested(relationCond, aliased, { [isNegativeRelation ? "$eqi" : op]: v });
+			setNested(relationCond, aliased, {
+				[isNegativeRelation ? "$eqi" : op]: v,
+			});
 		} else {
 			relationCond[key] = { documentId: { $eq: rawValue.value } };
 		}

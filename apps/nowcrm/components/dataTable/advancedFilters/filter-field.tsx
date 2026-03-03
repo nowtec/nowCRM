@@ -596,6 +596,19 @@ const FilterField = <
 									</SelectItem>
 								</SelectContent>
 							</Select>
+						) : fieldType === "enum" && enumValues.length > 0 ? (
+							<Select value={value || ""} onValueChange={onValueChange}>
+								<SelectTrigger className="h-8">
+									<SelectValue placeholder="Select..." />
+								</SelectTrigger>
+								<SelectContent>
+									{enumValues.map((enumValue) => (
+										<SelectItem key={enumValue} value={enumValue}>
+											{getEnumOptionLabel(enumValue)}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						) : isMultiScalarField ? (
 							<MultiScalarValueInput
 								value={value}

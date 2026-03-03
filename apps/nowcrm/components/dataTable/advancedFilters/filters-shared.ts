@@ -13,12 +13,18 @@ const RELATION_OPERATORS: Operator[] = [
 	{ value: "$notNull", label: "Is not empty" },
 ];
 
+const ENUM_OPERATORS: Operator[] = [
+	{ value: "$eqi", label: "Equal" },
+	{ value: "$nei", label: "Not equal" },
+];
+
 export function getOperatorsForField(
 	field: string,
 	fieldTypes: Record<string, "text" | "number" | "date" | "relation" | "enum">,
 ): Operator[] {
 	const type = fieldTypes[field] || "text";
 	if (type === "relation") return RELATION_OPERATORS;
+	if (type === "enum") return ENUM_OPERATORS;
 	if (type === "number") return NUMBER_OPERATORS;
 	if (type === "date") return DATE_OPERATORS;
 	return TEXT_OPERATORS;
