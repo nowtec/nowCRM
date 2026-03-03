@@ -9,6 +9,7 @@ import {
 	Info,
 	Mail,
 	MessageSquare,
+	Send,
 	Settings,
 	Users,
 } from "lucide-react";
@@ -40,6 +41,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RouteConfig } from "@/lib/config/routes-config";
 import ContactsPageClient from "../contact-dialog/contacts-data-table";
 import { BranchingTab } from "./branching-tab";
+import { SendTestDialog } from "./send-test-dialog";
 
 type Condition = {
 	id: string;
@@ -150,6 +152,7 @@ export function ChannelPanel({
 		() => node.data.hasIdentity || false,
 	);
 	const [branches, setBranches] = useState<Branch[]>([]);
+	const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
 	// FIX 2: Reset state when node changes
 	useEffect(() => {
 		console.log("ChannelPanel: Node changed, resetting state", {
@@ -604,19 +607,34 @@ export function ChannelPanel({
 																{config.composition.label}
 															</div>
 														</div>
-														<Button variant="outline" size="sm" asChild>
-															<Link
-																href={`${RouteConfig.composer.single(
-																	config.composition.value,
-																)}`}
-																target="_blank"
-																rel="noopener noreferrer"
-																className="flex items-center gap-1"
-															>
-																<Eye className="h-3 w-3" />
-																Preview
-															</Link>
-														</Button>
+														<div className="flex items-center gap-2">
+															{config.channel?.label
+																?.toLowerCase()
+																.includes("email") && (
+																<Button
+																	variant="outline"
+																	size="sm"
+																	onClick={() => setIsTestDialogOpen(true)}
+																	className="flex items-center gap-1"
+																>
+																	<Send className="h-3 w-3" />
+																	Send Test
+																</Button>
+															)}
+															<Button variant="outline" size="sm" asChild>
+																<Link
+																	href={`${RouteConfig.composer.single(
+																		config.composition.value,
+																	)}`}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																	className="flex items-center gap-1"
+																>
+																	<Eye className="h-3 w-3" />
+																	Preview
+																</Link>
+															</Button>
+														</div>
 													</div>
 												</div>
 											)}
@@ -707,6 +725,20 @@ export function ChannelPanel({
 					</CardContent>
 				</Card>
 			</div>
+			{config.composition?.value && config.channel?.value && (
+				<SendTestDialog
+					open={isTestDialogOpen}
+					onOpenChange={setIsTestDialogOpen}
+					compositionId={config.composition.value}
+					channel={
+						config.channel.label?.toLowerCase().includes("email")
+							? "email"
+							: config.channel.label?.toLowerCase() || ""
+					}
+					channelLabel={config.channel.label}
+					from={config.identity?.label}
+				/>
+			)}
 		</div>
 	);
 }

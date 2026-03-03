@@ -37,6 +37,7 @@ type AdditionalData = {
 		attribute_name?: string | null;
 		operator?: "gt" | "lt" | "eq" | null;
 	};
+	documentType?: string; // Document type filter for contact-document triggers
 	[k: string]: any;
 };
 
@@ -165,6 +166,7 @@ async function getContactIdFromWebhook(
 		}
 	}
 
+	// For related entities (contact-document, survey, etc.), extract contact from relation
 	if (data?.entry?.contact?.documentId) {
 		return data.entry.contact.documentId;
 	}
@@ -261,7 +263,19 @@ export async function processTriggerMessage(data: any) {
 		const entityMatches = add.entity === data?.model;
 		const enabled = add.enabled === true;
 		const eventOk = eventMatches(add.event, data, add.attribute);
-		return entityMatches && enabled && eventOk;
+
+		// Check document type filter for contact-document entities
+		let documentTypeMatches = true;
+		if (
+			add.entity === "contact-document" &&
+			add.documentType &&
+			data?.entry?.type
+		) {
+			documentTypeMatches =
+				data.entry.type.toLowerCase() === add.documentType.toLowerCase();
+		}
+
+		return entityMatches && enabled && eventOk && documentTypeMatches;
 	});
 	if (filtered_steps.length > 0) {
 		const email_channel = await adaptiveRateLimiter.execute(

@@ -265,6 +265,7 @@ function convertJourneyToReactFlow(
 					attribute: step.additional_data?.attribute || null,
 					event: step.additional_data?.event || null,
 					enabled: step.additional_data?.enabled !== false,
+					documentType: step.additional_data?.documentType || undefined,
 				};
 				break;
 
@@ -372,6 +373,7 @@ function convertJourneyToReactFlow(
 							conditionOperator: (rule.additional_data as any)
 								?.conditionOperator,
 							conditionField: (rule.additional_data as any)?.conditionField,
+							documentType: (rule.additional_data as any)?.documentType,
 							scores:
 								rule.journey_step_rule_scores?.map((score) => ({
 									documentId: score.documentId,
@@ -400,14 +402,11 @@ function convertJourneyToReactFlow(
 							sourceType: connection.source_step.type,
 						},
 						label:
-							connection.source_step.type === "trigger" ||
-							connection.source_step.type === "scheduler-trigger"
-								? ""
-								: conditions.length > 0
-									? conditions.length === 1
-										? conditions[0].label
-										: `All of ${conditions.length} conditions`
-									: "No conditions (click to configure)",
+							conditions.length > 0
+								? conditions.length === 1
+									? conditions[0].label
+									: `All of ${conditions.length} conditions`
+								: "No conditions (click to configure)",
 						labelStyle: {
 							fill: "#fff",
 							fontSize: 12,

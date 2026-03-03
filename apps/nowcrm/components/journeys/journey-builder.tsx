@@ -26,10 +26,9 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import type { DocumentId } from "@nowcrm/services";
-import { Info, Trash2, X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "../ui/alert";
 import { ConnectionPanel } from "./connection-panel/connection-panel";
 import { HeaderBar } from "./header-bar";
 import { initialEdges, initialNodes } from "./initial-data";
@@ -523,10 +522,9 @@ function JourneyBuilderContent({
 					condition_type: "all",
 					priority: newPriority,
 					ruleNotAllowed: isTriggerType(sourceNode.data.type),
+					sourceType: sourceNode.data.type, // Store source type for trigger detection
 				},
-				label: isTriggerType(sourceNode.data.type)
-					? ""
-					: "Configure Connection",
+				label: "Configure Connection",
 				labelStyle: {
 					fill: "#fff",
 					fontSize: 12,
@@ -1529,10 +1527,9 @@ function JourneyBuilderContent({
 													ruleNotAllowed: isTriggerType(
 														finalSourceNode.data.type,
 													),
+													sourceType: finalSourceNode.data.type, // Store source type for trigger detection
 												},
-												label: isTriggerType(finalSourceNode.data.type)
-													? ""
-													: "Configure Connection",
+												label: "Configure Connection",
 												labelStyle: {
 													fill: "#fff",
 													fontSize: 12,
@@ -1674,6 +1671,20 @@ function JourneyBuilderContent({
 					<div className="flex h-16 items-center justify-between border-b p-4">
 						<h3 className="font-semibold text-lg">Configure Step</h3>
 						<div className="flex gap-2">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => {
+									if (!selectedNode) return;
+									setPendingNodeId(selectedNode.id);
+									setPendingConnection(null);
+									setSelectedEdge(null);
+									setShowStepSelectorPanel(true);
+								}}
+								title="Change step type"
+							>
+								Change type
+							</Button>
 							{!isStartNode && (
 								<Button
 									variant="outline"
@@ -1722,25 +1733,14 @@ function JourneyBuilderContent({
 							</Button>
 						</div>
 					</div>
-					{isTriggerType(selectedEdge?.data.sourceType) ||
-					selectedEdge.data.ruleNotAllowed ? (
-						<div className="p-4">
-							<Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-								<Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-								<AlertDescription className="text-blue-800 dark:text-blue-200">
-									Triggers do not support connection rules or conditions.
-								</AlertDescription>
-							</Alert>
-						</div>
-					) : (
-						<ConnectionPanel
-							key={selectedEdge.id}
-							edge={selectedEdge}
-							updateEdgeConditions={(data) =>
-								updateEdgeConditions(selectedEdge.id, data)
-							}
-						/>
-					)}
+					<ConnectionPanel
+						key={selectedEdge.id}
+						edge={selectedEdge}
+						nodes={nodes}
+						updateEdgeConditions={(data) =>
+							updateEdgeConditions(selectedEdge.id, data)
+						}
+					/>
 				</div>
 			)}
 		</div>

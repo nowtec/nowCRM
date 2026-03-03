@@ -240,6 +240,7 @@ export default function JourneyClient({
 					attribute: node.data.config.attribute || null,
 					event: node.data.config.event || null,
 					enabled: node.data.config?.enabled !== false,
+					documentType: node.data.config.documentType || undefined,
 				};
 			} else if (node.data.type === "scheduler-trigger") {
 				timing = {
@@ -471,6 +472,28 @@ export default function JourneyClient({
 				}
 
 				function getReadyCondition(condition: any): string {
+					// Special handling for contact document age condition
+					// The date needs to be calculated at evaluation time, so we use a special format
+					if (condition.type === "[contact_documents]") {
+						const days =
+							condition.additional_data?.days ??
+							(typeof condition.value === "string"
+								? parseInt(condition.value, 10)
+								: null) ??
+							90;
+						const operator = condition.operator || "$lt";
+						// Store days in additional_data for backend processing
+						// The backend will calculate the date dynamically
+						let readyCondition = `filters[$and][0][contact_documents][createdAt][${operator}]=DAYS_AGO:${days}`;
+
+						// Add document type filter if specified
+						if (condition.documentType) {
+							readyCondition += `&filters[$and][1][contact_documents][type][$eqi]=${encodeURIComponent(condition.documentType)}`;
+						}
+
+						return readyCondition;
+					}
+
 					const formatSingleCondition = (
 						field: string,
 						operator: string,
@@ -613,7 +636,10 @@ export default function JourneyClient({
 							: condition.ready_condition,
 						condition_operator: condition.operator,
 						condition_value: condition.value,
-						additional_data: condition.additional_data,
+						additional_data: {
+							...condition.additional_data,
+							documentType: condition.documentType,
+						},
 						additional_condition: condition.additionalCondition,
 						label: condition.label,
 						scores:

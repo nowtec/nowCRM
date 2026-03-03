@@ -8,6 +8,7 @@ import {
 	ChevronRight,
 	Contact,
 	CreditCardIcon,
+	FileText,
 	FormInputIcon,
 	Mail,
 	Power,
@@ -47,7 +48,8 @@ type TriggerEntity =
 	| "action"
 	| "survey"
 	| "subscription"
-	| "donation-transaction";
+	| "donation-transaction"
+	| "contact-document";
 
 export type EventValue = "entry.create" | "entry.update" | "entry.unpublish";
 
@@ -64,6 +66,7 @@ type TriggerConfig = {
 	entity?: TriggerEntity | null;
 	attribute?: LabeledValue | null;
 	event?: EventValue | null;
+	documentType?: string; // Document type for document-related triggers
 };
 
 interface TriggerPanelProps {
@@ -205,6 +208,24 @@ const ENTITY_OPTIONS: EntityOption[] = [
 			},
 		],
 	},
+	{
+		value: "contact-document",
+		label: "Contact Document",
+		description: "Monitor when contacts create or update documents",
+		icon: FileText,
+		event_options: [
+			{
+				value: "entry.create",
+				label: "Document Created",
+				description: "When a contact creates a new document",
+			},
+			{
+				value: "entry.update",
+				label: "Document Updated",
+				description: "When a contact document is updated",
+			},
+		],
+	},
 ];
 
 // Helper to read current entity meta
@@ -222,6 +243,7 @@ export function TriggerPanel({
 		attribute: node.data.config?.attribute || null,
 		event: node.data.config?.event || null,
 		enabled: node.data.config?.enabled !== false,
+		documentType: node.data.config?.documentType || undefined,
 	}));
 
 	const [stepTitle, setStepTitle] = useState(
@@ -238,6 +260,7 @@ export function TriggerPanel({
 			attribute: node.data.config?.attribute || null,
 			event: node.data.config?.event || null,
 			enabled: node.data.config?.enabled !== false,
+			documentType: node.data.config?.documentType || undefined,
 		});
 
 		if (node.data.config?.entity) setCurrentStep(2);
@@ -830,6 +853,28 @@ export function TriggerPanel({
 														Choose when this trigger should activate
 													</p>
 												</div>
+
+												{/* File Type field - available for all triggers */}
+												<div className="space-y-2">
+													<label className="font-medium text-sm">
+														Document Type (optional)
+													</label>
+													<Input
+														type="text"
+														value={config.documentType || ""}
+														onChange={(e) =>
+															handleConfigChange({
+																documentType: e.target.value || undefined,
+															})
+														}
+														placeholder=""
+														className="w-full"
+													/>
+													<p className="text-muted-foreground text-xs">
+														Specify document type filter for this trigger. Leave
+														empty to match document.
+													</p>
+												</div>
 											</CardContent>
 										</Card>
 									)}
@@ -876,6 +921,12 @@ export function TriggerPanel({
 														<strong>Event:</strong>{" "}
 														{renderEventSummary(config.event)}
 													</div>
+													{config.documentType && (
+														<div>
+															<strong>Document Type:</strong>{" "}
+															{config.documentType}
+														</div>
+													)}
 												</div>
 											</AlertDescription>
 										</Alert>
