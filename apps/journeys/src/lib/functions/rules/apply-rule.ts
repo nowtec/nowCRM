@@ -39,7 +39,7 @@ export async function applyRule(
 			// Count existing $and conditions to determine index
 			const andMatches = readyCondition.match(/\[$and\]/g);
 			const nextIndex = andMatches ? andMatches.length : 0;
-			
+
 			// Add document type filter
 			const separator = readyCondition.includes("?") ? "&" : "?";
 			readyCondition += `${separator}filters[$and][${nextIndex}][contact_documents][type][$eqi]=${encodeURIComponent(documentType)}`;
