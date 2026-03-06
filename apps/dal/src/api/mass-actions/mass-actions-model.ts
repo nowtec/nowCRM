@@ -77,12 +77,13 @@ export const MassExportSchema = z.object({
 	searchMask: z
 		.record(z.any())
 		.openapi({ description: "Search filters to apply" }),
-	typeField: z.string().openapi({
-		description: "Field name to assign list ID to (e.g. 'listId')",
-	}),
-	listId: z
-		.number()
-		.openapi({ description: "ID of the list to assign items to" }),
+	mass_action: z
+		.string()
+		.openapi({ description: "Mass action type (e.g. 'export')" }),
+	userEmail: z
+		.string()
+		.optional()
+		.openapi({ description: "Recipient email for exported CSV" }),
 });
 
 export const MassAnonymizeSchema = z.object({
@@ -108,5 +109,5 @@ export type MassUpdateSubscriptionPayload = z.infer<
 export type MassAddToOrganizationPayload = z.infer<typeof MassAddToListSchema>;
 export type MassAddToJourneyPayload = z.infer<typeof MassAddToListSchema>;
 export type MassAnonymizePayload = z.infer<typeof MassAddToListSchema>;
-export type MassExportPayload = z.infer<typeof MassAddToListSchema>;
+export type MassExportPayload = z.infer<typeof MassExportSchema>;
 export type MassAddToListPayload = z.infer<typeof MassAddToListSchema>;

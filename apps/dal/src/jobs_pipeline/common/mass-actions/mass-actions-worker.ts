@@ -179,6 +179,7 @@ const massActionHandlers: Record<
 	export: async ({ entity, jobData }) => {
 		await exportQueue.add("exportBatch", {
 			entity,
+			searchMask: jobData.searchMask ?? {},
 			userEmail: jobData.userEmail,
 		});
 	},

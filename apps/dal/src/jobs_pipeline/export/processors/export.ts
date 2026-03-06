@@ -14,10 +14,14 @@ type ExportResult = {
 
 export const exportEntityItems = async (
 	entity: string,
-	searchMask: Record<string, any>,
-	userEmail: string,
+	searchMask: Record<string, any> = {},
+	userEmail?: string,
 ): Promise<ExportResult> => {
 	try {
+		if (!userEmail) {
+			throw new Error("Missing userEmail for export delivery");
+		}
+
 		logger.info(`[EXPORT] userEmail received: ${userEmail}`);
 
 		const exportFilename = `${entity}_export_${Date.now()}.csv`;
@@ -30,7 +34,13 @@ export const exportEntityItems = async (
 		let exportedCount = 0;
 
 		while (true) {
-			const pageItems = await fetchPage(entity, searchMask, page, 100, logger);
+			const pageItems = await fetchPage(
+				entity,
+				searchMask ?? {},
+				page,
+				100,
+				logger,
+			);
 			if (pageItems.length === 0) break;
 
 			for (const item of pageItems) {
