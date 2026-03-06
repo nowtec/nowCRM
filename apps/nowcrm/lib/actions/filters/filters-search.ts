@@ -100,6 +100,98 @@ function deepMerge(target: any, source: any) {
 	}
 }
 
+function isPlainObject(value: unknown): value is Record<string, any> {
+	return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function isFilterValuePresent(value: any, operator?: string): boolean {
+	const isNullOperator = operator === "$null" || operator === "$notNull";
+	return (
+		isNullOperator ||
+		(value !== "" &&
+			value != null &&
+			!(Array.isArray(value) && value.length === 0))
+	);
+}
+
+function buildRelationEmptyCondition(key: string): Record<string, any> {
+	const condition: Record<string, any> = {};
+	const aliased = FIELD_ALIASES[key] || key;
+	setNested(condition, aliased, { $null: true });
+	return condition;
+}
+
+function bindSubscriptionsWithActiveCondition(
+	subscriptionCondition: Record<string, any>,
+	subscriptionsActiveConditions: Array<Record<string, any>>,
+): Record<string, any> {
+	if (subscriptionsActiveConditions.length === 0) return subscriptionCondition;
+	const mergedCondition: Record<string, any> = {};
+	deepMerge(mergedCondition, subscriptionCondition);
+
+	const directRelationCondition = isPlainObject(mergedCondition.subscriptions)
+		? mergedCondition.subscriptions
+		: null;
+	const topLevelOrNotRelationCondition =
+		Array.isArray(mergedCondition.$or) && mergedCondition.$or.length > 0
+			? mergedCondition.$or.find(
+					(branch) =>
+						isPlainObject(branch) &&
+						isPlainObject(branch.$not) &&
+						isPlainObject(branch.$not.subscriptions),
+				)?.$not?.subscriptions || null
+			: null;
+	const topLevelNotRelationCondition =
+		isPlainObject(mergedCondition.$not) &&
+		isPlainObject(mergedCondition.$not.subscriptions)
+			? mergedCondition.$not.subscriptions
+			: null;
+
+	const relationCondition =
+		topLevelNotRelationCondition ||
+		topLevelOrNotRelationCondition ||
+		directRelationCondition;
+	if (!relationCondition) return subscriptionCondition;
+
+	// For negative relation filters like { subscriptions: { $not: {...} } },
+	// active constraints must be added inside $not to keep "same subscription row" semantics.
+	const mergeTarget = isPlainObject(relationCondition.$not)
+		? relationCondition.$not
+		: relationCondition;
+
+	for (const activeCondition of subscriptionsActiveConditions) {
+		const activeRelationCondition = activeCondition.subscriptions;
+		if (!isPlainObject(activeRelationCondition)) continue;
+		deepMerge(mergeTarget, activeRelationCondition);
+	}
+
+	// For "(NOT relation) OR relation IS NULL" shape, AND-ing with subscriptions_active
+	// means relation cannot be NULL, so collapse back to NOT-relation branch only.
+	if (Array.isArray(mergedCondition.$or)) {
+		const nonNullBranches = mergedCondition.$or.filter(
+			(branch) =>
+				!(
+					isPlainObject(branch) &&
+					isPlainObject(branch.subscriptions) &&
+					branch.subscriptions.$null === true
+				),
+		);
+
+		if (nonNullBranches.length !== mergedCondition.$or.length) {
+			if (nonNullBranches.length === 1) {
+				const collapsed = nonNullBranches[0];
+				for (const key of Object.keys(mergedCondition))
+					delete mergedCondition[key];
+				deepMerge(mergedCondition, collapsed);
+			} else {
+				mergedCondition.$or = nonNullBranches;
+			}
+		}
+	}
+
+	return mergedCondition;
+}
+
 const isRelObject = (v: any) => v && typeof v === "object" && "value" in v;
 const isRelArray = (v: any) =>
 	Array.isArray(v) &&
@@ -116,6 +208,26 @@ const DATE_EQ_FIELDS = new Set([
 	"donation_subscriptions_from",
 	"donation_transactions_from",
 ]);
+
+function detectValueShape(value: any): string {
+	if (isRelArray(value)) return "relation_array";
+	if (isRelObject(value)) return "relation_object";
+	if (isScalarArray(value)) return "scalar_array";
+	if (Array.isArray(value)) return "array_other";
+	if (value === null) return "null";
+	return typeof value;
+}
+
+function logSubscriptionFilter(
+	stage: string,
+	payload: Record<string, any>,
+): void {
+	try {
+		console.log(`[subscription-filter] ${stage}: ${JSON.stringify(payload)}`);
+	} catch {
+		console.log(`[subscription-filter] ${stage}:`, payload);
+	}
+}
 
 function normalizeSubscriptionActiveValue(value: any): boolean | null {
 	if (typeof value === "boolean") return value;
@@ -145,11 +257,29 @@ function buildFieldCondition(
 ): Record<string, any> {
 	let op = operator || "$eqi";
 	const cond: any = {};
+	const isSubscriptionDebugKey =
+		key === "subscriptions" || key === "subscriptions_active";
+
+	if (isSubscriptionDebugKey) {
+		logSubscriptionFilter("input", {
+			key,
+			operator: op,
+			shape: detectValueShape(rawValue),
+			value: rawValue,
+		});
+	}
 
 	// handle null / notNull operators that ignore value
 	if (op === "$null" || op === "$notNull") {
 		const aliased = FIELD_ALIASES[key] || key;
 		setNested(cond, aliased, { [op]: true });
+		if (isSubscriptionDebugKey) {
+			logSubscriptionFilter("output/null_operator", {
+				key,
+				operator: op,
+				condition: cond,
+			});
+		}
 		return cond;
 	}
 
@@ -166,6 +296,10 @@ function buildFieldCondition(
 		];
 
 		if (normalizedValues.length === 0) {
+			logSubscriptionFilter("output/subscriptions_active_empty", {
+				key,
+				operator: op,
+			});
 			return cond;
 		}
 
@@ -174,11 +308,23 @@ function buildFieldCondition(
 			setNested(cond, "subscriptions.active", {
 				[isNegative ? "$ne" : "$eq"]: normalizedValues[0],
 			});
+			logSubscriptionFilter("output/subscriptions_active_single", {
+				key,
+				operator: op,
+				normalizedValues,
+				condition: cond,
+			});
 			return cond;
 		}
 
 		setNested(cond, "subscriptions.active", {
 			[isNegative ? "$notIn" : "$in"]: normalizedValues,
+		});
+		logSubscriptionFilter("output/subscriptions_active_multi", {
+			key,
+			operator: op,
+			normalizedValues,
+			condition: cond,
 		});
 		return cond;
 	}
@@ -222,7 +368,23 @@ function buildFieldCondition(
 		}
 
 		if (isNegativeRelation) {
-			return { $not: relationCond };
+			const relationIsNullCond = buildRelationEmptyCondition(key);
+			const condition = { $or: [{ $not: relationCond }, relationIsNullCond] };
+			if (isSubscriptionDebugKey) {
+				logSubscriptionFilter("output/relation_single_negative_not_or_null", {
+					key,
+					operator: op,
+					condition,
+				});
+			}
+			return condition;
+		}
+		if (isSubscriptionDebugKey) {
+			logSubscriptionFilter("output/relation_single_positive", {
+				key,
+				operator: op,
+				condition: relationCond,
+			});
 		}
 		return relationCond;
 	}
@@ -245,7 +407,23 @@ function buildFieldCondition(
 		}
 
 		if (isNegativeRelation) {
-			return { $not: relationCond };
+			const relationIsNullCond = buildRelationEmptyCondition(key);
+			const condition = { $or: [{ $not: relationCond }, relationIsNullCond] };
+			if (isSubscriptionDebugKey) {
+				logSubscriptionFilter("output/relation_multi_negative_not_or_null", {
+					key,
+					operator: op,
+					condition,
+				});
+			}
+			return condition;
+		}
+		if (isSubscriptionDebugKey) {
+			logSubscriptionFilter("output/relation_multi_positive", {
+				key,
+				operator: op,
+				condition: relationCond,
+			});
 		}
 		return relationCond;
 	}
@@ -294,6 +472,12 @@ function buildFieldCondition(
 			.filter((v) => v !== "" && v != null);
 
 		if (values.length === 0) {
+			if (isSubscriptionDebugKey) {
+				logSubscriptionFilter("output/scalar_array_empty", {
+					key,
+					operator: op,
+				});
+			}
 			return cond;
 		}
 
@@ -301,6 +485,14 @@ function buildFieldCondition(
 		if (values.length === 1) {
 			const aliased = FIELD_ALIASES[key] || key;
 			setNested(cond, aliased, { [op]: values[0] });
+			if (isSubscriptionDebugKey) {
+				logSubscriptionFilter("output/scalar_array_single", {
+					key,
+					operator: op,
+					values,
+					condition: cond,
+				});
+			}
 			return cond;
 		}
 
@@ -309,6 +501,14 @@ function buildFieldCondition(
 			op = ["$ne", "$nei", "$notIn"].includes(op) ? "$notIn" : "$in";
 			const aliased = FIELD_ALIASES[key] || key;
 			setNested(cond, aliased, { [op]: values });
+			if (isSubscriptionDebugKey) {
+				logSubscriptionFilter("output/scalar_array_in_notin", {
+					key,
+					operator: op,
+					values,
+					condition: cond,
+				});
+			}
 			return cond;
 		}
 
@@ -319,10 +519,29 @@ function buildFieldCondition(
 			.filter((c) => Object.keys(c || {}).length > 0);
 
 		if (expandedConditions.length === 0) return cond;
-		if (expandedConditions.length === 1) return expandedConditions[0];
+		if (expandedConditions.length === 1) {
+			if (isSubscriptionDebugKey) {
+				logSubscriptionFilter("output/scalar_array_expanded_single", {
+					key,
+					operator: op,
+					condition: expandedConditions[0],
+				});
+			}
+			return expandedConditions[0];
+		}
 
 		const useAnd = ["$notContains", "$notContainsi"].includes(op);
-		return useAnd ? { $and: expandedConditions } : { $or: expandedConditions };
+		const condition = useAnd
+			? { $and: expandedConditions }
+			: { $or: expandedConditions };
+		if (isSubscriptionDebugKey) {
+			logSubscriptionFilter("output/scalar_array_expanded_multi", {
+				key,
+				operator: op,
+				condition,
+			});
+		}
+		return condition;
 	}
 
 	// CSV string → IN/NOT IN
@@ -335,6 +554,13 @@ function buildFieldCondition(
 			.split(",")
 			.map((v) => v.trim())
 			.filter(Boolean);
+		if (isSubscriptionDebugKey) {
+			logSubscriptionFilter("input/csv_string_to_array", {
+				key,
+				operator: op,
+				values,
+			});
+		}
 		return buildFieldCondition(key, values, op);
 	}
 
@@ -376,6 +602,13 @@ function buildFieldCondition(
 	// plain scalar
 	const aliased = FIELD_ALIASES[key] || key;
 	setNested(cond, aliased, { [op]: rawValue });
+	if (isSubscriptionDebugKey) {
+		logSubscriptionFilter("output/plain_scalar", {
+			key,
+			operator: op,
+			condition: cond,
+		});
+	}
 	return cond;
 }
 
@@ -405,10 +638,42 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 	const { hasEventComposition, hasEventCompositionSentStatus } =
 		hasEventCompositionSentStatusCombination(fieldGroups);
 
+	const shouldBindSubscriptionsActive =
+		groupLogic === "AND" &&
+		Array.isArray(fieldGroups.subscriptions) &&
+		fieldGroups.subscriptions.length > 0 &&
+		Array.isArray(fieldGroups.subscriptions_active) &&
+		fieldGroups.subscriptions_active.length > 0;
+
+	const subscriptionsActiveConditions = shouldBindSubscriptionsActive
+		? fieldGroups.subscriptions_active
+				.filter((instance) =>
+					isFilterValuePresent(instance.value, instance.operator),
+				)
+				.map((instance) =>
+					buildFieldCondition(
+						"subscriptions_active",
+						instance.value,
+						instance.operator,
+					),
+				)
+				.filter((condition) => Object.keys(condition).length > 0)
+		: [];
+
 	// Build conditions for each field group
 	const conditions: any[] = [];
 
 	for (const [baseField, instances] of Object.entries(fieldGroups)) {
+		if (
+			shouldBindSubscriptionsActive &&
+			subscriptionsActiveConditions.length > 0 &&
+			baseField === "subscriptions_active"
+		) {
+			// handled together with subscriptions to ensure channel+active are matched
+			// against the same relation row
+			continue;
+		}
+
 		// Skip event_composition_sent_status if we're handling it together with event_composition
 		if (
 			baseField === "event_composition_sent_status" &&
@@ -422,14 +687,7 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 
 		for (const instance of instances) {
 			// skip blanks unless operator is null/notNull
-			const treatAsPresent =
-				instance.operator === "$null" ||
-				instance.operator === "$notNull" ||
-				(instance.value !== "" &&
-					instance.value != null &&
-					!(Array.isArray(instance.value) && instance.value.length === 0));
-
-			if (!treatAsPresent) continue;
+			if (!isFilterValuePresent(instance.value, instance.operator)) continue;
 
 			// Synthetic field handled only by the dedicated special-case logic below.
 			// Never let it fall through to generic field handling because there is no
@@ -454,11 +712,27 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 					fieldConditions.push(condition);
 				}
 			} else {
-				const fieldCond = buildFieldCondition(
+				let fieldCond = buildFieldCondition(
 					baseField,
 					instance.value,
 					instance.operator,
 				);
+
+				if (
+					shouldBindSubscriptionsActive &&
+					subscriptionsActiveConditions.length > 0 &&
+					baseField === "subscriptions"
+				) {
+					fieldCond = bindSubscriptionsWithActiveCondition(
+						fieldCond,
+						subscriptionsActiveConditions,
+					);
+					logSubscriptionFilter("output/subscriptions_bound_with_active", {
+						baseField,
+						condition: fieldCond,
+					});
+				}
+
 				if (Object.keys(fieldCond).length) fieldConditions.push(fieldCond);
 			}
 		}
@@ -484,7 +758,7 @@ function buildGroup(filtersObj: Record<string, any>, groupLogic: "AND" | "OR") {
 		fieldGroups.event_composition_sent_status
 	) {
 		for (const instance of fieldGroups.event_composition_sent_status) {
-			if (instance.value !== "" && instance.value != null) {
+			if (isFilterValuePresent(instance.value, instance.operator)) {
 				const condition = buildEventCompositionSentStatusAloneCondition(
 					instance.value,
 				);
@@ -512,6 +786,19 @@ function andMerge(objs: any[]) {
 /* ----------------- main API ----------------- */
 
 export function transformFilters<T extends Record<string, any>>(filters: T) {
+	let shouldLogRootFilters = false;
+	try {
+		shouldLogRootFilters = JSON.stringify(filters || {}).includes(
+			"subscriptions",
+		);
+	} catch {
+		shouldLogRootFilters = true;
+	}
+
+	if (shouldLogRootFilters) {
+		logSubscriptionFilter("transformFilters/input", { filters });
+	}
+
 	if (Array.isArray((filters as any).groups)) {
 		// grouped path (contacts)
 		const groups = (filters as any).groups as Array<{
@@ -525,8 +812,21 @@ export function transformFilters<T extends Record<string, any>>(filters: T) {
 			.filter(Boolean) as any[];
 
 		if (built.length === 0) return {};
-		if (built.length === 1) return built[0];
-		return topLogic === "OR" ? { $or: built } : { $and: built };
+		if (built.length === 1) {
+			if (shouldLogRootFilters) {
+				logSubscriptionFilter("transformFilters/output_grouped", {
+					output: built[0],
+				});
+			}
+			return built[0];
+		}
+		const groupedOutput = topLogic === "OR" ? { $or: built } : { $and: built };
+		if (shouldLogRootFilters) {
+			logSubscriptionFilter("transformFilters/output_grouped", {
+				output: groupedOutput,
+			});
+		}
+		return groupedOutput;
 	}
 
 	// flat shape (orgs)
@@ -539,7 +839,11 @@ export function transformFilters<T extends Record<string, any>>(filters: T) {
 		conds.push(buildFieldCondition(k, v, op));
 	}
 	if (conds.length === 0) return {};
-	return andMerge(conds);
+	const output = andMerge(conds);
+	if (shouldLogRootFilters) {
+		logSubscriptionFilter("transformFilters/output_flat", { output });
+	}
+	return output;
 }
 
 export function parseFormIntoUrlFilters<T extends Record<string, any>>(
