@@ -47,19 +47,20 @@ export const ViewAction: React.FC<{ document: ContactDocument }> = ({
 	document,
 }) => {
 	const t = useTranslations();
+	const fileUrl = document.file?.url;
 
 	const handleCopyLink = async () => {
 		const { default: toast } = await import("react-hot-toast");
-		if (!document.file.url) return;
+		if (!fileUrl) return;
 		try {
-			await navigator.clipboard.writeText(document.file.url);
+			await navigator.clipboard.writeText(fileUrl);
 			toast.success(t("Contacts.documents.linkCopied"));
 		} catch (_err) {
 			toast.error(t("Contacts.documents.failedLinkCopied"));
 		}
 	};
 
-	if (!document.file.url) return null;
+	if (!fileUrl) return null;
 
 	return (
 		<DropdownMenu>
@@ -68,7 +69,7 @@ export const ViewAction: React.FC<{ document: ContactDocument }> = ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				<DropdownMenuItem asChild>
-					<a href={document.file.url} target="_blank" rel="noopener noreferrer">
+					<a href={fileUrl} target="_blank" rel="noopener noreferrer">
 						{t("common.actions.view")}
 					</a>
 				</DropdownMenuItem>
@@ -111,14 +112,14 @@ export const columns: ColumnDef<ContactDocument>[] = [
 		accessorKey: "size",
 		header: "Size",
 		cell: ({ row }) => {
-			return <div>{row.original.file.size}</div>;
+			return <div>{row.original.file?.size ?? "-"}</div>;
 		},
 	},
 	{
 		accessorKey: "ext",
 		header: "Ext",
 		cell: ({ row }) => {
-			return <div>{row.original.file.ext}</div>;
+			return <div>{row.original.file?.ext ?? "-"}</div>;
 		},
 	},
 	{
