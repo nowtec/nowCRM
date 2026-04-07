@@ -42,6 +42,7 @@ services:
     image: ghcr.io/nowtec/nowcrm/strapi:${VERSION:-latest}
     restart: unless-stopped
     environment:
+      JWT_SECRET: ${STRAPI_JWT_SECRET}
       DATABASE_CLIENT: ${STRAPI_DATABASE_CLIENT}
       DATABASE_HOST: postgres
       DATABASE_PORT: ${STRAPI_DATABASE_PORT}
@@ -122,12 +123,28 @@ services:
       JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: ${JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS}
       JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
       JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
+      JOURNEYS_REDIS_CONNECT_TIMEOUT: ${JOURNEYS_REDIS_CONNECT_TIMEOUT}
+      JOURNEYS_REDIS_LAZY_CONNECT: ${JOURNEYS_REDIS_LAZY_CONNECT}
+      JOURNEYS_REDIS_MAX_RETRIES: ${JOURNEYS_REDIS_MAX_RETRIES}
+      JOURNEYS_REDIS_RETRY_DELAY_MS: ${JOURNEYS_REDIS_RETRY_DELAY_MS}
+      JOURNEYS_REDIS_COMMAND_TIMEOUT: ${JOURNEYS_REDIS_COMMAND_TIMEOUT}
       NODE_ENV: production
       RABBITMQ_URL: ${RABBITMQ_URL}
       RABBITMQ_PREFETCH_COUNT: ${RABBITMQ_PREFETCH_COUNT}
       RABBITMQ_RECONNECT_DELAY_MS: ${RABBITMQ_RECONNECT_DELAY_MS}
       RABBITMQ_MAX_RECONNECT_ATTEMPTS: ${RABBITMQ_MAX_RECONNECT_ATTEMPTS}
       RABBITMQ_CONSUMER_CONCURRENCY: ${RABBITMQ_CONSUMER_CONCURRENCY}
+      RABBITMQ_MAX_RETRIES: ${RABBITMQ_MAX_RETRIES}
+      RABBITMQ_RETRY_INITIAL_DELAY_MS: ${RABBITMQ_RETRY_INITIAL_DELAY_MS}
+      RABBITMQ_RETRY_MAX_DELAY_MS: ${RABBITMQ_RETRY_MAX_DELAY_MS}
+      REDIS_CLEANUP_CRON: ${REDIS_CLEANUP_CRON}
+      STRAPI_PAGINATION_MAX_PAGES: ${STRAPI_PAGINATION_MAX_PAGES}
+      STRAPI_PAGINATION_MAX_RECORDS: ${STRAPI_PAGINATION_MAX_RECORDS}
+      STRAPI_URL: ${STRAPI_URL}
+      API_GATEWAY: ${API_GATEWAY}
+      CIRCUIT_BREAKER_FAILURE_THRESHOLD: ${CIRCUIT_BREAKER_FAILURE_THRESHOLD}
+      CIRCUIT_BREAKER_RESET_TIMEOUT_MS: ${CIRCUIT_BREAKER_RESET_TIMEOUT_MS}
+      CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS: ${CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -160,6 +177,7 @@ services:
       CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
       RABBITMQ_URL: ${RABBITMQ_URL}
       STRAPI_URL: ${STRAPI_URL}
+      API_GATEWAY: ${API_GATEWAY}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -205,6 +223,7 @@ services:
       NODE_ENV: production
       RABBITMQ_URL: ${RABBITMQ_URL}
       STRAPI_URL: http://strapi:1337
+      API_GATEWAY: ${API_GATEWAY}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -249,7 +268,39 @@ services:
       KRAKEND_COMPOSER_URL: ${KRAKEND_COMPOSER_URL:-http://composer:3020}
       KRAKEND_JOURNEYS_URL: ${KRAKEND_JOURNEYS_URL:-http://journeys:3010}
       KRAKEND_DAL_URL: ${KRAKEND_DAL_URL:-http://dal:6001}
-      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}    
+      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}
+      DAL_PORT: ${DAL_PORT}
+      DAL_HOST: ${DAL_HOST}
+      DAL_CORS_ORIGIN: ${DAL_CORS_ORIGIN}
+      DAL_COMMON_RATE_LIMIT_MAX_REQUESTS: ${DAL_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      DAL_MINUTE_TO_LAUNCH: ${DAL_MINUTE_TO_LAUNCH}
+      DAL_STRAPI_API_URL: ${DAL_STRAPI_API_URL}
+      DAL_STRAPI_API_TOKEN: ${DAL_STRAPI_API_TOKEN}
+      DAL_CHECK_TIME: ${DAL_CHECK_TIME}
+      DAL_JOB_FAIL_LIFE_TIME_DAYS: ${DAL_JOB_FAIL_LIFE_TIME_DAYS}
+      DAL_JOB_COMPLETED_LIFE_TIME_DAYS: ${DAL_JOB_COMPLETED_LIFE_TIME_DAYS}
+      DAL_REDIS_PORT: ${DAL_REDIS_PORT}
+      DAL_REDIS_HOST: ${DAL_REDIS_HOST}
+      DAL_WORKER_COUNT: ${DAL_WORKER_COUNT}
+      DAL_JOB_CONCURRENCY: ${DAL_JOB_CONCURRENCY}
+      DAL_DATABASE_CLIENT: ${DAL_DATABASE_CLIENT}
+      DAL_DATABASE_HOST: ${DAL_DATABASE_HOST}
+      DAL_DATABASE_PORT: ${DAL_DATABASE_PORT}
+      DAL_DATABASE_NAME: ${DAL_DATABASE_NAME}
+      DAL_DATABASE_USERNAME: ${DAL_DATABASE_USERNAME}
+      DAL_DATABASE_PASSWORD: ${DAL_DATABASE_PASSWORD}
+      DAL_DATABASE_RDS: ${DAL_DATABASE_RDS}
+      DAL_DATABASE_SSL_SELF: ${DAL_DATABASE_SSL_SELF}
+      DAL_SMTP_HOST: ${DAL_SMTP_HOST}
+      DAL_SMTP_PORT: ${DAL_SMTP_PORT}
+      DAL_SMTP_USER: ${DAL_SMTP_USER}
+      DAL_SMTP_PASS: ${DAL_SMTP_PASS}
+      DAL_SMTP_FROM: ${DAL_SMTP_FROM}
+      DAL_BASIC_AUTH_USERNAME: ${DAL_BASIC_AUTH_USERNAME}
+      DAL_BASIC_AUTH_PASSWORD: ${DAL_BASIC_AUTH_PASSWORD}
+      STRAPI_URL: ${STRAPI_URL}
+      API_GATEWAY: ${API_GATEWAY}
+      RABBITMQ_URL: ${RABBITMQ_URL}
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -282,25 +333,28 @@ services:
     networks:
       - my_net
 
-  caddy:
-    container_name: caddy-prod
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - nowcrm
-      - strapi
-      - journeys
-      - composer
-      - dal
-    networks:
-      - my_net
+  # caddy:
+  #   container_name: caddy-prod
+  #   image: caddy:2-alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   environment:
+  #     SSL_EMAIL: ${SSL_EMAIL}
+  #     CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
+  #   volumes:
+  #     - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - nowcrm
+  #     - strapi
+  #     - journeys
+  #     - composer
+  #     - dal
+  #   networks:
+  #     - my_net
 
 volumes:
   postgres-data-prod:
