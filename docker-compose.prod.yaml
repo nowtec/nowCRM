@@ -41,6 +41,8 @@ services:
     container_name: strapi-prod
     image: ghcr.io/nowtec/nowcrm/strapi:${VERSION:-latest}
     restart: unless-stopped
+    ports:
+      - "3041:1337"
     environment:
       JWT_SECRET: ${STRAPI_JWT_SECRET}
       DATABASE_CLIENT: ${STRAPI_DATABASE_CLIENT}
@@ -84,6 +86,8 @@ services:
     container_name: nowcrm-prod
     image: ghcr.io/nowtec/nowcrm/nowcrm:${VERSION:-latest}
     restart: unless-stopped
+    ports:
+      - "3040:3000"
     environment:
       AUTH_SECRET: ${CRM_AUTH_SECRET}
       AUTH_TRUST_HOST: ${CRM_AUTH_TRUST_HOST}
@@ -111,6 +115,8 @@ services:
     container_name: journeys-prod
     image: ghcr.io/nowtec/nowcrm/journeys:${VERSION:-latest}
     restart: unless-stopped
+    ports:
+      - "3043:3010"
     environment:
       JOURNEYS_PORT: ${JOURNEYS_PORT}
       JOURNEYS_HOST: ${JOURNEYS_HOST}
@@ -157,6 +163,8 @@ services:
     container_name: composer-prod
     image: ghcr.io/nowtec/nowcrm/composer:${VERSION:-latest}
     restart: unless-stopped
+    ports:
+      - "3042:3020"
     environment:
       COMPOSER_PORT: ${COMPOSER_PORT}
       COMPOSER_HOST: ${COMPOSER_HOST}
@@ -190,6 +198,8 @@ services:
     container_name: dal-prod
     image: ghcr.io/nowtec/nowcrm/dal:${VERSION:-latest}
     restart: unless-stopped
+    ports:
+      - "3044:6001"
     environment:
       DAL_PORT: ${DAL_PORT}
       DAL_HOST: ${DAL_HOST}
@@ -237,7 +247,7 @@ services:
     image: ghcr.io/nowtec/nowcrm/plugins:${VERSION:-latest}
     restart: unless-stopped
     ports:
-      - "3030:3030"
+      - "3050:3030"
     environment:
       PLUGINS_PORT: ${PLUGINS_PORT}
       PLUGINS_HOST: ${PLUGINS_HOST}
@@ -303,7 +313,7 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL}
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - strapi
     networks:
