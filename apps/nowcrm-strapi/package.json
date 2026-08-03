@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "A Strapi application",
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
     "build": "strapi build",
     "console": "strapi console",

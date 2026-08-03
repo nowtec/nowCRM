@@ -3,19 +3,16 @@ packages:
   - libs/*
   - scripts/generate-app/templates/*
 
-ignoredBuiltDependencies:
-  - '@parcel/watcher'
-  - '@swc/core'
-  - '@tailwindcss/oxide'
-  - core-js-pure
-  - unrs-resolver
-  - esbuild
-  - core-js
-  - sharp
-  - unrs-resolver
-
 injectWorkspacePackages: true
 
-onlyBuiltDependencies:
-  - '@scarf/scarf'
-  - msgpackr-extract
+allowBuilds:
+  '@scarf/scarf': true
+  msgpackr-extract: true
+  '@parcel/watcher': true
+  '@swc/core': true
+  '@tailwindcss/oxide': true
+  core-js: false
+  core-js-pure: false
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
