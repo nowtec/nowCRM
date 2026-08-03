@@ -5,6 +5,15 @@
 **/.next
 **/build
 
+# Every image builds from source; a stale local copy must not shadow it
+**/dist
+**/.strapi
+
+# Git is not excluded by Docker automatically
+.git
+.gitleaksignore
+.gitleaks.toml
+
 # Environment & configs
 **/.env
 **/.env.*
@@ -30,8 +39,11 @@ ISSUE_TEMPLATE
 
 # Tests & coverage
 coverage
+**/coverage
 .pytest_cache
 __pycache__
+**/playwright-report
+**/test-results
 
 # Misc
 *.md
