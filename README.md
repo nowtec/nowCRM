@@ -49,7 +49,8 @@
 It connects several microservices (Strapi, Composer, Journeys, and DAL) into one modular solution.  
 
 > Licensed under the [GNU Affero General Public License v3.0](./LICENSE).  
-> Attribution required — see [NOTICE](./NOTICE).
+> Attribution required — see [NOTICE](./NOTICE).  
+> Changes per version are listed in [RELEASE.md](./RELEASE.md).
 
 ---
 
@@ -97,8 +98,8 @@ For detailed API Gateway configuration, see [apps/krakend/README.md](./apps/krak
 
 Before starting local development, ensure you have:
 
-- Node.js, 20+
-- pnpm
+- Node.js 22+
+- pnpm 11 (managed automatically by Corepack via the `packageManager` field — run `corepack enable`)
 - Docker + Docker Compose
 
 ---
@@ -113,89 +114,92 @@ cd nowCRM
 ```
 
 
-### 2. You can start nowCRM in two main ways:
+### 2. Start the stack
 
-* **Option A**: One step Docker setup with `make up`
-* **Option B**: Local step by step setup with `make dev` and per service commands
+Everything is driven by the Makefile. Run `make help` for the full target list.
+
+| Command | What it does |
+|---------|--------------|
+| `make dev` | Starts every service in Docker and then watches the source tree, so saving a file updates the running container. Builds any image that is missing and injects Strapi's bootstrap tokens on the way. Stays in the foreground; Ctrl-C stops watching and leaves the services running. |
+| `make up` | Starts every service in Docker, detached, without watching. |
+| `make down` | Stop and remove the containers. |
+| `make rebuild` | Rebuild every image with `--no-cache` and recreate the containers. |
+
+The CRM is served on `http://localhost:3000` and Strapi on `http://localhost:1337`.
+
+On the first run you are prompted for your **customer domain**:
+
+```text
+Enter CUSTOMER_DOMAIN (e.g. nowtec.solutions):
+```
+
+To skip the prompt (or run non-interactively), pass it in:
+
+```bash
+CUSTOMER_DOMAIN=example.com make dev
+```
+
+That value is written to `.env`, expanded into the address defaults derived from it,
+and never asked for again.
+
+> **Updating an existing checkout.** `make dev` and `make up` only build images that are
+> *missing*, so they will not pick up changes to a `Dockerfile`. After pulling commits that
+> touch the Docker or Compose setup, run `make rebuild` once. `make init-env` is safe to
+> re-run at any time: it backfills variables newly added to any `.env.sample` and never
+> overwrites values you already have.
+
+### 3. Sign in
+
+`make dev` and `make up` finish by printing the Strapi admin URL and password. Re-print
+them at any time with `make print-creds`.
+
+To sign in to the CRM itself, create a user in Strapi under **Content Manager → User**
+and set **Confirmed** to true. The API gateway validates every request against Strapi,
+and it rejects tokens belonging to unconfirmed users — so an unconfirmed account can
+sign in to Strapi but fails on the first CRM request.
 
 ---
 
-### Option A: Full Docker setup with `make up`
+### How hot reload works
 
-This is the quickest way to get a complete environment running.
+The development Compose file builds the `dev` target of each service Dockerfile, so the
+containers run development servers (`tsx watch`, `next dev`, `strapi develop`) rather than
+compiled output. `docker compose watch` then keeps them in step with your working tree:
 
-1. Make sure Docker and Docker Compose are running on your machine.
+| Change | Effect |
+|--------|--------|
+| Source under `apps/<service>/src` or `libs/services/src` | Synced into the container; the dev server reloads in place |
+| `apps/nowcrm-strapi/**` | Synced into the container, which is then restarted |
+| Any `package.json` or `pnpm-lock.yaml` | The affected image is rebuilt, since a dependency change needs a real install |
 
-2. From the project root, run:
-
-   ```bash
-   make up
-   ```
-
-3. You will be prompted to enter your **customer domain**
-   For example:
-
-   ```text
-   Enter your customer domain (e.g. nowtec.solutions):
-   ```
-
-4. After you confirm the domain, the full setup will run automatically inside Docker
-   All required services will be started and wired together.
+Development images are tagged with a `-dev` suffix (`nowcrm-dev`, `nowcrm-journeys-dev`, …)
+so they are never confused with the production artefacts.
 
 ---
 
-### Option B: Local development, service by service
+### Running a single service on the host
 
-If you prefer to run everything locally outside of Docker, you can bring up the environment step by step.
-
-#### 1. Prepare the dev environment
-
-From the project root, run:
+The development stack publishes every service port, so you can stop one container and run
+that service directly against the rest of the stack:
 
 ```bash
-make dev
+make up                                  # start everything in Docker
+docker compose -f docker-compose.dev.yaml stop journeys
+
+cd apps/journeys
+pnpm dev                                 # or: pnpm build && pnpm start
 ```
 
-This command prepares the local development environment (dependencies, configs, etc.) for all services.
+Each service reads its own `apps/<service>/.env`, which `make init-env` creates and keeps
+up to date. Those files point at `localhost`, which is why they work from the host and are
+deliberately not synced into the containers.
 
-#### 2. Start backend services
-
-For **DAL**, **Composer** and **Journeys**, go into each service root folder and run:
+For the CRM specifically:
 
 ```bash
-pnpm build
-pnpm start
+docker compose -f docker-compose.dev.yaml stop nowcrm
+pnpm --filter @nowcrm/nowcrm dev
 ```
-
-Examples:
-
-```bash
-cd dal
-pnpm build
-pnpm start
-```
-
-```bash
-cd composer
-pnpm build
-pnpm start
-```
-
-```bash
-cd journeys
-pnpm build
-pnpm start
-```
-
-#### 3. Start nowCRM frontend
-
-From the `nowcrm` (frontend) root folder:
-
-```bash
-pnpm dev
-```
-
-The frontend will start in development mode and connect to the locally running backend services.
 
 ---
 
@@ -216,13 +220,11 @@ git clone https://github.com/nowtec/nowCRM.git
 cd nowCRM
 ```
 
-### 2. Create the External Network
+### 2. Network
 
-The production compose file uses an external network that must be created first:
-
-```bash
-docker network create my_net
-```
+No manual step is needed: each stack creates and owns its own Docker network
+(`nowcrm-dev`, `nowcrm-prod`, `nowcrm-test`), so `make down` tears it down cleanly
+and the stacks stay isolated from each other.
 
 ### 3. Prepare Environment Variables
 
@@ -232,11 +234,16 @@ Copy the sample environment file and configure it with your production values:
 cp .env.sample .env
 ```
 
+Or let `make init-env` create it and generate every secret for you, then fill in the
+third-party credentials by hand.
+
 **Important:** Edit `.env` and fill in all required values. Critical variables include:
 
 - `CUSTOMER_DOMAIN` - Your production domain (e.g., `example.com`)
 - `STRAPI_DATABASE_*` - PostgreSQL database credentials
-- `STRAPI_ADMIN_JWT_SECRET`, `STRAPI_API_TOKEN_SALT`, `STRAPI_APP_KEYS` - Generate secure random values
+- `STRAPI_ADMIN_JWT_SECRET`, `STRAPI_API_TOKEN_SALT`, `STRAPI_TRANSFER_TOKEN_SALT`, `STRAPI_APP_KEYS` - Generate secure random values
+- `STRAPI_JWT_SECRET` - Signs end-user sessions. Leave it empty and Strapi generates one inside the container, so every container recreate signs all users out
+- `STRAPI_ENCRYPTION_KEY` - Encrypts stored provider credentials. Changing it makes existing encrypted values unreadable
 - `CRM_AUTH_SECRET` - Generate a secure random value for NextAuth
 - `CRM_TOTP_ENCRYPTION_KEY` - 32-digit key for 2FA encryption
 - `S3_*` - S3-compatible storage credentials for file uploads
@@ -344,7 +351,7 @@ docker compose -f docker-compose.prod.yaml up -d
 ### Troubleshooting
 
 **Services fail to start:**
-- Check that the `my_net` network exists: `docker network ls`
+- Check the stack's network exists: `docker network ls | grep nowcrm`
 - Verify all environment variables are set in `.env`
 - Check service logs: `docker compose -f docker-compose.prod.yaml logs`
 
@@ -490,7 +497,7 @@ SES → SNS → Webhook → Composer endpoint
 ### Running Locally
 
 ```bash
-cd strapi-app
+cd apps/nowcrm-strapi
 pnpm develop
 ```
 
@@ -502,7 +509,7 @@ pnpm start
 
 ### Docker Notes
 
-PostgreSQL service configured in `docker-compose.yaml` with:
+PostgreSQL service configured in `docker-compose.dev.yaml` (and `docker-compose.prod.yaml`) with:
 
 ```yaml
 command: -c 'max_connections=500'
@@ -586,10 +593,13 @@ Verify tokens have proper access for:
 ### 4. Service Domain and Deployment Verification
 
 #### 4.1 Domain Accessibility
-Verify the following domains are accessible:
-- [ ] `dal(-demo).CUSTOMERDOMAIN`
-- [ ] `journeys(-demo).CUSTOMERDOMAIN`
-- [ ] `composer(-demo).CUSTOMERDOMAIN`
+Backend services have no public host of their own; they are reached through the API
+gateway. Verify the following are accessible:
+- [ ] `crm(-demo).CUSTOMERDOMAIN`
+- [ ] `admin(-demo).CUSTOMERDOMAIN`
+- [ ] `api(-demo).CUSTOMERDOMAIN/dal/health-check`
+- [ ] `api(-demo).CUSTOMERDOMAIN/journeys/health-check`
+- [ ] `api(-demo).CUSTOMERDOMAIN/composer/health-check`
 
 #### 4.2 Service Health Check
 For each service, verify:
