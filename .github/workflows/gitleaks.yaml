@@ -1,12 +1,15 @@
 name: Gitleaks Security Scan
 
+# Temporarily disabled: no Gitleaks license available for the repository.
+# Once a Gitleaks license is available, re-enable by restoring the pull_request/push triggers below.
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # pull_request:
+  #   branches:
+  #     - main
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   gitleaks:
