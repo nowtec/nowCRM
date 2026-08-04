@@ -1,5 +1,8 @@
-onlyBuiltDependencies:
-  - '@swc/core'
-  - core-js-pure
-  - esbuild
-  - sharp
+packages:
+  - '.'
+
+allowBuilds:
+  '@swc/core': true
+  core-js-pure: true
+  esbuild: true
+  sharp: true

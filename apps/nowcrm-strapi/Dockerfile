@@ -1,7 +1,6 @@
-FROM node:22-alpine
+FROM node:22-alpine AS builder
 
-# Installing system dependencies (libvips-dev needed for sharp)
-RUN apk update && apk add --no-cache \
+RUN apk add --no-cache \
   build-base \
   gcc \
   autoconf \
@@ -9,44 +8,47 @@ RUN apk update && apk add --no-cache \
   zlib-dev \
   libpng-dev \
   nasm \
-  bash \
-  vips-dev \
-  git \
-  curl
+  vips-dev
 
-# Set environment
-ARG NODE_ENV=development
-ENV NODE_ENV=${NODE_ENV}
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
 
-# Install pnpm globally
-RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /opt/app
 
-# Prepare working directory
-WORKDIR /opt/
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Copy only dependency files for caching
-COPY package.json pnpm-lock.yaml ./
-
-# Configure pnpm fetch retry & install dependencies
 RUN pnpm config set fetch-retry-maxtimeout 600000 \
   && pnpm install --frozen-lockfile
 
-# Make global node binaries available
-ENV PATH=/opt/node_modules/.bin:$PATH
-
-# Copy application source
-WORKDIR /opt/app
 COPY . .
 
-# Adjust permissions
-RUN chown -R node:node /opt/app
-USER node
-
-# Build the app
+ENV NODE_ENV=production
 RUN pnpm run build
 
-# Expose app port
+FROM node:22-alpine AS runner
+
+RUN apk add --no-cache vips
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+
+ENV NODE_ENV=production
+
+WORKDIR /opt/app
+
+COPY --from=builder --chown=node:node /opt/app ./
+
+RUN chown node:node /opt/app
+
+USER node
+
 EXPOSE 1337
 
-# Default command (development mode)
-CMD ["pnpm", "run","develop"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+  CMD node -e "fetch('http://127.0.0.1:1337/_health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+CMD ["pnpm", "run", "start"]

@@ -13,6 +13,7 @@ RUN mkdir -p /run/postgresql /var/lib/postgresql/data && \
 
 COPY . .
 
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
 # Build with temporary PostgreSQL
@@ -48,13 +49,17 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy built application
-COPY --from=builder /app .
+COPY --from=builder --chown=node:node /app .
 
 # Enable pnpm for runtime
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable pnpm
+
+USER node
 
 EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 CMD ["sh", "-c", "echo 'Running migrations...' && pnpm --filter wiki payload migrate; migration_exit=$?; if [ $migration_exit -eq 0 ]; then echo 'Migrations applied successfully'; else echo 'Migration exited with code' $migration_exit; fi; echo 'Starting application...' && pnpm --filter wiki start"]

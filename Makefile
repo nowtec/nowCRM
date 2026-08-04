@@ -1,411 +1,245 @@
-COMPOSE_FILE=docker-compose.dev.yaml
-ENV_FILE=.env
-NETWORK_NAME=my_net
+# nowCRM — local stack task runner. Bootstrap logic lives in scripts/.
 
-SERVICES = apps/composer apps/journeys apps/dal apps/nowcrm
-ALL_SERVICES = composer journeys dal 
-NOWCRM_SERVICE = nowcrm
-DEV_SERVICES = dbdt strapi rabbitmq redis
-STRAPI_SERVICE = strapi
-TOKEN_NAME = journeys_dal_composer
 SHELL := /bin/bash
+.SHELLFLAGS := -ec
+.DEFAULT_GOAL := help
+.ONESHELL:
+
+COMPOSE_FILE ?= docker-compose.dev.yaml
+ENV_FILE     ?= .env
+COMPOSE = docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE)
+
+INFRA_SERVICES  = dbdt redis rabbitmq mailpit
+APP_SERVICES    = strapi composer journeys dal plugins krakend
+# Recreated after inject-strapi-token, since they read the token at creation.
+TOKEN_CONSUMERS = composer journeys dal plugins
+CRM_SERVICE     = nowcrm
+
+BUILD_TARGETS = nowcrm-strapi:strapi nowcrm-dev:nowcrm nowcrm-journeys-dev:journeys \
+                nowcrm-composer-dev:composer nowcrm-dal-dev:dal \
+                nowcrm-plugins-dev:plugins krakend-nowtec:krakend
+
+.PHONY: help up dev watch down restart stop logs ps status \
+        init-env print-env print-creds inject-strapi-token \
+        build build-if-missing rebuild clean clean-volumes prune check-docker
 
 # ============================================================
 # Checks
 # ============================================================
 
-check-env:
-	@if [ ! -f $(ENV_FILE) ]; then \
-		echo "⚠️  $(ENV_FILE) not found."; \
-		if [ -f .env.sample ]; then \
-			cp .env.sample $(ENV_FILE); \
-			echo "✅ Created $(ENV_FILE) from .env.sample"; \
-		else \
-			echo "❌ .env.sample not found! Creating empty .env..."; \
-			touch $(ENV_FILE); \
-		fi; \
-		read -p "🌐 Enter CUSTOMER_DOMAIN (e.g. nowtec.solutions): " CUSTOMER_DOMAIN; \
-		if [ -z "$$CUSTOMER_DOMAIN" ]; then \
-			echo "❌ CUSTOMER_DOMAIN cannot be empty. Aborting."; \
-			exit 1; \
-		fi; \
-		if grep -q '^CUSTOMER_DOMAIN=' $(ENV_FILE); then \
-			sed -i '' "s|^CUSTOMER_DOMAIN=.*|CUSTOMER_DOMAIN=$$CUSTOMER_DOMAIN|" $(ENV_FILE); \
-		else \
-			echo "CUSTOMER_DOMAIN=$$CUSTOMER_DOMAIN" >> $(ENV_FILE); \
-		fi; \
-		echo "✅ Added CUSTOMER_DOMAIN=$$CUSTOMER_DOMAIN to $(ENV_FILE)"; \
-		for dir in . $(SERVICES); do \
-			if [ "$$dir" = "." ] || [ -d $$dir ]; then \
-				env_path="$$dir/.env"; \
-				sample_path="$$dir/.env.sample"; \
-				if [ -f $$env_path ]; then \
-					sed -i '' "/^CUSTOMER_DOMAIN=/! s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
-					echo "🔁 Updated $$env_path"; \
-				elif [ -f $$sample_path ]; then \
-					cp $$sample_path $$env_path; \
-					sed -i '' "/^CUSTOMER_DOMAIN=/! s|CUSTOMER_DOMAIN|$$CUSTOMER_DOMAIN|g" $$env_path; \
-					echo "🆕 Created $$env_path and replaced CUSTOMER_DOMAIN"; \
-				else \
-					echo "⚠️  No .env or .env.sample in $$dir, skipping"; \
-				fi; \
-			fi; \
-		done; \
-		echo "✨ All CUSTOMER_DOMAIN replacements complete."; \
-	else \
-		echo "✔️  $(ENV_FILE) already exists, skipping domain setup"; \
-	fi
-
-
-check-network:
-	@if [ -z "$$(docker network ls --filter name=$(NETWORK_NAME) -q)" ]; then \
-		echo "Creating docker network $(NETWORK_NAME)"; \
-		docker network create $(NETWORK_NAME); \
-	fi
+check-docker:
+	@command -v docker >/dev/null 2>&1 || { \
+		echo "error: docker is not installed or not on PATH."; \
+		echo "       See https://docs.docker.com/get-docker/"; exit 1; }
+	@docker compose version >/dev/null 2>&1 || { \
+		echo "error: the Docker Compose v2 plugin is required ('docker compose')."; \
+		echo "       The legacy 'docker-compose' binary is not supported."; exit 1; }
+	@docker info >/dev/null 2>&1 || { \
+		echo "error: cannot talk to the Docker daemon. Is it running?"; exit 1; }
 
 # ============================================================
-# Environment setup
+# Environment
 # ============================================================
 
-setup-envs:
-	@echo "🧩 Checking and creating local .env files..."
-
-	# 1️⃣ Root .env
-	@if [ -f .env.sample ]; then \
-		if [ ! -f .env ]; then \
-			cp .env.sample .env; \
-			echo "Created root .env from .env.sample"; \
-		else \
-			echo "✔️  Root .env already exists — skipping"; \
-		fi \
-	else \
-		echo "⚠️  .env.sample not found in root — skipping"; \
-	fi
-
-	# 2️⃣ For each service
-	@for dir in $(SERVICES); do \
-		if [ -d $$dir ]; then \
-			if [ -f $$dir/.env.sample ]; then \
-				if [ ! -f $$dir/.env ]; then \
-					cp $$dir/.env.sample $$dir/.env; \
-					echo "Created $$dir/.env from $$dir/.env.sample"; \
-				else \
-					echo "✔️  $$dir/.env already exists — skipping"; \
-				fi \
-			else \
-				echo "⚠️  $$dir/.env.sample not found — skipping"; \
-			fi \
-		fi \
-	done
-	@echo "Environment setup complete."
-
-# ============================================================
-# STRAPI DATABASE + AWS ENV GENERATION
-# ============================================================
-
-generate-env:
-	@echo "🔐 Generating STRAPI_* secrets in $(ENV_FILE) if missing or empty..."
-	@touch $(ENV_FILE)
-	@set -e; \
-	for VAR in \
-		STRAPI_DATABASE_NAME \
-		STRAPI_DATABASE_USERNAME \
-		STRAPI_DATABASE_PASSWORD \
-		STRAPI_AWS_REGION \
-		STRAPI_AWS_ACCESS_KEY_ID \
-		STRAPI_AWS_ACCESS_SECRET \
-		STRAPI_AWS_BUCKET \
-		STRAPI_ADMIN_JWT_SECRET \
-		STRAPI_API_TOKEN_SALT \
-		STRAPI_TRANSFER_TOKEN_SALT \
-		STRAPI_APP_KEYS \
-		STRAPI_TEST_ADMIN_PASSWORD \
-		TEST_USER_USERNAME \
-		TEST_USER_PASSWORD \
-		CRM_TOTP_ENCRYPTION_KEY \
-		CRM_AUTH_SECRET; \
-	do \
-		LINE=$$(grep -E "^$$VAR=" $(ENV_FILE) 2>/dev/null || true); \
-		VALUE=$$(echo "$$LINE" | cut -d'=' -f2- | tr -d '" '); \
-		if [ -z "$$LINE" ] || [ -z "$$VALUE" ]; then \
-			case $$VAR in \
-				STRAPI_DATABASE_NAME) VAL="strapi_$$(LC_ALL=C tr -dc 'a-z0-9' </dev/urandom | head -c 8)";; \
-				STRAPI_DATABASE_USERNAME) VAL="strapi_$$(LC_ALL=C tr -dc 'a-z0-9' </dev/urandom | head -c 8)";; \
-				STRAPI_DATABASE_PASSWORD) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9@#%^+=_' </dev/urandom | head -c 32)";; \
-				STRAPI_AWS_REGION) VAL="eu-central-1";; \
-				STRAPI_AWS_ACCESS_KEY_ID) VAL="your_aws_access_key_id";; \
-				STRAPI_AWS_ACCESS_SECRET) VAL="your_aws_access_secret";; \
-				STRAPI_AWS_BUCKET) VAL="your_s3_bucket_name";; \
-				STRAPI_ADMIN_JWT_SECRET) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64)";; \
-				STRAPI_API_TOKEN_SALT) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)";; \
-				STRAPI_TRANSFER_TOKEN_SALT) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)";; \
-				STRAPI_APP_KEYS) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64),$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64)";; \
-				STRAPI_TEST_ADMIN_PASSWORD) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9@#%^+=' </dev/urandom | head -c 16)";; \
-				CRM_TOTP_ENCRYPTION_KEY) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64)";; \
-				CRM_AUTH_SECRET) VAL="$$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 64)";; \
-			esac; \
-			if grep -q "^$$VAR=" $(ENV_FILE); then \
-				sed -i '' "s|^$$VAR=.*|$$VAR=\"$$VAL\"|" $(ENV_FILE); \
-				echo "✅ Updated empty $$VAR=\"$$VAL\""; \
-			else \
-				echo "$$VAR=\"$$VAL\"" >> $(ENV_FILE); \
-				echo "✅ Added $$VAR=\"$$VAL\""; \
-			fi; \
-		else \
-			echo "$$VAR already set — skipping"; \
-		fi; \
-	done; \
-	\
-	echo "Syncing CRM vars with apps/nowcrm/.env..."; \
-	NOWCRM_ENV="apps/nowcrm/.env"; \
-	if [ -f $$NOWCRM_ENV ]; then \
-		for ROOT_VAR in CRM_TOTP_ENCRYPTION_KEY CRM_AUTH_SECRET; do \
-			case $$ROOT_VAR in \
-				CRM_TOTP_ENCRYPTION_KEY) TARGET_VAR="CRM_TOTP_ENCRYPTION_KEY";; \
-				CRM_AUTH_SECRET) TARGET_VAR="AUTH_SECRET";; \
-			esac; \
-			ROOT_VAL=$$(grep -E "^$$ROOT_VAR=" $(ENV_FILE) | cut -d'=' -f2- | tr -d '"'); \
-			if grep -q "^$$TARGET_VAR=" $$NOWCRM_ENV; then \
-				sed -i '' "s|^$$TARGET_VAR=.*|$$TARGET_VAR=\"$$ROOT_VAL\"|" $$NOWCRM_ENV; \
-				echo "Updated $$TARGET_VAR in nowcrm env"; \
-			else \
-				echo "$$TARGET_VAR=\"$$ROOT_VAL\"" >> $$NOWCRM_ENV; \
-				echo "Added $$TARGET_VAR to nowcrm env"; \
-			fi; \
-		done; \
-	else \
-		echo "apps/nowcrm/.env not found — skipping"; \
-	fi
-
+init-env:
+	@ENV_FILE=$(ENV_FILE) ./scripts/env-setup.sh
 
 print-env:
-	@echo "---- Effective STRAPI env from $(ENV_FILE) ----"
-	@grep -E '^(STRAPI_DATABASE_|STRAPI_AWS_)' $(ENV_FILE) | sed 's/\(PASSWORD=\).*/\1********/' | sed 's/\(SECRET=\).*/\1********/'
-
-init-env: check-env setup-envs generate-env print-env
-
-# ============================================================
-# Token injection logic
-# ============================================================
+	@echo "---- Effective Strapi env from $(ENV_FILE) ----"
+	@grep -E '^(STRAPI_DATABASE_|STRAPI_AWS_)' $(ENV_FILE) \
+		| sed -E 's/(PASSWORD|SECRET|KEY_ID)=.*/\1=********/'
 
 inject-strapi-token:
-	@echo "⏳ Waiting for Strapi container to initialize and create tokens..."
+	@ENV_FILE=$(ENV_FILE) \
+	STRAPI_CONTAINER="$$($(COMPOSE) ps -q strapi)" \
+	./scripts/inject-strapi-token.sh
 
-	@echo "⏳ Waiting (max 180s) for CRM_STRAPI_API_TOKEN..."
-	@i=0; \
-	while [ $$i -lt 36 ]; do \
-		if docker logs $(STRAPI_SERVICE) 2>&1 | grep -q 'CRM_STRAPI_API_TOKEN='; then \
-			echo "CRM_STRAPI_API_TOKEN found"; \
-			break; \
+print-creds:
+	@. ./scripts/lib/env-file.sh
+	@echo ""
+	@echo "=================================================================="
+	@echo " Strapi admin: http://localhost:1337/admin"
+	@echo "   login:    $$(env_get STRAPI_STANDART_EMAIL $(ENV_FILE))"
+	@CID="$$($(COMPOSE) ps -q strapi)"; \
+	PASS=""; \
+	if [ -n "$$CID" ]; then \
+		PASS="$$(docker logs "$$CID" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' \
+			| grep 'STRAPI_ADMIN_PASSWORD:' | tail -1 | cut -d: -f2- \
+			| sed 's/^[[:space:]]*//' | tr -d '\r\n')"; \
+	fi; \
+	if [ -n "$$PASS" ]; then echo "   password: $$PASS"; \
+	else echo "   password: not in logs (only printed on first boot)"; fi
+	@echo ""
+	@if [ -n "$$($(COMPOSE) ps -q $(CRM_SERVICE) 2>/dev/null)" ]; then \
+		echo " CRM: http://localhost:3000/crm"; \
+	else \
+		echo " CRM: not running in Docker (that is what 'make dev' does)."; \
+		echo "   Start it on the host:  pnpm --filter @nowcrm/nowcrm dev"; \
+		echo "   Or in a container:     make up"; \
+	fi
+	@echo "   Create a user in Strapi (Content Manager -> User), then sign in."
+	@echo "   Set 'Confirmed' = true on that user, or the gateway rejects its token."
+	if [ -n "$$PASS" ]; then \
+		echo "   The Strapi admin password is printed above only on first boot.";
+	fi
+	@echo "=================================================================="
+
+# ============================================================
+# Build
+# ============================================================
+
+build: check-docker
+	@$(COMPOSE) build
+
+build-if-missing: check-docker
+	@missing=""
+	@for pair in $(BUILD_TARGETS); do \
+		image="$${pair%%:*}"; service="$${pair##*:}"; \
+		if docker image inspect "$$image" >/dev/null 2>&1; then \
+			echo "  ok      $$image"; \
+		else \
+			echo "  missing $$image"; missing="$$missing $$service"; \
 		fi; \
-		echo "waiting for CRM_STRAPI_API_TOKEN..."; \
-		sleep 5; \
-		i=$$((i+1)); \
 	done; \
-	if [ $$i -eq 36 ]; then echo "Timeout waiting for CRM_STRAPI_API_TOKEN"; fi
-
-	@echo "⏳ Extracting CRM_STRAPI_API_TOKEN..."
-	@set -e; \
-	CRM_TOKEN=$$(docker logs $(STRAPI_SERVICE) 2>&1 \
-		| sed 's/\x1b\[[0-9;]*m//g' \
-		| grep -Eo 'CRM_STRAPI_API_TOKEN=[0-9a-fA-F]+' \
-		| tail -1 \
-		| cut -d= -f2 \
-		| tr -d '\r\n '); \
-	\
-	if [ -z "$$CRM_TOKEN" ]; then \
-		echo "CRM_STRAPI_API_TOKEN not found in logs"; \
+	if [ -n "$$missing" ]; then \
+		echo "==> Building:$$missing"; \
+		$(COMPOSE) build $$missing; \
 	else \
-		echo "Retrieved CRM_STRAPI_API_TOKEN: $$CRM_TOKEN"; \
-		for env_file in $(ENV_FILE) $(SERVICES:%=%/.env) apps/nowcrm/.env; do \
-			if [ -f $$env_file ]; then \
-				if grep -q '^CRM_STRAPI_API_TOKEN' $$env_file; then \
-					sed -i '' "s|^CRM_STRAPI_API_TOKEN=.*|CRM_STRAPI_API_TOKEN=\"$$CRM_TOKEN\"|" $$env_file; \
-					echo "Updated CRM_STRAPI_API_TOKEN in $$env_file"; \
-				fi; \
-			fi; \
-		done; \
+		echo "==> All images present"; \
 	fi
 
-	@echo "⏳ Extracting JOURNEYS_DAL_COMPOSER_API_TOKEN..."
+# ============================================================
+# Lifecycle
+# ============================================================
 
-	@set -e; \
-	JOURNEYS_TOKEN=$$(docker logs $(STRAPI_SERVICE) 2>&1 \
-		| sed 's/\x1b\[[0-9;]*m//g' \
-		| grep -Eo 'JOURNEYS_DAL_COMPOSER_API_TOKEN=[0-9a-fA-F]+' \
-		| tail -1 \
-		| cut -d= -f2 \
-		| tr -d '\r\n '); \
-	\
-	if [ -z "$$JOURNEYS_TOKEN" ]; then \
-		echo "Token JOURNEYS_DAL_COMPOSER_API_TOKEN missing"; \
+up: check-docker init-env build-if-missing
+	@echo "==> Starting infrastructure and backend services..."
+	@$(COMPOSE) up -d $(INFRA_SERVICES) $(APP_SERVICES)
+	@$(MAKE) inject-strapi-token
+	@echo "==> Starting $(CRM_SERVICE) with the injected tokens..."
+	@$(COMPOSE) up -d $(TOKEN_CONSUMERS) $(CRM_SERVICE)
+	@$(MAKE) print-creds
+
+dev: check-docker init-env build-if-missing
+	@echo "==> Starting the development stack..."
+	@$(COMPOSE) up -d $(INFRA_SERVICES) $(APP_SERVICES)
+	@$(MAKE) inject-strapi-token
+	@echo "==> Applying the injected tokens..."
+	@$(COMPOSE) up -d $(TOKEN_CONSUMERS) $(CRM_SERVICE)
+	@$(MAKE) print-creds
+	@echo ""
+	# The bracket stops the pattern matching this recipe's own shell.
+	@if pgrep -f "[d]ocker-compose compose .*-f $(COMPOSE_FILE) watch" >/dev/null 2>&1; then \
+		echo "==> A 'docker compose watch' is already running for this project."; \
+		echo "    The stack above is up; this shell will not start a second watcher."; \
+		echo "    Stop the other one (Ctrl-C in its terminal) and re-run 'make dev',"; \
+		echo "    or keep using it — it is already syncing your edits."; \
 		exit 0; \
-	fi; \
-	\
-	echo "Retrieved JOURNEYS_DAL_COMPOSER_API_TOKEN: $$JOURNEYS_TOKEN"; \
-	echo "Updating COMPOSER_STRAPI_API_TOKEN, DAL_STRAPI_API_TOKEN and JOURNEYS_STRAPI_API_TOKEN only if empty..."; \
-	\
-	for env_file in $(ENV_FILE) $(SERVICES:%=%/.env) apps/nowcrm/.env; do \
-		if [ -f $$env_file ]; then \
-			for VAR in COMPOSER_STRAPI_API_TOKEN DAL_STRAPI_API_TOKEN JOURNEYS_STRAPI_API_TOKEN; do \
-				LINE=$$(grep -E "^$$VAR=" $$env_file || true); \
-				VALUE=$$(echo $$LINE | cut -d= -f2- | tr -d '"' ); \
-				if [ -n "$$LINE" ] && [ -z "$$VALUE" ]; then \
-					sed -i '' "s|^$$VAR=.*|$$VAR=\"$$JOURNEYS_TOKEN\"|" $$env_file; \
-					echo "Updated empty $$VAR in $$env_file"; \
-				fi; \
-			done; \
-		fi; \
-	done
-
-
-print-strapi-creds:
-	@echo ""
-	@echo "Please save your credentials for future logins!"
-	@echo "Reading Strapi credentials from logs..."
-	@URL="http://localhost:1337/admin"; \
-	EMAIL="$$(grep -E '^STRAPI_STANDART_EMAIL=' $(ENV_FILE) | cut -d= -f2-)"; \
-	PASS="$$(docker logs $(STRAPI_SERVICE) 2>&1 \
-		| grep 'STRAPI_ADMIN_PASSWORD:' \
-		| tail -1 \
-		| cut -d: -f2- \
-		| sed 's/^[[:space:]]*//' \
-		| tr -d '\r\n')"; \
-	echo "Strapi URL: $$URL"; \
-	echo "Login: $$EMAIL"; \
-	if [ -z "$$PASS" ]; then \
-		echo "Password: not found in logs"; \
-	else \
-		echo "Password: $$PASS"; \
 	fi
+	@echo "==> Watching for changes. Saving a file under apps/ or libs/ updates the"
+	@echo "    running container; editing a package.json rebuilds its image."
+	@echo "    Ctrl-C stops watching; the services keep running (make down to stop)."
+	@trap 'exit 0' INT; $(COMPOSE) watch --no-up || [ $$? -eq 130 ]
 
-print-crm-creds:
-	@echo ""
-	@echo "Please open Strapi,"
-	@echo "go to Content Manager, open User and create your own account."
-	@echo "Use this account to log in to the CRM. CRM URL: http://localhost:3000/crm"
-	
-# ============================================================
-# Build checks
-# ============================================================
+watch: dev
 
-build-if-missing:
-	@echo "🔍 Checking if Docker images need to be built..."
-	@set -e; \
-	IMAGES_TO_BUILD=""; \
-	if ! docker image inspect nowcrm-strapi >/dev/null 2>&1; then \
-		echo "⚠️  Image nowcrm-strapi not found, will build"; \
-		IMAGES_TO_BUILD="$$IMAGES_TO_BUILD strapi"; \
-	else \
-		echo "✅ Image nowcrm-strapi exists"; \
-	fi; \
-	if ! docker image inspect nowcrm >/dev/null 2>&1; then \
-		echo "⚠️  Image nowcrm not found, will build"; \
-		IMAGES_TO_BUILD="$$IMAGES_TO_BUILD nowcrm"; \
-	else \
-		echo "✅ Image nowcrm exists"; \
-	fi; \
-	if ! docker image inspect nowcrm-journeys >/dev/null 2>&1; then \
-		echo "⚠️  Image nowcrm-journeys not found, will build"; \
-		IMAGES_TO_BUILD="$$IMAGES_TO_BUILD journeys"; \
-	else \
-		echo "✅ Image nowcrm-journeys exists"; \
-	fi; \
-	if ! docker image inspect nowcrm-composer >/dev/null 2>&1; then \
-		echo "⚠️  Image nowcrm-composer not found, will build"; \
-		IMAGES_TO_BUILD="$$IMAGES_TO_BUILD composer"; \
-	else \
-		echo "✅ Image nowcrm-composer exists"; \
-	fi; \
-	if ! docker image inspect nowcrm-dal >/dev/null 2>&1; then \
-		echo "⚠️  Image nowcrm-dal not found, will build"; \
-		IMAGES_TO_BUILD="$$IMAGES_TO_BUILD dal"; \
-	else \
-		echo "✅ Image nowcrm-dal exists"; \
-	fi; \
-	if [ -n "$$IMAGES_TO_BUILD" ]; then \
-		echo "🔨 Building missing images:$$IMAGES_TO_BUILD"; \
-		sudo docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) build $$IMAGES_TO_BUILD; \
-		echo "✅ Build complete"; \
-	else \
-		echo "✅ All images exist, skipping build"; \
-	fi
+down: check-docker
+	@$(COMPOSE) down
 
-# ============================================================
-# Main commands
-# ============================================================
+stop: check-docker
+	@$(COMPOSE) stop
 
-up: init-env check-network build-if-missing
-	@echo "Starting Docker containers except nowcrm..."
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up -d $(DEV_SERVICES) $(ALL_SERVICES)
+restart: check-docker
+	@$(COMPOSE) restart
+
+rebuild: check-docker
+	@$(COMPOSE) build --no-cache
+	@$(COMPOSE) up -d --force-recreate
 	@$(MAKE) inject-strapi-token
 
-	@echo "Starting nowcrm only after tokens are ready..."
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up -d $(NOWCRM_SERVICE)
+rebuild-%: check-docker
+	@$(COMPOSE) build --no-cache $*
+	@$(COMPOSE) up -d --force-recreate $*
 
-	@$(MAKE) print-strapi-creds
-	@$(MAKE) print-crm-creds
+# ============================================================
+# Inspection
+# ============================================================
 
-dev: init-env check-network build-if-missing
-	@echo "Starting DEV stack (Strapi + DB + RabbitMQ + Redis)..."
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up -d $(DEV_SERVICES)
-	@$(MAKE) inject-strapi-token
+ps status: check-docker
+	@$(COMPOSE) ps
 
-	@echo "Starting nowcrm after token injection..."
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up -d $(NOWCRM_SERVICE)
+logs: check-docker
+	@$(COMPOSE) logs -f --tail=100
 
-	@$(MAKE) print-strapi-creds
-	@$(MAKE) print-crm-creds
+logs-%: check-docker
+	@$(COMPOSE) logs -f --tail=100 $*
 
-down:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) down
+sh-%: check-docker
+	@$(COMPOSE) exec $* sh 2>/dev/null || $(COMPOSE) exec $* bash
 
-restart:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) restart
+# ============================================================
+# Cleanup
+# ============================================================
 
-logs:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) logs -f --tail=100
+clean: check-docker
+	@$(COMPOSE) down -v --remove-orphans
 
-logs-%:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) logs -f --tail=100 $*
+clean-volumes: check-docker
+	@$(COMPOSE) down -v
 
-rebuild:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) build --no-cache
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up -d --force-recreate
-	@$(MAKE) inject-strapi-token
+prune: check-docker
+	@echo "This prunes unused images, networks and build cache for EVERY project"
+	@echo "on this machine, not just nowCRM."
+	@read -r -p "Continue? [y/N] " reply; \
+	case "$$reply" in [yY]*) docker system prune -af ;; *) echo "Aborted." ;; esac
 
-rebuild-%:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) build --no-cache $*
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) up -d --force-recreate $*
-	@$(MAKE) inject-strapi-token
-
-ps:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) ps
-
-clean:
-	docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) down -v --remove-orphans
-	docker system prune -f
-
-clean-volumes:
-	docker volume prune -f
-
-sh-%:
-	docker exec -it $* sh || docker exec -it $* bash
-
-status:
-	@echo "Network: $(NETWORK_NAME)"
-	@docker compose --env-file $(ENV_FILE) -f $(COMPOSE_FILE) ps
+# ============================================================
+# Help
+# ============================================================
 
 help:
 	@echo ""
-	@echo "Default Docker Compose Makefile"
+	@echo "nowCRM — local stack"
 	@echo ""
-	@echo "Usage:"
-	@echo "  make up              - start all containers and auto-inject STRAPI_API_TOKEN"
-	@echo "  make down            - stop all containers"
-	@echo "  make rebuild         - rebuild and re-inject token"
-	@echo "  make init-env        - generate STRAPI_DATABASE_* + STRAPI_AWS_* vars"
-	@echo "  make inject-strapi-token - manually fetch token and inject it"
+	@echo "Every target below runs against $(COMPOSE_FILE). It builds the 'dev' target"
+	@echo "of each service Dockerfile, so the containers run development servers"
+	@echo "rather than compiled output. For production, pass the prod file:"
+	@echo "COMPOSE_FILE=docker-compose.prod.yaml make up"
 	@echo ""
-
-.PHONY: up down restart logs rebuild ps clean help setup-envs inject-strapi-token init-env generate-env build-if-missing
+	@echo "Getting started"
+	@echo "  make dev                  Start every service in Docker, then watch the source tree."
+	@echo "                            Saving a file updates the running container."
+	@echo "                            Stays in the foreground; Ctrl-C stops watching and"
+	@echo "                            leaves the services running. Alias: make watch"
+	@echo "  make up                   Start every service in Docker, detached, no watching"
+	@echo "  make down                 Stop and remove containers"
+	@echo ""
+	@echo "  The CRM is served on http://localhost:3000 and Strapi on :1337."
+	@echo "  Editing a package.json or pnpm-lock.yaml rebuilds that service's image."
+	@echo ""
+	@echo "Environment"
+	@echo "  make init-env             Create .env files and generate missing secrets"
+	@echo "  make print-env            Show Strapi env with secrets masked"
+	@echo "  make print-creds          Re-print the Strapi/CRM sign-in details"
+	@echo "  make inject-strapi-token  Re-read Strapi's tokens into the .env files"
+	@echo ""
+	@echo "Build"
+	@echo "  make build                Build all images"
+	@echo "  make build-if-missing     Build only images that do not exist yet"
+	@echo "  make rebuild              Rebuild everything with --no-cache and recreate"
+	@echo "  make rebuild-<service>    Rebuild and recreate a single service"
+	@echo ""
+	@echo "Inspection"
+	@echo "  make ps | status          List services"
+	@echo "  make logs                 Follow logs for all services"
+	@echo "  make logs-<service>       Follow logs for one service"
+	@echo "  make sh-<container>       Open a shell in a running container"
+	@echo ""
+	@echo "Cleanup"
+	@echo "  make clean                Remove nowCRM containers, networks and volumes"
+	@echo "  make clean-volumes        Remove nowCRM volumes"
+	@echo "  make prune                Prune unused Docker data machine-wide (prompts)"
+	@echo ""
+	@echo "Overrides:  COMPOSE_FILE=$(COMPOSE_FILE) ENV_FILE=$(ENV_FILE)"
+	@echo "  e.g.  COMPOSE_FILE=docker-compose.prod.yaml make ps"
+	@echo ""

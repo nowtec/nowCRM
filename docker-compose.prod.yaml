@@ -2,30 +2,31 @@ name: "nowcrm-prod"
 
 services:
   postgres:
-    container_name: strapidb-prod
     image: postgres:17.2
-    restart: always
+    restart: unless-stopped
     command: -c 'max_connections=500'
     environment:
       POSTGRES_USER: ${STRAPI_DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${STRAPI_DATABASE_PASSWORD}
       POSTGRES_DB: ${STRAPI_DATABASE_NAME}
     healthcheck:
-      test: ["CMD-SHELL","pg_isready -U ${STRAPI_DATABASE_USERNAME} -d ${STRAPI_DATABASE_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10s
     volumes:
       - postgres-data-prod:/var/lib/postgresql/data
-    networks:
-      - my_net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
-    container_name: redis-prod
-    image: redis:latest
-    restart: always
-    environment:
-      REDIS_PORT: ${REDIS_PORT:-6379}
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data-prod:/data
     healthcheck:
@@ -34,233 +35,15 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    networks:
-      - my_net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  strapi:
-    container_name: strapi-prod
-    image: ghcr.io/nowtec/nowcrm/strapi:${VERSION:-latest}
-    restart: unless-stopped
-    environment:
-      DATABASE_CLIENT: ${STRAPI_DATABASE_CLIENT}
-      DATABASE_HOST: postgres
-      DATABASE_PORT: ${STRAPI_DATABASE_PORT}
-      DATABASE_NAME: ${STRAPI_DATABASE_NAME}
-      DATABASE_USERNAME: ${STRAPI_DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${STRAPI_DATABASE_PASSWORD}
-      DATABASE_RDS: ${STRAPI_DATABASE_RDS}
-      ADMIN_JWT_SECRET: ${STRAPI_ADMIN_JWT_SECRET}
-      API_TOKEN_SALT: ${STRAPI_API_TOKEN_SALT}
-      TRANSFER_TOKEN_SALT: ${STRAPI_TRANSFER_TOKEN_SALT}
-      APP_KEYS: ${STRAPI_APP_KEYS}
-      DATABASE_SSL: ${STRAPI_DATABASE_SSL}
-      DATABASE_SSL_CERT: ${STRAPI_DATABASE_SSL_CERT}
-      DATABASE_SSL_CA: ${STRAPI_DATABASE_SSL_CA}
-      DATABASE_SSL_CAPATH: ${STRAPI_DATABASE_SSL_CAPATH}
-      DATABASE_SSL_CIPHER: ${STRAPI_DATABASE_SSL_CIPHER}
-      DATABASE_SSL_REJECT_UNAUTHORIZED: ${STRAPI_DATABASE_SSL_REJECT_UNAUTHORIZED}
-      DATABASE_SCHEMA: ${STRAPI_DATABASE_SCHEMA}
-      DATABASE_POOL_MIN: ${STRAPI_DATABASE_POOL_MIN}
-      DATABASE_POOL_MAX: ${STRAPI_DATABASE_POOL_MAX}
-      STRAPI_TEST_ADMIN_EMAIL: ${STRAPI_TEST_ADMIN_EMAIL}
-      STRAPI_STANDART_EMAIL: ${STRAPI_STANDART_EMAIL}
-      STRAPI_TEST_ADMIN_PASSWORD: ${STRAPI_TEST_ADMIN_PASSWORD}
-      TEST_RUN: ${TEST_RUN}
-      STRAPI_BACKEND_ORIGIN: ${STRAPI_BACKEND_ORIGIN}
-      AWS_ACCESS_KEY_ID: ${STRAPI_AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${STRAPI_AWS_ACCESS_SECRET}
-      AWS_REGION: ${STRAPI_AWS_REGION}
-      AWS_ACL: ${STRAPI_AWS_ACL}
-      AWS_SIGNED_URL_EXPIRES: ${STRAPI_AWS_SIGNED_URL_EXPIRES}
-      AWS_BUCKET: ${STRAPI_AWS_BUCKET}
-      NODE_ENV: production
-    depends_on:
-      - postgres
-    networks:
-      - my_net
-
-  nowcrm:
-    container_name: nowcrm-prod
-    image: ghcr.io/nowtec/nowcrm/nowcrm:${VERSION:-latest}
-    restart: unless-stopped
-    environment:
-      AUTH_SECRET: ${CRM_AUTH_SECRET}
-      AUTH_TRUST_HOST: ${CRM_AUTH_TRUST_HOST}
-      AUTH_URL: ${CRM_AUTH_URL}
-      CRM_BASE_URL: ${CRM_BASE_URL}
-      CRM_STRAPI_API_TOKEN: ${CRM_STRAPI_API_TOKEN}
-      NODE_ENV: production
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      STRAPI_URL: http://strapi:1337
-      CRM_TOTP_ENCRYPTION_KEY: ${CRM_TOTP_ENCRYPTION_KEY}
-      twoFA_ENABLED: ${twoFA_ENABLED}
-      TEST_RUN: ${TEST_RUN}
-      NT_STACK_VERSION: ${NT_STACK_VERSION}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY}
-      S3_ENDPOINT: ${S3_ENDPOINT}
-      S3_BUCKET: ${S3_BUCKET}
-      S3_PUBLIC_URL_BASE: ${S3_PUBLIC_URL_BASE}
-    depends_on:
-      - strapi
-    networks:
-      - my_net
-
-  journeys:
-    container_name: journeys-prod
-    image: ghcr.io/nowtec/nowcrm/journeys:${VERSION:-latest}
-    restart: unless-stopped
-    environment:
-      JOURNEYS_PORT: ${JOURNEYS_PORT}
-      JOURNEYS_HOST: ${JOURNEYS_HOST}
-      JOURNEYS_CORS_ORIGIN: ${JOURNEYS_CORS_ORIGIN}
-      JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS}
-      JOURNEYS_MINUTE_TO_LAUNCH: ${JOURNEYS_MINUTE_TO_LAUNCH}
-      JOURNEYS_STRAPI_API_TOKEN: ${JOURNEYS_STRAPI_API_TOKEN}
-      JOURNEYS_CHECK_TIME: ${JOURNEYS_CHECK_TIME}
-      JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS: ${JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS}
-      JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: ${JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS}
-      JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
-      JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
-      NODE_ENV: production
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      RABBITMQ_PREFETCH_COUNT: ${RABBITMQ_PREFETCH_COUNT}
-      RABBITMQ_RECONNECT_DELAY_MS: ${RABBITMQ_RECONNECT_DELAY_MS}
-      RABBITMQ_MAX_RECONNECT_ATTEMPTS: ${RABBITMQ_MAX_RECONNECT_ATTEMPTS}
-      RABBITMQ_CONSUMER_CONCURRENCY: ${RABBITMQ_CONSUMER_CONCURRENCY}
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - my_net
-
-  composer:
-    container_name: composer-prod
-    image: ghcr.io/nowtec/nowcrm/composer:${VERSION:-latest}
-    restart: unless-stopped
-    environment:
-      COMPOSER_PORT: ${COMPOSER_PORT}
-      COMPOSER_HOST: ${COMPOSER_HOST}
-      COMPOSER_CRM_REDIRECT_HEALTH_CHECK: ${COMPOSER_CRM_REDIRECT_HEALTH_CHECK}
-      COMPOSER_CORS_ORIGIN: ${COMPOSER_CORS_ORIGIN}
-      COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS: ${COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS}
-      COMPOSER_STRAPI_API_TOKEN: ${COMPOSER_STRAPI_API_TOKEN}
-      COMPOSER_REDIS_PORT: ${COMPOSER_REDIS_PORT}
-      COMPOSER_REDIS_HOST: ${COMPOSER_REDIS_HOST}
-      COMPOSER_OPENAI_API_KEY: ${COMPOSER_OPENAI_API_KEY}
-      COMPOSER_ANTHROPIC_KEY: ${COMPOSER_ANTHROPIC_KEY}
-      COMPOSER_SMTP_HOST: ${COMPOSER_SMTP_HOST}
-      COMPOSER_SMTP_PORT: ${COMPOSER_SMTP_PORT}
-      COMPOSER_SMTP_USER: ${COMPOSER_SMTP_USER}
-      COMPOSER_SMTP_PASS: ${COMPOSER_SMTP_PASS}
-      COMPOSER_CUSTOMER_IDENTITY: ${COMPOSER_CUSTOMER_IDENTITY}
-      NODE_ENV: production
-      CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      STRAPI_URL: ${STRAPI_URL}
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - my_net
-
-  dal:
-    container_name: dal-prod
-    image: ghcr.io/nowtec/nowcrm/dal:${VERSION:-latest}
-    restart: unless-stopped
-    environment:
-      DAL_PORT: ${DAL_PORT}
-      DAL_HOST: ${DAL_HOST}
-      DAL_CORS_ORIGIN: ${DAL_CORS_ORIGIN}
-      DAL_COMMON_RATE_LIMIT_MAX_REQUESTS: ${DAL_COMMON_RATE_LIMIT_MAX_REQUESTS}
-      DAL_MINUTE_TO_LAUNCH: ${DAL_MINUTE_TO_LAUNCH}
-      DAL_STRAPI_API_URL: ${DAL_STRAPI_API_URL}
-      DAL_STRAPI_API_TOKEN: ${DAL_STRAPI_API_TOKEN}
-      DAL_CHECK_TIME: ${DAL_CHECK_TIME}
-      DAL_JOB_FAIL_LIFE_TIME_DAYS: ${DAL_JOB_FAIL_LIFE_TIME_DAYS}
-      DAL_JOB_COMPLETED_LIFE_TIME_DAYS: ${DAL_JOB_COMPLETED_LIFE_TIME_DAYS}
-      DAL_REDIS_PORT: ${DAL_REDIS_PORT}
-      DAL_REDIS_HOST: ${DAL_REDIS_HOST}
-      DAL_WORKER_COUNT: ${DAL_WORKER_COUNT}
-      DAL_JOB_CONCURRENCY: ${DAL_JOB_CONCURRENCY}
-      DAL_DATABASE_CLIENT: ${DAL_DATABASE_CLIENT}
-      DAL_DATABASE_HOST: ${DAL_DATABASE_HOST}
-      DAL_BASIC_AUTH_USERNAME: ${DAL_BASIC_AUTH_USERNAME}
-      DAL_BASIC_AUTH_PASSWORD: ${DAL_BASIC_AUTH_PASSWORD}
-      DAL_DATABASE_PORT: ${DAL_DATABASE_PORT}
-      DAL_DATABASE_NAME: ${DAL_DATABASE_NAME}
-      DAL_DATABASE_USERNAME: ${DAL_DATABASE_USERNAME}
-      DAL_DATABASE_PASSWORD: ${DAL_DATABASE_PASSWORD}
-      DAL_DATABASE_RDS: ${DAL_DATABASE_RDS}
-      DAL_DATABASE_SSL_SELF: ${DAL_DATABASE_SSL_SELF}
-      DAL_SMTP_HOST: ${DAL_SMTP_HOST}
-      DAL_SMTP_PORT: ${DAL_SMTP_PORT}
-      DAL_SMTP_USER: ${DAL_SMTP_USER}
-      DAL_SMTP_PASS: ${DAL_SMTP_PASS}
-      DAL_SMTP_FROM: ${DAL_SMTP_FROM}
-      NODE_ENV: production
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      STRAPI_URL: http://strapi:1337
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - my_net
-
-  plugins:
-    container_name: plugins-prod
-    image: ghcr.io/nowtec/nowcrm/plugins:${VERSION:-latest}
-    restart: unless-stopped
-    ports:
-      - "3030:3030"
-    environment:
-      PLUGINS_PORT: ${PLUGINS_PORT}
-      PLUGINS_HOST: ${PLUGINS_HOST}
-      PLUGINS_CORS_ORIGIN: ${PLUGINS_CORS_ORIGIN}
-      PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS}
-      PLUGINS_NPMRC_TOKEN: ${PLUGINS_NPMRC_TOKEN}
-      PLUGINS_GIT_TOKEN: ${PLUGINS_GIT_TOKEN}
-      PLUGINS_PACKAGE_NAMES: ${PLUGINS_PACKAGE_NAMES}
-      PLUGINS_INSTALL_DIR: ${PLUGINS_INSTALL_DIR}
-      PLUGINS_PYTHON_PATH: ${PLUGINS_PYTHON_PATH}
-      PLUGINS_PYTHON_VENV_DIR: ${PLUGINS_PYTHON_VENV_DIR}
-      PLUGINS_SCHEDULES: ${PLUGINS_SCHEDULES}
-      NODE_ENV: production
-      API_GATEWAY: ${API_GATEWAY}
-      PLUGINS_STRAPI_API_TOKEN: ${PLUGINS_STRAPI_API_TOKEN}
-      STRAPI_URL: ${STRAPI_URL}
-    depends_on:
-      - strapi
-    networks:
-      - my_net
-
-  krakend:
-    container_name: krakend-prod
-    image: ghcr.io/nowtec/nowcrm/dal:${VERSION:-latest}
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      FC_ENABLE: 1
-      KRAKEND_COMPOSER_URL: ${KRAKEND_COMPOSER_URL:-http://composer:3020}
-      KRAKEND_JOURNEYS_URL: ${KRAKEND_JOURNEYS_URL:-http://journeys:3010}
-      KRAKEND_DAL_URL: ${KRAKEND_DAL_URL:-http://dal:6001}
-      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}    
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    depends_on:
-      - strapi
-    networks:
-      - my_net
   rabbitmq:
-    container_name: rabbitmq-prod
     image: rabbitmq:4.1.2-management
-    restart: always
+    restart: unless-stopped
     command: >
       bash -c "
       cp /custom_plugins/rabbitmq_delayed_message_exchange-4.1.0.ez /opt/rabbitmq/plugins/ &&
@@ -272,25 +55,302 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
     volumes:
       - rabbitmq_data-prod:/var/lib/rabbitmq
-      - ./rabbitmq:/custom_plugins
+      - ./rabbitmq:/custom_plugins:ro
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 5s
-    networks:
-      - my_net
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  strapi:
+    image: ghcr.io/nowtec/nowcrm/strapi:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_CLIENT: ${STRAPI_DATABASE_CLIENT}
+      DATABASE_HOST: ${STRAPI_DATABASE_HOST:-postgres}
+      DATABASE_PORT: ${STRAPI_DATABASE_PORT}
+      DATABASE_NAME: ${STRAPI_DATABASE_NAME}
+      DATABASE_USERNAME: ${STRAPI_DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${STRAPI_DATABASE_PASSWORD}
+      DATABASE_SCHEMA: ${STRAPI_DATABASE_SCHEMA}
+      DATABASE_RDS: ${STRAPI_DATABASE_RDS}
+      DATABASE_POOL_MIN: ${STRAPI_DATABASE_POOL_MIN}
+      DATABASE_POOL_MAX: ${STRAPI_DATABASE_POOL_MAX}
+      DATABASE_SSL: ${STRAPI_DATABASE_SSL}
+      DATABASE_SSL_REJECT_UNAUTHORIZED: ${STRAPI_DATABASE_SSL_REJECT_UNAUTHORIZED}
+      DATABASE_SSL_CA: ${STRAPI_DATABASE_SSL_CA}
+      DATABASE_SSL_CAPATH: ${STRAPI_DATABASE_SSL_CAPATH}
+      DATABASE_SSL_CERT: ${STRAPI_DATABASE_SSL_CERT}
+      DATABASE_SSL_KEY: ${STRAPI_DATABASE_SSL_KEY}
+      DATABASE_SSL_CIPHER: ${STRAPI_DATABASE_SSL_CIPHER}
+      APP_KEYS: ${STRAPI_APP_KEYS}
+      ADMIN_JWT_SECRET: ${STRAPI_ADMIN_JWT_SECRET}
+      API_TOKEN_SALT: ${STRAPI_API_TOKEN_SALT}
+      TRANSFER_TOKEN_SALT: ${STRAPI_TRANSFER_TOKEN_SALT}
+      ENCRYPTION_KEY: ${STRAPI_ENCRYPTION_KEY}
+      JWT_SECRET: ${STRAPI_JWT_SECRET}
+      STRAPI_STANDART_EMAIL: ${STRAPI_STANDART_EMAIL}
+      STRAPI_TEST_ADMIN_EMAIL: ${STRAPI_TEST_ADMIN_EMAIL}
+      STRAPI_TEST_ADMIN_PASSWORD: ${STRAPI_TEST_ADMIN_PASSWORD}
+      STRAPI_BACKEND_ORIGIN: ${STRAPI_BACKEND_ORIGIN}
+      TEST_RUN: ${TEST_RUN}
+      AWS_REGION: ${STRAPI_AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${STRAPI_AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${STRAPI_AWS_ACCESS_SECRET}
+      AWS_BUCKET: ${STRAPI_AWS_BUCKET}
+      AWS_ACL: ${STRAPI_AWS_ACL}
+      AWS_SIGNED_URL_EXPIRES: ${STRAPI_AWS_SIGNED_URL_EXPIRES}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nowcrm:
+    image: ghcr.io/nowtec/nowcrm/nowcrm:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_GATEWAY: ${API_GATEWAY:-http://krakend:8080/}
+      STRAPI_URL: ${STRAPI_URL:-http://strapi:1337/api/}
+      AUTH_SECRET: ${CRM_AUTH_SECRET}
+      AUTH_TRUST_HOST: ${CRM_AUTH_TRUST_HOST}
+      AUTH_URL: ${CRM_AUTH_URL}
+      CRM_BASE_URL: ${CRM_BASE_URL}
+      CRM_STRAPI_API_TOKEN: ${CRM_STRAPI_API_TOKEN}
+      CRM_TOTP_ENCRYPTION_KEY: ${CRM_TOTP_ENCRYPTION_KEY}
+      twoFA_ENABLED: ${twoFA_ENABLED}
+      TEST_RUN: ${TEST_RUN}
+      NT_STACK_VERSION: ${NT_STACK_VERSION}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_PUBLIC_URL_BASE: ${S3_PUBLIC_URL_BASE}
+    depends_on:
+      strapi:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  journeys:
+    image: ghcr.io/nowtec/nowcrm/journeys:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_GATEWAY: ${API_GATEWAY:-http://krakend:8080/}
+      STRAPI_URL: ${STRAPI_URL:-http://strapi:1337/api/}
+      JOURNEYS_PORT: ${JOURNEYS_PORT}
+      JOURNEYS_HOST: ${JOURNEYS_HOST}
+      JOURNEYS_CORS_ORIGIN: ${JOURNEYS_CORS_ORIGIN}
+      JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      JOURNEYS_MINUTE_TO_LAUNCH: ${JOURNEYS_MINUTE_TO_LAUNCH}
+      JOURNEYS_STRAPI_API_TOKEN: ${JOURNEYS_STRAPI_API_TOKEN}
+      JOURNEYS_CHECK_TIME: ${JOURNEYS_CHECK_TIME}
+      JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS: ${JOURNEYS_JOB_FAIL_LIFE_TIME_DAYS}
+      JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS: ${JOURNEYS_JOB_COMPLETED_LIFE_TIME_DAYS}
+      JOURNEYS_JOB_KEY_BASE_TTL_SECONDS: ${JOURNEYS_JOB_KEY_BASE_TTL_SECONDS:-3600}
+      JOURNEYS_JOB_KEY_MAX_TTL_SECONDS: ${JOURNEYS_JOB_KEY_MAX_TTL_SECONDS:-2592000}
+      JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS: ${JOURNEYS_JOB_KEY_PROCESSING_BUFFER_SECONDS:-300}
+      JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS: ${JOURNEYS_STRAPI_REQUEST_TIMEOUT_MS:-120000}
+      JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS: ${JOURNEYS_SUBSCRIPTION_ERROR_RETRY_DELAY_MS:-3600000}
+      JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS: ${JOURNEYS_PAUSED_JOURNEY_RETRY_DELAY_MS:-3600000}
+      JOURNEYS_REDIS_HOST: ${JOURNEYS_REDIS_HOST}
+      JOURNEYS_REDIS_PORT: ${JOURNEYS_REDIS_PORT}
+      JOURNEYS_REDIS_MAX_RETRIES: ${JOURNEYS_REDIS_MAX_RETRIES}
+      JOURNEYS_REDIS_RETRY_DELAY_MS: ${JOURNEYS_REDIS_RETRY_DELAY_MS}
+      JOURNEYS_REDIS_CONNECT_TIMEOUT: ${JOURNEYS_REDIS_CONNECT_TIMEOUT}
+      JOURNEYS_REDIS_COMMAND_TIMEOUT: ${JOURNEYS_REDIS_COMMAND_TIMEOUT}
+      JOURNEYS_REDIS_LAZY_CONNECT: ${JOURNEYS_REDIS_LAZY_CONNECT}
+      REDIS_CLEANUP_CRON: ${REDIS_CLEANUP_CRON}
+      STRAPI_PAGINATION_MAX_PAGES: ${STRAPI_PAGINATION_MAX_PAGES}
+      STRAPI_PAGINATION_MAX_RECORDS: ${STRAPI_PAGINATION_MAX_RECORDS}
+      CIRCUIT_BREAKER_FAILURE_THRESHOLD: ${CIRCUIT_BREAKER_FAILURE_THRESHOLD}
+      CIRCUIT_BREAKER_RESET_TIMEOUT_MS: ${CIRCUIT_BREAKER_RESET_TIMEOUT_MS}
+      CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS: ${CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      RABBITMQ_PREFETCH_COUNT: ${RABBITMQ_PREFETCH_COUNT}
+      RABBITMQ_CONSUMER_CONCURRENCY: ${RABBITMQ_CONSUMER_CONCURRENCY}
+      RABBITMQ_RECONNECT_DELAY_MS: ${RABBITMQ_RECONNECT_DELAY_MS}
+      RABBITMQ_MAX_RECONNECT_ATTEMPTS: ${RABBITMQ_MAX_RECONNECT_ATTEMPTS}
+      RABBITMQ_MAX_RETRIES: ${RABBITMQ_MAX_RETRIES}
+      RABBITMQ_RETRY_INITIAL_DELAY_MS: ${RABBITMQ_RETRY_INITIAL_DELAY_MS}
+      RABBITMQ_RETRY_MAX_DELAY_MS: ${RABBITMQ_RETRY_MAX_DELAY_MS}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  composer:
+    image: ghcr.io/nowtec/nowcrm/composer:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_GATEWAY: ${API_GATEWAY:-http://krakend:8080/}
+      STRAPI_URL: ${STRAPI_URL:-http://strapi:1337/api/}
+      COMPOSER_PORT: ${COMPOSER_PORT}
+      COMPOSER_HOST: ${COMPOSER_HOST}
+      COMPOSER_CRM_REDIRECT_HEALTH_CHECK: ${COMPOSER_CRM_REDIRECT_HEALTH_CHECK}
+      COMPOSER_CORS_ORIGIN: ${COMPOSER_CORS_ORIGIN}
+      COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS: ${COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      COMPOSER_STRAPI_API_TOKEN: ${COMPOSER_STRAPI_API_TOKEN}
+      COMPOSER_REDIS_HOST: ${COMPOSER_REDIS_HOST}
+      COMPOSER_REDIS_PORT: ${COMPOSER_REDIS_PORT}
+      COMPOSER_OPENAI_API_KEY: ${COMPOSER_OPENAI_API_KEY}
+      COMPOSER_ANTHROPIC_KEY: ${COMPOSER_ANTHROPIC_KEY}
+      COMPOSER_SMTP_HOST: ${COMPOSER_SMTP_HOST}
+      COMPOSER_SMTP_PORT: ${COMPOSER_SMTP_PORT}
+      COMPOSER_SMTP_USER: ${COMPOSER_SMTP_USER}
+      COMPOSER_SMTP_PASS: ${COMPOSER_SMTP_PASS}
+      COMPOSER_CUSTOMER_IDENTITY: ${COMPOSER_CUSTOMER_IDENTITY}
+      CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  dal:
+    image: ghcr.io/nowtec/nowcrm/dal:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_GATEWAY: ${API_GATEWAY:-http://krakend:8080/}
+      STRAPI_URL: ${STRAPI_URL:-http://strapi:1337/api/}
+      DAL_PORT: ${DAL_PORT}
+      DAL_HOST: ${DAL_HOST}
+      DAL_CORS_ORIGIN: ${DAL_CORS_ORIGIN}
+      DAL_COMMON_RATE_LIMIT_MAX_REQUESTS: ${DAL_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      DAL_MINUTE_TO_LAUNCH: ${DAL_MINUTE_TO_LAUNCH}
+      DAL_STRAPI_API_URL: ${DAL_STRAPI_API_URL}
+      DAL_STRAPI_API_TOKEN: ${DAL_STRAPI_API_TOKEN}
+      DAL_CHECK_TIME: ${DAL_CHECK_TIME}
+      DAL_JOB_FAIL_LIFE_TIME_DAYS: ${DAL_JOB_FAIL_LIFE_TIME_DAYS}
+      DAL_JOB_COMPLETED_LIFE_TIME_DAYS: ${DAL_JOB_COMPLETED_LIFE_TIME_DAYS}
+      DAL_REDIS_HOST: ${DAL_REDIS_HOST}
+      DAL_REDIS_PORT: ${DAL_REDIS_PORT}
+      DAL_WORKER_COUNT: ${DAL_WORKER_COUNT}
+      DAL_JOB_CONCURRENCY: ${DAL_JOB_CONCURRENCY}
+      DAL_BASIC_AUTH_USERNAME: ${DAL_BASIC_AUTH_USERNAME}
+      DAL_BASIC_AUTH_PASSWORD: ${DAL_BASIC_AUTH_PASSWORD}
+      DAL_DATABASE_CLIENT: ${DAL_DATABASE_CLIENT}
+      DAL_DATABASE_HOST: ${DAL_DATABASE_HOST:-postgres}
+      DAL_DATABASE_PORT: ${DAL_DATABASE_PORT:-5432}
+      DAL_DATABASE_NAME: ${DAL_DATABASE_NAME}
+      DAL_DATABASE_USERNAME: ${DAL_DATABASE_USERNAME}
+      DAL_DATABASE_PASSWORD: ${DAL_DATABASE_PASSWORD}
+      DAL_DATABASE_RDS: ${DAL_DATABASE_RDS}
+      DAL_DATABASE_SSL_SELF: ${DAL_DATABASE_SSL_SELF}
+      DAL_SMTP_HOST: ${DAL_SMTP_HOST}
+      DAL_SMTP_PORT: ${DAL_SMTP_PORT}
+      DAL_SMTP_USER: ${DAL_SMTP_USER}
+      DAL_SMTP_PASS: ${DAL_SMTP_PASS}
+      DAL_SMTP_FROM: ${DAL_SMTP_FROM}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  plugins:
+    image: ghcr.io/nowtec/nowcrm/plugins:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_GATEWAY: ${API_GATEWAY:-http://krakend:8080/}
+      STRAPI_URL: ${STRAPI_URL:-http://strapi:1337/api/}
+      PLUGINS_PORT: ${PLUGINS_PORT}
+      PLUGINS_HOST: ${PLUGINS_HOST}
+      PLUGINS_CORS_ORIGIN: ${PLUGINS_CORS_ORIGIN}
+      PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS: ${PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS}
+      PLUGINS_STRAPI_API_TOKEN: ${PLUGINS_STRAPI_API_TOKEN}
+      PLUGINS_NPMRC_TOKEN: ${PLUGINS_NPMRC_TOKEN}
+      PLUGINS_GIT_TOKEN: ${PLUGINS_GIT_TOKEN}
+      PLUGINS_PACKAGE_NAMES: ${PLUGINS_PACKAGE_NAMES}
+      PLUGINS_INSTALL_DIR: ${PLUGINS_INSTALL_DIR}
+      PLUGINS_PYTHON_PATH: ${PLUGINS_PYTHON_PATH}
+      PLUGINS_PYTHON_VENV_DIR: ${PLUGINS_PYTHON_VENV_DIR}
+      PLUGINS_SCHEDULES: ${PLUGINS_SCHEDULES}
+    depends_on:
+      strapi:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  krakend:
+    image: ghcr.io/nowtec/nowcrm/krakend:${VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      FC_ENABLE: 1
+      KRAKEND_COMPOSER_URL: ${KRAKEND_COMPOSER_URL:-http://composer:3020}
+      KRAKEND_JOURNEYS_URL: ${KRAKEND_JOURNEYS_URL:-http://journeys:3010}
+      KRAKEND_DAL_URL: ${KRAKEND_DAL_URL:-http://dal:6001}
+      KRAKEND_STRAPI_URL: ${KRAKEND_STRAPI_URL:-http://strapi:1337}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/__health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      strapi:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   caddy:
-    container_name: caddy-prod
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      # Caddyfile site blocks are templated on these; empty means no vhost matches.
+      CUSTOMER_DOMAIN: ${CUSTOMER_DOMAIN:?CUSTOMER_DOMAIN is required for TLS host matching}
+      SSL_EMAIL: ${SSL_EMAIL:?SSL_EMAIL is required for ACME certificate registration}
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -299,8 +359,13 @@ services:
       - journeys
       - composer
       - dal
-    networks:
-      - my_net
+      - plugins
+      - krakend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres-data-prod:
@@ -310,5 +375,6 @@ volumes:
   caddy_config:
 
 networks:
-  my_net:
-    external: true
+  default:
+    name: nowcrm-prod
+    driver: bridge

@@ -54,21 +54,17 @@ export default factories.createCoreController('api::token-verify.token-verify', 
       let apiTokenValid = false;
       let apiTokenData = null;
       try {
-        // Use Strapi's auth service to verify API token
-        // This handles token hashing and verification properly
         const apiTokenService = strapi.service('admin::api-token');
-        
-        // Try to verify the token using Strapi's internal method
-        // First, get all API tokens and check if any match
-        const apiTokens = await strapi.db.query('admin::api-token').findMany({
-          select: ['id', 'name', 'type', 'accessKey'],
+        const matchingToken = await apiTokenService.getBy({
+          accessKey: apiTokenService.hash(token),
         });
 
-        // Check if token matches any API token's accessKey
-        // In Strapi v5, accessKey is the actual token value (not hashed)
-        const matchingToken = apiTokens.find((t) => t.accessKey === token);
+        // A token past its lifespan stays in the table, so expiry is checked here.
+        const expired =
+          matchingToken?.expiresAt != null &&
+          new Date(matchingToken.expiresAt).getTime() <= Date.now();
 
-        if (matchingToken) {
+        if (matchingToken && !expired) {
           apiTokenValid = true;
           apiTokenData = {
             id: matchingToken.id,

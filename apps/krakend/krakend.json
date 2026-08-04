@@ -22,7 +22,8 @@
         "timeout": "30s",
         "cache_ttl": "600s",
         "excluded_paths": [
-          "/composer/send-to-channels/callback/{provider}"
+          "/composer/send-to-channels/callback/{provider}",
+          "/__health"
         ]
       }
     },

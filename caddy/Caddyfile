@@ -12,24 +12,10 @@ admin.{$CUSTOMER_DOMAIN} {
     reverse_proxy strapi:1337
 }
 
-# Strapi API
+# API Gateway (KrakenD). Composer, Journeys, DAL and the Strapi API are reached
+# through here at /composer/*, /journeys/*, /dal/* and /strapi/api/*.
 api.{$CUSTOMER_DOMAIN} {
-    reverse_proxy strapi:1337
-}
-
-# Journeys Service
-journeys.{$CUSTOMER_DOMAIN} {
-    reverse_proxy journeys:3010
-}
-
-# Composer Service
-composer.{$CUSTOMER_DOMAIN} {
-    reverse_proxy composer:3020
-}
-
-# DAL Service
-dal.{$CUSTOMER_DOMAIN} {
-    reverse_proxy dal:6001
+    reverse_proxy krakend:8080
 }
 
 # RabbitMQ Management UI
