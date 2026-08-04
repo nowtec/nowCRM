@@ -80,7 +80,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/composer:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/composer:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Output docker build result
         if: always()
@@ -166,7 +166,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/plugins:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/plugins:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Output docker build result
         if: always()
@@ -252,7 +252,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/journeys:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/journeys:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Output docker build result
         if: always()
@@ -338,7 +338,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/dal:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/dal:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Output docker build result
         if: always()
@@ -424,7 +424,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/strapi:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Output docker build result
         if: always()
@@ -511,7 +511,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/wiki:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/wiki:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
   build-and-push-krakend:
     name: Build and Push Krakend Docker Image
@@ -553,7 +553,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/krakend:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/krakend:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
       - name: Output docker build result
         if: always()
@@ -637,7 +637,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/nowcrm:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}/nowcrm:${{ needs.create_release.outputs.tag_name }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=max,ignore-error=true
 
   notify_success:
     name: Send Success Notification
