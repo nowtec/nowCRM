@@ -1,0 +1,43 @@
+{
+  "collectionName": "components_letter_margins",
+  "info": {
+    "displayName": "Margins",
+    "description": "Page margin configuration for letter templates"
+  },
+  "attributes": {
+    "top": {
+      "type": "decimal",
+      "required": true,
+      "default": 2.54,
+      "min": 0,
+      "max": 10
+    },
+    "bottom": {
+      "type": "decimal",
+      "required": true,
+      "default": 2.54,
+      "min": 0,
+      "max": 10
+    },
+    "left": {
+      "type": "decimal",
+      "required": true,
+      "default": 2.54,
+      "min": 0,
+      "max": 10
+    },
+    "right": {
+      "type": "decimal",
+      "required": true,
+      "default": 2.54,
+      "min": 0,
+      "max": 10
+    },
+    "unit": {
+      "type": "enumeration",
+      "enum": ["cm", "inch", "mm"],
+      "default": "cm",
+      "required": true
+    }
+  }
+}

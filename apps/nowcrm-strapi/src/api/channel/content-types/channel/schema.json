@@ -44,6 +44,11 @@
     },
     "max_sending_rate": {
       "type": "integer"
+    },
+    "letter_config": {
+      "type": "component",
+      "repeatable": false,
+      "component": "channel.letter-config"
     }
   }
 }
