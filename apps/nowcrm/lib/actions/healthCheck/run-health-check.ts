@@ -22,6 +22,7 @@ export async function runHealthCheck(): Promise<StandardResponse<null>> {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
+				Authorization: `Bearer ${session.jwt}`,
 			},
 			cache: "no-store",
 		});

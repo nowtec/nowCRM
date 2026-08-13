@@ -7,6 +7,36 @@ import type { StandardResponse } from "./response.service";
 import { handleError, handleResponse } from "./response.service";
 
 /**
+ * Builds the Authorization header every request through the API gateway needs.
+ * The gateway's auth plugin rejects the request before it reaches a backend
+ * service when the header is absent.
+ * @param {string} [token] - Strapi user JWT or API token.
+ * @param {boolean} contentType - Whether to include the Content-Type header.
+ * @returns {Headers} - The headers object.
+ * @throws When no token is supplied; the error carries status 401 so
+ * {@link handleError} reports it as unauthorized rather than a server fault.
+ */
+export function authHeaders(token?: string, contentType = true): Headers {
+	if (!token) {
+		const error: Error & { status?: number } = new Error(
+			"Authorization token is required.",
+		);
+		error.status = 401;
+		throw error;
+	}
+
+	const headers = new Headers({
+		Authorization: `Bearer ${token}`,
+	});
+
+	if (contentType) {
+		headers.append("Content-Type", "application/json");
+	}
+
+	return headers;
+}
+
+/**
  * Generic base service to handle common CRUD operations.
  * @template T - The type of the data entity.
  * @template FormT - The type of the form data used for creating/updating.
@@ -21,19 +51,7 @@ class BaseService<T, FormT> {
 	 * @returns {Headers} - The headers object.
 	 */
 	protected getHeaders(contentType = false, token?: string): Headers {
-		if (!token) {
-			throw new Error("Authorization token is required.");
-		}
-
-		const headers = new Headers({
-			Authorization: `Bearer ${token}`,
-		});
-
-		if (contentType) {
-			headers.append("Content-Type", "application/json");
-		}
-
-		return headers;
+		return authHeaders(token, contentType);
 	}
 
 	/**

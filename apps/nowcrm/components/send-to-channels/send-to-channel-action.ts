@@ -33,7 +33,7 @@ export async function sendToChannelAction(
 			interval: data.interval,
 			throttle: data.throttle,
 		});
-		const response = await composerService.sendComposition(data);
+		const response = await composerService.sendComposition(data, session.jwt);
 		console.info("[sendToChannelAction] Composer response", response);
 		return response;
 	} catch (_error: any) {

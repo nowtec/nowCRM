@@ -20,7 +20,7 @@ export async function quickWrite(
 		};
 	}
 	try {
-		const res = await compositionsService.quickWrite(values);
+		const res = await compositionsService.quickWrite(values, session.jwt);
 		return res;
 	} catch (error) {
 		return handleError(error);

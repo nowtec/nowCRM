@@ -20,7 +20,10 @@ export async function structuredResponse(
 		};
 	}
 	try {
-		const res = await composerService.requestStructuredResponse(values);
+		const res = await composerService.requestStructuredResponse(
+			values,
+			session.jwt,
+		);
 
 		return res;
 	} catch (error) {

@@ -115,12 +115,16 @@ export async function processJob(
 		);
 
 		await adaptiveRateLimiter.execute(() =>
-			composerService.sendComposition(compositionPayload, {
-				stepId,
-				contactId,
-				token: env.JOURNEYS_STRAPI_API_TOKEN,
-				compositionId: stepDataFinal.composition.documentId,
-			}),
+			composerService.sendComposition(
+				compositionPayload,
+				env.JOURNEYS_STRAPI_API_TOKEN,
+				{
+					stepId,
+					contactId,
+					token: env.JOURNEYS_STRAPI_API_TOKEN,
+					compositionId: stepDataFinal.composition.documentId,
+				},
+			),
 		);
 	} else {
 		logger.warn(

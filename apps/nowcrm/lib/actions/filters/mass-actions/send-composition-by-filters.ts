@@ -32,6 +32,7 @@ export async function sendCompositionByFilters(
 			subject,
 			from,
 			interval,
+			session.jwt,
 		);
 		return res;
 	} catch (error) {

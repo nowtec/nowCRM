@@ -20,7 +20,7 @@ export async function createReference(
 		};
 	}
 	try {
-		const res = await compositionsService.createReference(values);
+		const res = await compositionsService.createReference(values, session.jwt);
 		return res;
 	} catch (error) {
 		return handleError(error);

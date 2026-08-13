@@ -19,7 +19,7 @@ export async function createCompositionFull(
 		};
 	}
 	try {
-		const result = await composerService.createComposition(values);
+		const result = await composerService.createComposition(values, session.jwt);
 		return {
 			data: result.data,
 			status: 200,

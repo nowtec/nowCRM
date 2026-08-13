@@ -69,7 +69,7 @@ export async function sendTestEmailAction(
 			interval: 0,
 		};
 
-		const response = await composerService.sendComposition(payload);
+		const response = await composerService.sendComposition(payload, session.jwt);
 		return response;
 	} catch (error: any) {
 		return handleError(error);
