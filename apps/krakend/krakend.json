@@ -22,7 +22,10 @@
         "timeout": "30s",
         "cache_ttl": "600s",
         "excluded_paths": [
-          "/composer/send-to-channels/callback/{provider}",
+          "/composer/send-to-channels/callback/linkedin",
+          "/composer/send-to-channels/callback/twitter",
+          "/composer/send-to-channels/callback/unipile",
+          "/composer/send-to-channels/callback/status-unipile",
           "/__health"
         ]
       }

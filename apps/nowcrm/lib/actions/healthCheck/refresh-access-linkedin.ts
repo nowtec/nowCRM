@@ -24,6 +24,7 @@ export async function refreshAccessLinkedin(): Promise<
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
+				Authorization: `Bearer ${session.jwt}`,
 			},
 			cache: "no-store",
 		});

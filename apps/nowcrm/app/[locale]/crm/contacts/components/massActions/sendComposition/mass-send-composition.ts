@@ -30,6 +30,7 @@ export async function MassSendComposition(
 			subject,
 			from,
 			interval,
+			session.jwt,
 		);
 	} catch (error) {
 		return handleError(error);

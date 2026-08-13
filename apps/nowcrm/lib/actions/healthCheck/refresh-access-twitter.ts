@@ -24,6 +24,7 @@ export async function refreshAccessTwitter(): Promise<
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
+				Authorization: `Bearer ${session.jwt}`,
 			},
 			cache: "no-store",
 		});

@@ -19,7 +19,10 @@ export async function regenerateItemResult(
 		};
 	}
 	try {
-		const res = await compositionsService.regenerateItemResult(values);
+		const res = await compositionsService.regenerateItemResult(
+			values,
+			session.jwt,
+		);
 		return res;
 	} catch (error) {
 		return handleError(error);

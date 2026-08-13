@@ -8,6 +8,7 @@ import { envServices } from "../../env-config";
 import type { DocumentId } from "../../types/common/base-type";
 
 import type { ServiceResponse } from "../../types/microservices/service-response";
+import { authHeaders } from "../common/base.service";
 import { handleError, type StandardResponse } from "../common/response.service";
 import { journeyStepsService } from "../journey-steps.service";
 
@@ -19,6 +20,7 @@ class ComposerService {
 		subject: string,
 		from: string,
 		interval: number,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const payload = {
@@ -43,7 +45,7 @@ class ComposerService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -70,17 +72,13 @@ class ComposerService {
 			const data = JSON.parse(raw);
 			return { data, status: res.status, success: true };
 		} catch (error: any) {
-			return {
-				data: null,
-				status: 500,
-				success: false,
-				errorMessage: error.message,
-			};
+			return handleError(error);
 		}
 	}
 
 	async sendComposition(
 		payload: sendToChannelsData,
+		token: string,
 		journeys_data?: {
 			stepId: DocumentId;
 			contactId: DocumentId;
@@ -139,12 +137,12 @@ class ComposerService {
 				},
 			);
 
+			const headers = authHeaders(token);
+			headers.append("Accept", "application/json");
+
 			const response = await fetch(url, {
 				method: "POST",
-				headers: {
-					"content-type": "application/json",
-					accept: "application/json",
-				},
+				headers,
 				body: JSON.stringify(payload),
 			});
 			const rawBody = await response.text();
@@ -248,6 +246,7 @@ class ComposerService {
 
 	async createComposition(
 		data: Partial<createComposition>,
+		token: string,
 	): Promise<StandardResponse<DocumentId>> {
 		try {
 			const base = envServices.API_GATEWAY;
@@ -255,9 +254,7 @@ class ComposerService {
 
 			const response = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
@@ -281,6 +278,7 @@ class ComposerService {
 		subject: string,
 		from: string,
 		interval: number,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const payload = {
@@ -304,7 +302,7 @@ class ComposerService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -331,17 +329,13 @@ class ComposerService {
 			const data = JSON.parse(raw);
 			return { data, status: res.status, success: true };
 		} catch (error: any) {
-			return {
-				data: null,
-				status: 500,
-				success: false,
-				errorMessage: error.message,
-			};
+			return handleError(error);
 		}
 	}
 
 	async requestStructuredResponse(
 		data: StructuredResponseModel,
+		token: string,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
 			const url = new URL(
@@ -350,9 +344,7 @@ class ComposerService {
 			);
 			const response = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});

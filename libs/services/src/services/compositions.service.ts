@@ -25,6 +25,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 
 	async createReference(
 		data: ReferenceComposition,
+		token: string,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
 			const url = new URL(
@@ -33,9 +34,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 			);
 			const response = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: this.getHeaders(true, token),
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
@@ -56,6 +55,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 
 	async quickWrite(
 		data: QuickWriteModel,
+		token: string,
 	): Promise<StandardResponse<{ result: string }>> {
 		try {
 			const url = new URL(
@@ -64,9 +64,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 			);
 			const response = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: this.getHeaders(true, token),
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
@@ -86,6 +84,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 
 	async regenerateItemResult(
 		data: createAdditionalComposition,
+		token: string,
 	): Promise<StandardResponse<string>> {
 		try {
 			const url = new URL(
@@ -94,9 +93,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 			);
 			const rez = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: this.getHeaders(true, token),
 				cache: "no-store",
 				body: JSON.stringify(data),
 			});
@@ -138,10 +135,14 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 	}
 
 	public async getCompositionJobsData(
+		token: string,
 		page = 1,
 		jobsPerPage = 20,
 	): Promise<StandardResponse<JobCompositionRecord[]>> {
 		try {
+			const headers = this.getHeaders(false, token);
+			headers.append("Accept", "application/json");
+
 			const host = envServices.API_GATEWAY.replace(/\/+$/, "");
 
 			const listUrl = new URL("/composer/admin/queues/api/queues", host);
@@ -152,8 +153,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 
 			const listRes = await fetch(listUrl, {
 				cache: "no-store",
-				credentials: "include",
-				headers: { Accept: "application/json" },
+				headers,
 			});
 			if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`);
 			const rawText = await listRes.text();
@@ -183,8 +183,7 @@ class CompositionsService extends BaseService<Composition, Form_Composition> {
 				try {
 					const logsRes = await fetch(logsUrl, {
 						cache: "no-store",
-						credentials: "include",
-						headers: { Accept: "application/json" },
+						headers,
 					});
 					if (logsRes.ok) {
 						const logsJson = (await logsRes.json()) as any;
