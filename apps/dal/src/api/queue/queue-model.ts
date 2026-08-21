@@ -8,10 +8,11 @@ export const QueueDataQuerySchema = z.object({
 	jobsPerPage: z.string().optional().openapi({ example: "10" }),
 });
 
-export const FailedContactSchema = z.object({
-	email: z.string(),
-	reason: z.string(),
-});
+export const FailedContactSchema = z
+	.object({
+		email: z.string().optional(),
+	})
+	.catchall(z.unknown());
 
 export const FailedOrgSchema = z.object({
 	name: z.string(),
