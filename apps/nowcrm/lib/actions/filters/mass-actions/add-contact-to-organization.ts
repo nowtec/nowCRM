@@ -24,6 +24,7 @@ export async function addContactsToOrganizationByFilters(
 		const res = await dalService.addContactsToOrganizationByFilters(
 			filters,
 			organizationId,
+			session.jwt,
 		);
 		return res;
 	} catch (error) {

@@ -21,7 +21,10 @@ export async function anonymizeContactsByFilters(payload: {
 	}
 
 	try {
-		const res = await dalService.anonymizeContactsByFilters(payload);
+		const res = await dalService.anonymizeContactsByFilters(
+			payload,
+			session.jwt,
+		);
 		return res;
 	} catch (error) {
 		return handleError(error);

@@ -21,7 +21,11 @@ export async function addContactsToListByFilters(
 	}
 
 	try {
-		const res = await dalService.addContactsToListByFilters(filters, listId);
+		const res = await dalService.addContactsToListByFilters(
+			filters,
+			listId,
+			session.jwt,
+		);
 		return res;
 	} catch (error) {
 		return handleError(error);

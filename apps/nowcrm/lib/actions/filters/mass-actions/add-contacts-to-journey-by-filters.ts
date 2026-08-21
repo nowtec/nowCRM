@@ -24,6 +24,7 @@ export async function addContactsToJourneyByFilters(
 		const res = await dalService.addContactsToJourneyByFilters(
 			filters,
 			JourneyId,
+			session.jwt,
 		);
 
 		return res;
