@@ -281,16 +281,23 @@ export default function Page() {
 		}
 
 		uploadCSV(formData)
-			.then(() => toast.success("CSV import started!"))
+			.then((res) => {
+				if (!res.success) {
+					console.error("[uploadCSV ERROR]", res.errorMessage);
+					toast.error(res.errorMessage || "Upload failed");
+					return;
+				}
+				toast.success("CSV import started!");
+				setTimeout(() => {
+					resetImportState();
+				}, 2000);
+			})
 			.catch((e) => {
 				console.error("[uploadCSV ERROR]", e);
 				toast.error("Upload failed");
 			})
 			.finally(() => {
 				setIsSubmitting(false);
-				setTimeout(() => {
-					resetImportState();
-				}, 2000);
 			});
 	};
 

@@ -1,6 +1,10 @@
+/**
+ * A CSV row the import rejected, carrying whatever columns that row had so it
+ * can be downloaded, corrected and re-imported.
+ */
 export interface FailedContact {
-	email: string;
-	reason: string;
+	email?: string;
+	[field: string]: unknown;
 }
 
 export interface ImportRecord {

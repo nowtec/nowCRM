@@ -148,20 +148,13 @@ export default function PreviousJobsModal({
 			key: "failedContacts",
 			header: "Failed Contacts",
 			render: (item: any) => {
-				const failedContacts = item.failedContacts;
-				if (failedContacts && failedContacts.length > 0) {
-					return (
-						<div className="max-h-16 max-w-[250px] space-y-1 overflow-y-auto break-words text-sm">
-							{failedContacts.map((fc: any, index: number) => (
-								<div key={index}>
-									<strong>{fc.email}</strong>: {fc.reason}
-								</div>
-							))}
-						</div>
-					);
-				}
-				return (
-					<span className="text-muted-foreground">No failed contacts</span>
+				const count = item.failedContacts?.length ?? 0;
+				return count > 0 ? (
+					<span className="font-medium text-red-700 dark:text-red-200">
+						{count}
+					</span>
+				) : (
+					<span className="text-muted-foreground">0</span>
 				);
 			},
 		},

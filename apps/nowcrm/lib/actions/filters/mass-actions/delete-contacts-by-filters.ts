@@ -21,7 +21,7 @@ export async function deleteContactsByFilters(payload: {
 	}
 
 	try {
-		const res = await dalService.deleteContactsByFilters(payload);
+		const res = await dalService.deleteContactsByFilters(payload, session.jwt);
 		return res;
 	} catch (error) {
 		return handleError(error);

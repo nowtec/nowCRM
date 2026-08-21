@@ -27,6 +27,7 @@ export async function UpdateSubscriptionContactsByFilters(
 			filters,
 			channelId,
 			isSubscribe,
+			session.jwt,
 			addEvent,
 		);
 		return res;

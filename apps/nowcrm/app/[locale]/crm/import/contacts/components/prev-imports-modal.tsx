@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { downloadCsv } from "@/lib/actions/import/download-csv";
 import { getPreviousImports } from "@/lib/actions/import/fetch-import";
+import { ImportStatusBadge } from "../../import-status-badge";
 
 interface PreviousImportsModalProps {
 	isOpen: boolean;
@@ -120,39 +121,28 @@ export default function PreviousImportsModal({
 			header: "Date",
 			render: (item: ImportRecord) => new Date(item.createdAt).toLocaleString(),
 		},
-		// {
-		// 	key: "status",
-		// 	header: "Status",
-		// },
-		// {
-		//   key: "progressPercent",
-		//   header: "Progress %",
-		//   render: (item: ImportRecord) => (item.progressPercent !== undefined ? `${item.progressPercent}%` : "N/A"),
-		// },
+		{
+			key: "status",
+			header: "Status",
+			render: (item: ImportRecord) => <ImportStatusBadge item={item} />,
+		},
 		{
 			key: "failedContacts",
 			header: "Failed Contacts",
 			render: (item: ImportRecord) => {
-				const failedContacts = item.failedContacts;
-				if (failedContacts && failedContacts.length > 0) {
-					return (
-						<div className="max-h-16 max-w-[300px] space-y-1 overflow-y-auto break-words text-sm">
-							{failedContacts.map((fc, index) => (
-								<div key={index}>
-									<strong>{fc.email}</strong>: {fc.reason}
-								</div>
-							))}
-						</div>
-					);
-				}
-				return (
-					<span className="text-muted-foreground">No failed contacts</span>
+				const count = item.failedContacts?.length ?? 0;
+				return count > 0 ? (
+					<span className="font-medium text-red-700 dark:text-red-200">
+						{count}
+					</span>
+				) : (
+					<span className="text-muted-foreground">0</span>
 				);
 			},
 		},
 		{
 			key: "download",
-			header: "Download",
+			header: "Download Failed",
 			render: (item: ImportRecord) => {
 				const failedContacts = item.failedContacts;
 				if (failedContacts && failedContacts.length > 0) {

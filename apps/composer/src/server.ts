@@ -27,13 +27,17 @@ app.use(express.static(path.join(`${__dirname}/src`, "public")));
 // Set the application to trust the reverse proxy
 app.set("trust proxy", true);
 
+// Mass sends and SES/SNS batches exceed Express' 100kb default body limit.
+const BODY_LIMIT = "25mb";
+
 // Middlewares
 app.use(
 	express.json({
 		type: ["application/json", "text/plain"],
+		limit: BODY_LIMIT,
 	}),
 );
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 //app.use(cors({ origin: env.COMPOSER_CORS_ORIGIN, credentials: true }));
 app.use(helmet());
 app.use(rateLimiter);

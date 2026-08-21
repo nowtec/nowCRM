@@ -216,7 +216,12 @@ export default function Page() {
 
 			formData.append("extraColumns", JSON.stringify(extraColumns));
 
-			await uploadCSV(formData);
+			const res = await uploadCSV(formData);
+			if (!res.success) {
+				console.error("[uploadCSV ERROR]", res.errorMessage);
+				toast.error(res.errorMessage || "Upload failed");
+				return;
+			}
 
 			toast.success("CSV import started!");
 

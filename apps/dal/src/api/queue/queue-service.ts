@@ -1,5 +1,30 @@
 import { ServiceResponse } from "@nowcrm/services";
 import { env } from "@/common/utils/env-config";
+import { getProgress } from "@/jobs_pipeline/common/helpers/progress-tracker";
+
+/** Written by the contacts worker; see logFailedContacts in contacts-worker.ts. */
+const CONTACTS_MARKER = "Failed contacts:";
+
+/**
+ * The queued job only parses the CSV and fans out batches, so its own state
+ * says nothing about how far the import got. Prefer the batch counters the
+ * workers keep, and fall back to the job's own state for imports that ran
+ * before those counters existed or whose keys have since expired.
+ */
+function deriveStatus(
+	job: any,
+	progress: { total: number; completed: number },
+): string {
+	if (job.isFailed) return "failed";
+
+	if (progress.total > 0) {
+		return progress.completed >= progress.total ? "completed" : "processing";
+	}
+
+	if (job.finishedOn) return "completed";
+	if (job.processedOn) return "processing";
+	return "queued";
+}
 
 function prettifyOp(op: string): string {
 	const map: Record<string, string> = {
@@ -46,11 +71,11 @@ function parseSearchMaskToString(mask: any): string {
 class QueueServiceApi {
 	public async getQueueData(query: any) {
 		const baseUrl = `http://${env.DAL_HOST}:${env.DAL_PORT}`;
-		let cookieHeader = "";
 
 		try {
 			const page = Number.parseInt(query.page as string, 10) || 1;
-			const jobsPerPage = 20;
+			const jobsPerPage =
+				Number.parseInt(query.jobsPerPage as string, 10) || 20;
 
 			const type = (query.type as string)?.toLowerCase() || "contacts";
 			let queueName = "csvContactsQueue";
@@ -60,21 +85,6 @@ class QueueServiceApi {
 				queueName = "csvMassActionsQueue";
 			}
 
-			const loginRes = await fetch(`${baseUrl}/login`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					username: env.DAL_BASIC_AUTH_USERNAME,
-					password: env.DAL_BASIC_AUTH_PASSWORD,
-				}),
-				credentials: "include",
-			});
-
-			if (!loginRes.ok) throw new Error(`Login failed: ${loginRes.statusText}`);
-
-			const cookies = loginRes.headers.get("set-cookie");
-			if (cookies) cookieHeader = cookies;
-
 			const params = new URLSearchParams({
 				activeQueue: queueName,
 				status: "latest",
@@ -82,12 +92,9 @@ class QueueServiceApi {
 				jobsPerPage: String(jobsPerPage),
 			});
 
+			// Bull Board is mounted without auth, so its API is called directly.
 			const response = await fetch(
 				`${baseUrl}/admin/queues/api/queues?${params}`,
-				{
-					headers: { Cookie: cookieHeader },
-					credentials: "include",
-				},
 			);
 
 			if (!response.ok)
@@ -105,10 +112,14 @@ class QueueServiceApi {
 
 			const formattedJobs = await Promise.all(
 				jobs.map(async (job: any, _index: number) => {
+					const progress = await getProgress(String(job.id));
+
 					const jobInfo = {
 						id: job.id,
 						filename: job.data?.filename || "Unknown File",
 						createdAt: new Date(job.timestamp).toLocaleString(),
+						status: deriveStatus(job, progress),
+						progressPercent: progress.percent,
 						type: job.data?.type,
 						massAction: job.data?.mass_action || null,
 						listName: job.data?.list_name || null,
@@ -116,17 +127,13 @@ class QueueServiceApi {
 						searchMask: job.data?.searchMask || null,
 						parsedSearchMask: parseSearchMaskToString(job.data?.searchMask),
 						logs: [] as string[],
-						failedContacts: [] as { email: string; reason: string }[],
+						failedContacts: [] as Array<Record<string, any>>,
 						failedOrgs: [] as { name: string; reason: string }[],
 					};
 
 					try {
 						const logsRes = await fetch(
 							`${baseUrl}/admin/queues/api/queues/${queueName}/${job.id}/logs`,
-							{
-								headers: { Cookie: cookieHeader },
-								credentials: "include",
-							},
 						);
 
 						if (!logsRes.ok)
@@ -140,15 +147,9 @@ class QueueServiceApi {
 
 						jobInfo.logs = logs;
 
-						const reasonMap = new Map<string, string>();
 						const orgReasonMap = new Map<string, string>();
 
 						logs.forEach((line: string) => {
-							const emailMatch = line.match(
-								/failed email:\s*([\w.+-]+@[^\s]+)\s+—\s+reason:\s*(.+)$/i,
-							);
-							if (emailMatch) reasonMap.set(emailMatch[1], emailMatch[2]);
-
 							const orgMatch = line.match(
 								/failed org:\s*(.+?)\s+—\s+reason:\s*(.+)$/i,
 							);
@@ -156,31 +157,24 @@ class QueueServiceApi {
 								orgReasonMap.set(orgMatch[1].trim(), orgMatch[2].trim());
 						});
 
-						let csvContacts: { email: string; reason: string }[] = [];
+						const csvContacts: Array<Record<string, any>> = [];
+						for (const line of logs) {
+							if (typeof line !== "string") continue;
+							const at = line.indexOf(CONTACTS_MARKER);
+							if (at === -1) continue;
 
-						const failedContactsBlock = logs.find((line: any) =>
-							line.includes("Failed contacts:"),
-						);
-						if (failedContactsBlock) {
-							const match = failedContactsBlock.match(/\[\s*\{[\s\S]*?\}\s*\]/);
-							if (match) {
-								const parsedArray = JSON.parse(match[0]);
-								if (Array.isArray(parsedArray)) {
-									csvContacts = parsedArray.map((contact: any) => ({
-										...contact,
-										reason: reasonMap.get(contact.email) || "Unknown error",
-									}));
-								}
+							try {
+								const parsed = JSON.parse(
+									line.slice(at + CONTACTS_MARKER.length).trim(),
+								);
+								if (Array.isArray(parsed)) csvContacts.push(...parsed);
+							} catch {
+								console.warn(
+									`Could not parse a failed-contacts block on job ${job.id}`,
+								);
 							}
 						}
-						if (csvContacts.length === 0 && reasonMap.size > 0) {
-							csvContacts = Array.from(reasonMap.entries()).map(
-								([email, reason]) => ({
-									email,
-									reason,
-								}),
-							);
-						}
+
 						jobInfo.failedContacts = csvContacts;
 
 						let csvOrgs: { name: string; reason: string }[] = [];

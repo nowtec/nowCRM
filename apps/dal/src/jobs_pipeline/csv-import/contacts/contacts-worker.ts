@@ -7,7 +7,9 @@ import { pino } from "pino";
 // contactWorker.ts
 import { env } from "@/common/utils/env-config";
 import { fetchJson } from "@/common/utils/fetch-json";
+import { incrementProgress } from "@/jobs_pipeline/common/helpers/progress-tracker";
 import { relationsQueue } from "@/jobs_pipeline/common/relation/contacts/relation-worker";
+import { csvContactsQueue } from "./csv-contacts-queue";
 import { cleanEmptyStringsToNull } from "./processors/contacts/clean";
 import { formatDateTimeFields } from "./processors/contacts/dates";
 import { validateEnumerations } from "./processors/contacts/enumerations";
@@ -16,12 +18,46 @@ import { getCachedContactId } from "./processors/contacts/iscache";
 import { sanitizeContacts } from "./processors/contacts/sanitize";
 import { relationCache } from "./processors/helpers/cache";
 
+/**
+ * Records rejected rows on the parent CSV job's log.
+ */
+async function logFailedContacts(
+	parentJobId: unknown,
+	rows: any[],
+): Promise<void> {
+	if (!parentJobId || rows.length === 0) return;
+
+	try {
+		const parent = await csvContactsQueue.getJob(String(parentJobId));
+		if (!parent) return;
+
+		const failedRows = rows.map((row) => {
+			const copy = { ...(row ?? {}) };
+			// Internal marker sanitizeContacts adds to otherwise empty rows.
+			delete copy._keep;
+			return copy;
+		});
+
+		await parent.log(`Failed contacts: ${JSON.stringify(failedRows)}`);
+	} catch (err: any) {
+		console.error(
+			`Could not record failed contacts on job ${parentJobId}: ${err.message}`,
+		);
+	}
+}
+
+/**
+ * Pairs every contact in the batch with the id it ended up with, so relations
+ * can be linked afterwards. Contacts whose bulk-create batch failed have no id
+ * and are left out rather than aborting the batch: the rest of the job, the
+ * updated contacts included, still gets its relations.
+ */
 function buildFullContactsArray(
 	originalContacts: any[],
 	updateContacts: any[],
 	existingContactIds: CreatedPair[],
 	newContacts: any[],
-	createdIds: CreatedPair[],
+	createdIds: Array<CreatedPair | null>,
 ): Array<any & { documentId: DocumentId }> {
 	const full: Array<any & { documentId: DocumentId }> = [];
 	let newIdx = 0;
@@ -30,18 +66,22 @@ function buildFullContactsArray(
 	for (const contact of originalContacts) {
 		if (updateContacts.includes(contact)) {
 			const ex = existingContactIds[existingIdx++];
+			if (!ex) continue;
 			full.push({
 				...contact,
 				id: ex.id,
 				documentId: ex.documentId,
 			});
 		} else {
-			full.push({
-				...newContacts[newIdx],
-				id: createdIds[newIdx].id,
-				documentId: createdIds[newIdx].documentId,
-			});
+			const created = createdIds[newIdx];
+			const source = newContacts[newIdx];
 			newIdx++;
+			if (!created || !source) continue;
+			full.push({
+				...source,
+				id: created.id,
+				documentId: created.documentId,
+			});
 		}
 	}
 
@@ -286,7 +326,10 @@ export const startContactsWorkers = () => {
 
 				const DAL_BATCH_SIZE = 1000;
 				const STRAPI_BATCH_SIZE = 100;
-				const createdIds: CreatedPair[] = [];
+				// Index-aligned with newContacts: a slot stays null when its
+				// bulk-create batch failed, so a failure never shifts the
+				// contacts that follow onto the wrong ids.
+				const createdIds: Array<CreatedPair | null> = [];
 				let successCount = 0;
 
 				for (
@@ -349,7 +392,12 @@ export const startContactsWorkers = () => {
 
 							relationCache.contacts = cacheMap;
 
-							for (const d of docs) {
+							for (let i = 0; i < batch.length; i++) {
+								const d = docs[i];
+								if (!d) {
+									createdIds.push(null);
+									continue;
+								}
 								createdIds.push({
 									id: d.id,
 									documentId: d.documentId,
@@ -367,19 +415,33 @@ export const startContactsWorkers = () => {
 							const dur = Date.now() - batchStart;
 							recordResponseTime(dur, true);
 							onHttpError();
+							// Keep the slots so the surviving contacts stay aligned.
+							for (let i = 0; i < batch.length; i++) createdIds.push(null);
 							logger.error(
 								`[${workerId}] Bulk-create failed at batch #${dalBatchNum}.${batchNum}: ${err.message}`,
 							);
+							await logFailedContacts(job.data.parentJobId, batch);
 						}
 
 						await sleep(jitter(BATCH_COOLDOWN_BASE));
 					}
 				}
 
+				// Null slots stand for contacts whose create batch failed.
+				const created = createdIds.filter(
+					(pair): pair is CreatedPair => pair !== null,
+				);
+				const skipped = createdIds.length - created.length;
+
 				const total = Date.now() - jobStart;
 				logger.info(
-					`[${workerId}] DONE job ${job.id} - success=${successCount}, updated=${updateContacts.length}, total_appended=${existingContactIds.length + createdIds.length}, totalTime=${total}ms`,
+					`[${workerId}] DONE job ${job.id} - success=${successCount}, updated=${updateContacts.length}, skipped=${skipped}, total_appended=${existingContactIds.length + created.length}, totalTime=${total}ms`,
 				);
+				if (skipped > 0) {
+					logger.warn(
+						`[${workerId}] ${skipped} contact(s) were not created; their batch was rejected by Strapi`,
+					);
+				}
 
 				const fullContacts = buildFullContactsArray(
 					contacts,
@@ -485,12 +547,17 @@ export const startContactsWorkers = () => {
 					});
 				}
 
+				if (job.data.parentJobId) {
+					await incrementProgress(String(job.data.parentJobId));
+				}
+
 				return {
 					successCount,
-					ids: createdIds,
+					ids: created,
+					skippedCount: skipped,
 					updateCount: updateContacts.length,
 					existingIds: existingContactIds,
-					totalAppended: existingContactIds.length + createdIds.length,
+					totalAppended: existingContactIds.length + created.length,
 				};
 			},
 			{

@@ -20,7 +20,11 @@ export async function updateContactsByFilters(
 	}
 
 	try {
-		const res = await dalService.updateContactsByFilters(filters, updateData);
+		const res = await dalService.updateContactsByFilters(
+			filters,
+			updateData,
+			session.jwt,
+		);
 		return res;
 	} catch (error) {
 		return handleError(error);

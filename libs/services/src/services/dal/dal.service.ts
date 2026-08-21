@@ -3,10 +3,12 @@ import { envServices } from "../../env-config";
 import type { DocumentId } from "../../types/common/base-type";
 import type { ImportRecord } from "../../types/dal/import-record";
 import type { ServiceResponse } from "../../types/microservices/service-response";
+import { authHeaders } from "../common/base.service";
 import { handleError, type StandardResponse } from "../common/response.service";
 
 class DalService {
 	async fetchPreviousImports(
+		token: string,
 		page = 1,
 		jobsPerPage = 20,
 		type: "contacts" | "organizations" | "mass-actions" = "contacts",
@@ -18,6 +20,7 @@ class DalService {
 			url.searchParams.set("type", type);
 
 			const response = await fetch(url, {
+				headers: authHeaders(token, false),
 				cache: "no-store",
 			});
 
@@ -69,7 +72,10 @@ class DalService {
 		}
 	}
 
-	async uploadCSV(formData: FormData): Promise<any> {
+	async uploadCSV(
+		formData: FormData,
+		token: string,
+	): Promise<StandardResponse<any>> {
 		const file = formData.get("file") as File;
 		const filename = formData.get("filename") as string;
 		const type = formData.get("type") as string;
@@ -105,26 +111,40 @@ class DalService {
 			const url = new URL(API_ROUTES_DAL.UPLOAD, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
+				headers: authHeaders(token, false),
 				body: upstreamFormData,
 				cache: "no-store",
 			});
 
 			if (!res.ok) {
-				console.error(await res.text());
-				throw new Error("DAL API failed");
+				const errorText = await res.text();
+				console.error("CSV upload failed:", errorText);
+				return {
+					data: null,
+					status: res.status,
+					success: false,
+					errorMessage: `DAL API returned ${res.status}: ${errorText}`,
+				};
 			}
 
-			return await res.json();
+			return {
+				data: await res.json(),
+				status: res.status,
+				success: true,
+			};
 		} catch (error: any) {
 			return handleError(error);
 		}
 	}
 
-	async deleteContactsByFilters(payload: {
-		entity: string;
-		searchMask: any;
-		mass_action: string;
-	}): Promise<StandardResponse<any>> {
+	async deleteContactsByFilters(
+		payload: {
+			entity: string;
+			searchMask: any;
+			mass_action: string;
+		},
+		token: string,
+	): Promise<StandardResponse<any>> {
 		try {
 			const transformedFilters = payload.searchMask;
 
@@ -138,9 +158,7 @@ class DalService {
 			const url = new URL(API_ROUTES_DAL.MASS_DELETE, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(updatedPayload),
 			});
 
@@ -167,6 +185,7 @@ class DalService {
 			mass_action: string;
 		},
 		userEmail: string,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const transformedFilters = payload.searchMask;
@@ -182,9 +201,7 @@ class DalService {
 			const url = new URL(API_ROUTES_DAL.MASS_EXPORT, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(updatedPayload),
 			});
 
@@ -207,6 +224,7 @@ class DalService {
 	async addContactsToListByFilters(
 		filters: Record<string, any>,
 		listId: DocumentId,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const payload = {
@@ -224,9 +242,7 @@ class DalService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -246,10 +262,13 @@ class DalService {
 		}
 	}
 
-	async fetchProgressMap(): Promise<StandardResponse<Map<string, number>>> {
+	async fetchProgressMap(
+		token: string,
+	): Promise<StandardResponse<Map<string, number>>> {
 		try {
 			const url = new URL(API_ROUTES_DAL.PROGRESS, envServices.API_GATEWAY);
 			const response = await fetch(url, {
+				headers: authHeaders(token, false),
 				cache: "no-store",
 			});
 
@@ -278,6 +297,7 @@ class DalService {
 	async updateContactsByFilters(
 		filters: Record<string, any>,
 		updateData: Record<string, any>,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const payload = {
@@ -295,9 +315,7 @@ class DalService {
 			const url = new URL(API_ROUTES_DAL.MASS_UPDATE, envServices.API_GATEWAY);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -320,6 +338,7 @@ class DalService {
 	async addContactsToJourneyByFilters(
 		filters: Record<string, any>,
 		JourneyId: DocumentId,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const payload = {
@@ -340,9 +359,7 @@ class DalService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -366,6 +383,7 @@ class DalService {
 		filters: Record<string, any>,
 		channelId: DocumentId,
 		isSubscribe: boolean,
+		token: string,
 		addEvent?: boolean,
 	): Promise<StandardResponse<any>> {
 		try {
@@ -389,9 +407,7 @@ class DalService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -414,6 +430,7 @@ class DalService {
 	async addContactsToOrganizationByFilters(
 		filters: Record<string, any>,
 		organizationId: DocumentId,
+		token: string,
 	): Promise<StandardResponse<any>> {
 		try {
 			const payload = {
@@ -431,9 +448,7 @@ class DalService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(payload),
 			});
 
@@ -453,11 +468,14 @@ class DalService {
 		}
 	}
 
-	async anonymizeContactsByFilters(payload: {
-		entity: string;
-		searchMask: any;
-		mass_action: string;
-	}): Promise<StandardResponse<any>> {
+	async anonymizeContactsByFilters(
+		payload: {
+			entity: string;
+			searchMask: any;
+			mass_action: string;
+		},
+		token: string,
+	): Promise<StandardResponse<any>> {
 		try {
 			const transformedFilters = payload.searchMask;
 
@@ -474,9 +492,7 @@ class DalService {
 			);
 			const res = await fetch(url, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: authHeaders(token),
 				body: JSON.stringify(updatedPayload),
 			});
 

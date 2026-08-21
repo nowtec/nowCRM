@@ -22,7 +22,11 @@ export async function exportContactsByFilters(payload: {
 
 	const userEmail = session.user?.email ?? "unknown@unknown.com";
 	try {
-		const res = await dalService.exportContactsByFilters(payload, userEmail);
+		const res = await dalService.exportContactsByFilters(
+			payload,
+			userEmail,
+			session.jwt,
+		);
 
 		return res;
 	} catch (error) {

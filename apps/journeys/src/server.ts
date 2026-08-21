@@ -20,8 +20,12 @@ import { logger } from "./logger";
 const app: Express = express();
 app.set("trust proxy", true);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Strapi webhook payloads carry the whole entry with its relations, so a
+// mass import or a large list blows past Express' 100kb default.
+const BODY_LIMIT = "25mb";
+
+app.use(express.json({ limit: BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 
 app.use(helmet());
 app.use(rateLimiter);
