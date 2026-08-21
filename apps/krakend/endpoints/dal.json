@@ -296,6 +296,7 @@
     "method": "GET",
     "output_encoding": "json",
     "input_headers": ["Authorization"],
+    "input_query_strings": ["page", "jobsPerPage", "type"],
     "extra_config": {
       "validation/cel": [
         {
