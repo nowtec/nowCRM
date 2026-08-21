@@ -38,13 +38,18 @@ app.use(rateLimiter);
 app.use(requestLogger);
 
 app.use("/", uploadRouter);
+
+// Mass-action search masks exceed Express' 100kb default body limit.
+const BODY_LIMIT = "25mb";
+
 // Middlewares
 app.use(
 	express.json({
 		type: ["application/json", "text/plain"],
+		limit: BODY_LIMIT,
 	}),
 );
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
 
 app.use("/mass-actions", massActionsRouter);
 app.use("/health-check", healthCheckRouter);
