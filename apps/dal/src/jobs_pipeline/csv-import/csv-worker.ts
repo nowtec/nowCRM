@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { env } from "@/common/utils/env-config";
 import { logger } from "@/logger";
 import { parseCSV } from "../common/helpers/parse-csv";
+import { initProgress } from "../common/helpers/progress-tracker";
 import { resolveDocumentId } from "../common/helpers/resolve-document-id";
 import { contactsQueue } from "./contacts/contacts-queue";
 import { createList } from "./contacts/processors/contacts/list";
@@ -46,6 +47,8 @@ const processCsvJob = async (job: any) => {
 
 	const batchSize = 1000;
 	const totalBatches = Math.ceil(records.length / batchSize);
+
+	await initProgress(String(job.id), totalBatches);
 
 	let listId: number | undefined;
 	if (type === "contacts") {

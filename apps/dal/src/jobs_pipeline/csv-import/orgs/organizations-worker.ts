@@ -7,6 +7,7 @@ import { pino } from "pino";
 // orgsWorker.ts
 import { env } from "@/common/utils/env-config";
 import { fetchJson } from "@/common/utils/fetch-json";
+import { incrementProgress } from "@/jobs_pipeline/common/helpers/progress-tracker";
 import { orgRelationsQueue } from "@/jobs_pipeline/common/relation/orgs/relation-worker-org";
 import { relationCache } from "../contacts/processors/helpers/cache";
 import { cleanEmptyStringsToNull } from "./processors/organizations/clean";
@@ -397,6 +398,10 @@ export const startOrganizationsWorkers = () => {
 						organizations: updatedFullOrgs,
 						listId,
 					});
+				}
+
+				if (job.data.parentJobId) {
+					await incrementProgress(String(job.data.parentJobId));
 				}
 
 				return {
