@@ -400,10 +400,9 @@ export function EmailChannelContent({
 					"../send-to-channel-action"
 				);
 				const answer = await sendToChannelAction(submissionData);
-				console.log(answer);
 
 				if (answer.success) {
-					toast.success(answer.errorMessage as string);
+					toast.success("The email sending process has started.");
 					closeOnSubmit?.();
 					router.refresh();
 				} else {
