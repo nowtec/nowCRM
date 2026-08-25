@@ -12,6 +12,10 @@ export const env = cleanEnv(process.env, {
 	COMPOSER_PORT: port({ devDefault: testOnly(3000) }),
 	COMPOSER_CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:3000") }),
 	COMPOSER_COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(100) }),
+	COMPOSER_COMMON_RATE_LIMIT_WINDOW_MS: num({
+		default: 60_000,
+		devDefault: testOnly(60_000),
+	}),
 
 	COMPOSER_CRM_REDIRECT_HEALTH_CHECK: str({
 		devDefault: testOnly("http://localhost:3000/crm/admin-panel/channels"),

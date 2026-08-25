@@ -13,6 +13,10 @@ export const env = cleanEnv(process.env, {
 	JOURNEYS_PORT: port({ devDefault: testOnly(3000) }),
 	JOURNEYS_CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:3000") }),
 	JOURNEYS_COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(100) }),
+	JOURNEYS_COMMON_RATE_LIMIT_WINDOW_MS: num({
+		default: 60_000,
+		devDefault: testOnly(60_000),
+	}),
 	JOURNEYS_STRAPI_API_TOKEN: str({ devDefault: testOnly("") }),
 	JOURNEYS_CHECK_TIME: num({ devDefault: testOnly(1440) }),
 	JOURNEYS_REDIS_PORT: port({ devDefault: testOnly(6379) }),

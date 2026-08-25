@@ -12,6 +12,10 @@ export const env = cleanEnv(process.env, {
 	PLUGINS_PORT: port({ devDefault: testOnly(3030) }),
 	PLUGINS_CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:3000") }),
 	PLUGINS_COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(100) }),
+	PLUGINS_COMMON_RATE_LIMIT_WINDOW_MS: num({
+		default: 60_000,
+		devDefault: testOnly(60_000),
+	}),
 
 	// Plugin configuration
 	PLUGINS_NPMRC_TOKEN: str({ devDefault: testOnly("") }),
