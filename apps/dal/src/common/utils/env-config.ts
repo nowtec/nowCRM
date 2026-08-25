@@ -13,6 +13,10 @@ export const env = cleanEnv(process.env, {
 	DAL_PORT: port({ devDefault: testOnly(3000) }),
 	DAL_CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:3000") }),
 	DAL_COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(100) }),
+	DAL_COMMON_RATE_LIMIT_WINDOW_MS: num({
+		default: 60_000,
+		devDefault: testOnly(60_000),
+	}),
 	DAL_STRAPI_API_TOKEN: str({ devDefault: testOnly("") }),
 	DAL_CHECK_TIME: num({ devDefault: testOnly(1440) }),
 	DAL_REDIS_PORT: port({ devDefault: testOnly(6379) }),

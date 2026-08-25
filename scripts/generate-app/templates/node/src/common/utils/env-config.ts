@@ -12,6 +12,10 @@ export const env = cleanEnv(process.env, {
 	NODE_APP_PORT: port({ devDefault: testOnly(3000) }),
 	NODE_APP_CORS_ORIGIN: str({ devDefault: testOnly("http://localhost:3000") }),
 	NODE_APP_COMMON_RATE_LIMIT_MAX_REQUESTS: num({ devDefault: testOnly(100) }),
+	NODE_APP_COMMON_RATE_LIMIT_WINDOW_MS: num({
+		default: 60_000,
+		devDefault: testOnly(60_000),
+	}),
 
 
 });
