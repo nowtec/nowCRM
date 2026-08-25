@@ -20,7 +20,7 @@
     "endpoint": "/composer/create-composition",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -45,7 +45,7 @@
     "endpoint": "/composer/create-reference",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -70,7 +70,7 @@
     "endpoint": "/composer/regenerate",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -95,7 +95,7 @@
     "endpoint": "/composer/quick-write",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -120,7 +120,7 @@
     "endpoint": "/composer/structured-response",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -145,7 +145,7 @@
     "endpoint": "/composer/send-to-channels",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -188,7 +188,7 @@
     "method": "GET",
     "output_encoding": "json",
     "input_query_strings": ["*"],
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -264,7 +264,7 @@
     "endpoint": "/composer/admin/queues/{path}",
     "method": "GET",
     "output_encoding": "json",
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -289,7 +289,7 @@
     "endpoint": "/composer/admin/queues/api/{path}",
     "method": "GET",
     "output_encoding": "json",
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -314,7 +314,7 @@
     "endpoint": "/composer/admin/queues/api/{path}",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {

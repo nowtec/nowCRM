@@ -20,7 +20,7 @@
     "endpoint": "/dal/import-progress",
     "method": "GET",
     "output_encoding": "json",
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -45,7 +45,7 @@
     "endpoint": "/dal/upload-csv",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -70,7 +70,7 @@
     "endpoint": "/dal/mass-actions/delete",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -95,7 +95,7 @@
     "endpoint": "/dal/mass-actions/update",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -120,7 +120,7 @@
     "endpoint": "/dal/mass-actions/export",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -145,7 +145,7 @@
     "endpoint": "/dal/mass-actions/anonymize",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -170,7 +170,7 @@
     "endpoint": "/dal/mass-actions/add-to-list",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -195,7 +195,7 @@
     "endpoint": "/dal/mass-actions/add-to-organization",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -220,7 +220,7 @@
     "endpoint": "/dal/mass-actions/add-to-journey",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -245,7 +245,7 @@
     "endpoint": "/dal/mass-actions/update-subscription",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -270,7 +270,7 @@
     "endpoint": "/dal/admin/queues/{path}",
     "method": "GET",
     "output_encoding": "json",
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -295,7 +295,7 @@
     "endpoint": "/dal/queue-data",
     "method": "GET",
     "output_encoding": "json",
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "input_query_strings": ["page", "jobsPerPage", "type"],
     "extra_config": {
       "validation/cel": [
@@ -321,7 +321,7 @@
     "endpoint": "/dal/api/queue/{path}",
     "method": "GET",
     "output_encoding": "json",
-    "input_headers": ["Authorization"],
+    "input_headers": ["Authorization", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
@@ -346,7 +346,7 @@
     "endpoint": "/dal/api/queue/{path}",
     "method": "POST",
     "output_encoding": "json",
-    "input_headers": ["Authorization", "Content-Type"],
+    "input_headers": ["Authorization", "Content-Type", "X-Forwarded-For"],
     "extra_config": {
       "validation/cel": [
         {
