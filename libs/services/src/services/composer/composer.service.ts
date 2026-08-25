@@ -9,7 +9,11 @@ import type { DocumentId } from "../../types/common/base-type";
 
 import type { ServiceResponse } from "../../types/microservices/service-response";
 import { authHeaders } from "../common/base.service";
-import { handleError, type StandardResponse } from "../common/response.service";
+import {
+	handleError,
+	parseGatewayError,
+	type StandardResponse,
+} from "../common/response.service";
 import { journeyStepsService } from "../journey-steps.service";
 
 class ComposerService {
@@ -70,6 +74,16 @@ class ComposerService {
 			}
 
 			const data = JSON.parse(raw);
+			const gatewayError = parseGatewayError(data, res.status);
+			if (gatewayError) {
+				return {
+					data: null,
+					status: gatewayError.status,
+					success: false,
+					errorMessage: gatewayError.message,
+				};
+			}
+
 			return { data, status: res.status, success: true };
 		} catch (error: any) {
 			return handleError(error);
@@ -169,6 +183,25 @@ class ComposerService {
 				};
 			}
 
+			const gatewayError = parseGatewayError(parsedBody, response.status);
+			if (gatewayError) {
+				console.error(
+					"[ComposerService.sendComposition] Gateway rejected the request",
+					{
+						httpStatus: response.status,
+						upstreamStatus: gatewayError.status,
+						upstreamMessage: gatewayError.message,
+						payload: payloadLogSummary,
+					},
+				);
+				return {
+					errorMessage: `Failed to send composition: ${gatewayError.message} - ${gatewayError.status}`,
+					data: null,
+					status: gatewayError.status,
+					success: false,
+				};
+			}
+
 			const data = (parsedBody || {}) as Partial<ServiceResponse<null>> & {
 				error?: { message?: string; status?: number };
 				errorMessage?: string;
@@ -225,7 +258,6 @@ class ComposerService {
 				data: (data.responseObject ?? null) as null,
 				status: responseStatus,
 				success: true,
-				errorMessage: responseMessage,
 			};
 		} catch (error: any) {
 			console.error(
@@ -327,6 +359,16 @@ class ComposerService {
 			}
 
 			const data = JSON.parse(raw);
+			const gatewayError = parseGatewayError(data, res.status);
+			if (gatewayError) {
+				return {
+					data: null,
+					status: gatewayError.status,
+					success: false,
+					errorMessage: gatewayError.message,
+				};
+			}
+
 			return { data, status: res.status, success: true };
 		} catch (error: any) {
 			return handleError(error);

@@ -14,6 +14,78 @@ export interface StandardResponse<T> {
 	};
 }
 
+type GatewayErrorDetails = {
+	http_status_code?: number;
+	http_body?: string;
+	http_body_encoding?: string;
+};
+
+export type GatewayError = {
+	status: number;
+	message: string;
+};
+
+// KrakenD's `return_error_details` alias, shared by every endpoint definition.
+const GATEWAY_ERROR_KEY = "error_backend_status";
+
+function extractGatewayErrorMessage(
+	details: GatewayErrorDetails,
+	fallbackMessage: string,
+): string {
+	const body = details.http_body;
+	if (!body) {
+		return fallbackMessage;
+	}
+
+	try {
+		const parsed = JSON.parse(body);
+		if (parsed?.error) {
+			return `${parsed.error.status ?? ""} - ${parsed.error.message ?? "Unknown error"}`.trim();
+		}
+		if (typeof parsed?.message === "string") {
+			return parsed.message;
+		}
+	} catch {
+		// Upstream answered with a non-JSON body (plain text or HTML).
+	}
+
+	return body;
+}
+
+/**
+ * Detects a gateway-wrapped upstream failure.
+ *
+ * KrakenD answers with HTTP 200 while nesting the real failure under
+ * `error_backend_status`, so the envelope has to be detected from the body.
+ *
+ * @param body - The parsed response body.
+ * @param fallbackStatus - Status to report when the envelope omits one.
+ * @returns The upstream error, or `null` when the body is not an envelope.
+ */
+export function parseGatewayError(
+	body: unknown,
+	fallbackStatus: number,
+): GatewayError | null {
+	if (!body || typeof body !== "object") {
+		return null;
+	}
+
+	const details = (body as Record<string, unknown>)[GATEWAY_ERROR_KEY] as
+		| GatewayErrorDetails
+		| undefined;
+
+	if (!details || typeof details !== "object") {
+		return null;
+	}
+
+	const status = details.http_status_code || fallbackStatus;
+
+	return {
+		status,
+		message: extractGatewayErrorMessage(details, `Request failed (${status})`),
+	};
+}
+
 function processItem(item: any): any {
 	if (item === null || item === undefined) {
 		return item;
@@ -46,30 +118,13 @@ export async function handleResponse<T>(
 	try {
 		const json: any = await response.json();
 
-		// Check for error_backend_status key
-		if (json.error_backend_status) {
-			const errorBackend = json.error_backend_status;
-			let errorMessage = "An error occurred";
-			const errorStatus = errorBackend.http_status_code || status;
-
-			// Try to parse the http_body if it's a JSON string
-			if (errorBackend.http_body) {
-				try {
-					const errorBody = JSON.parse(errorBackend.http_body);
-					if (errorBody.error) {
-						errorMessage = `${errorBody.error.status || errorStatus} - ${errorBody.error.message || "Unknown error"}`;
-					}
-				} catch {
-					// If parsing fails, use the raw body or default message
-					errorMessage = errorBackend.http_body || errorMessage;
-				}
-			}
-
+		const gatewayError = parseGatewayError(json, status);
+		if (gatewayError) {
 			return {
 				data: null,
-				status: errorStatus,
+				status: gatewayError.status,
 				success: false,
-				errorMessage,
+				errorMessage: gatewayError.message,
 			};
 		}
 
