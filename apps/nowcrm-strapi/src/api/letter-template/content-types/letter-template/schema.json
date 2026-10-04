@@ -1,0 +1,87 @@
+{
+  "kind": "collectionType",
+  "collectionName": "letter_templates",
+  "info": {
+    "singularName": "letter-template",
+    "pluralName": "letter-templates",
+    "displayName": "Letter Template",
+    "description": "Templates for letter generation with PDF output"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "text"
+    },
+    "template_file": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "files"
+      ],
+      "required": true
+    },
+    "paper_size": {
+      "type": "enumeration",
+      "enum": [
+        "A4",
+        "Letter",
+        "Legal",
+        "A5"
+      ],
+      "default": "A4",
+      "required": true
+    },
+    "orientation": {
+      "type": "enumeration",
+      "enum": [
+        "portrait",
+        "landscape"
+      ],
+      "default": "portrait",
+      "required": true
+    },
+    "margins": {
+      "type": "component",
+      "repeatable": false,
+      "component": "letter.margins",
+      "required": true
+    },
+    "category": {
+      "type": "string",
+      "maxLength": 50
+    },
+    "tags": {
+      "type": "json"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "required_tokens": {
+      "type": "json"
+    },
+    "default_font_size": {
+      "type": "integer",
+      "min": 8,
+      "max": 72,
+      "default": 12
+    },
+    "default_font_family": {
+      "type": "string",
+      "default": "Arial"
+    },
+    "version": {
+      "type": "integer",
+      "default": 1,
+      "min": 1
+    }
+  }
+}
