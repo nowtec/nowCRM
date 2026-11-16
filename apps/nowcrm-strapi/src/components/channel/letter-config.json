@@ -1,0 +1,65 @@
+{
+  "collectionName": "components_channel_letter_config",
+  "info": {
+    "displayName": "Letter Configuration",
+    "description": "Letter-specific configuration for channel"
+  },
+  "attributes": {
+    "default_template": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::letter-template.letter-template"
+    },
+    "paper_size": {
+      "type": "enumeration",
+      "enum": ["A4", "Letter", "Legal", "A5"],
+      "default": "A4"
+    },
+    "orientation": {
+      "type": "enumeration",
+      "enum": ["portrait", "landscape"],
+      "default": "portrait"
+    },
+    "default_font_size": {
+      "type": "integer",
+      "min": 8,
+      "max": 72,
+      "default": 12
+    },
+    "default_font_family": {
+      "type": "string",
+      "default": "Arial"
+    },
+    "include_letterhead": {
+      "type": "boolean",
+      "default": true
+    },
+    "letterhead_image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "batch_size": {
+      "type": "integer",
+      "min": 1,
+      "max": 1000,
+      "default": 50
+    },
+    "output_format": {
+      "type": "enumeration",
+      "enum": ["pdf", "pdfa", "pdf_ua"],
+      "default": "pdf"
+    },
+    "dpi": {
+      "type": "integer",
+      "min": 72,
+      "max": 600,
+      "default": 300
+    },
+    "compression_level": {
+      "type": "enumeration",
+      "enum": ["none", "low", "medium", "high"],
+      "default": "medium"
+    }
+  }
+}
