@@ -18,7 +18,7 @@ export default async function CompositionPage(props: {
 			},
 		},
 	});
-	if (!response.success || !response.data || !response.meta) {
+	if (!response.success || !response.data) {
 		return <ErrorMessage response={response} />;
 	}
 	return <CompositionView composition={response.data} />;
