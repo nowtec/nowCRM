@@ -65,7 +65,20 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const getCompositionItemsWithChannels = (
+	items: Composition["composition_items"] | null | undefined,
+) =>
+	(items ?? []).filter(
+		(item) =>
+			typeof item?.channel?.name === "string" && item.channel.name.length > 0,
+	);
+
 export function CompositionView({ composition }: { composition: Composition }) {
+	const compositionItems = getCompositionItemsWithChannels(
+		composition.composition_items,
+	);
+	const compositionStatus = composition.composition_status ?? "Unknown";
+
 	// Initialize form with the composition data
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -80,7 +93,7 @@ export function CompositionView({ composition }: { composition: Composition }) {
 			add_unsubscribe: composition.add_unsubscribe || false,
 			reference_prompt: composition.reference_prompt || "",
 			reference_result: composition.reference_result || "",
-			composition_items: composition.composition_items.map((item) => ({
+			composition_items: compositionItems.map((item) => ({
 				documentId: item.documentId,
 				additional_prompt: item.additional_prompt || "",
 				result: item.result,
@@ -97,13 +110,11 @@ export function CompositionView({ composition }: { composition: Composition }) {
 	const [isAddingChannel, setIsAddingChannel] = useState(false);
 
 	// Get all available channels from the composition items
-	const availableChannels = composition.composition_items.map(
-		(item) => item.channel.name,
-	);
+	const availableChannels = compositionItems.map((item) => item.channel.name);
 
 	// Find composition item by channel name
 	const findCompositionItem = (channelName: string) => {
-		return composition.composition_items.find(
+		return compositionItems.find(
 			(item) => item.channel.name.toLowerCase() === channelName.toLowerCase(),
 		);
 	};
@@ -133,7 +144,7 @@ export function CompositionView({ composition }: { composition: Composition }) {
 
 	// Find form composition item index by channel name
 	const findFormItemIndex = (channelName: string) => {
-		return composition.composition_items.findIndex(
+		return compositionItems.findIndex(
 			(item) => item.channel.name.toLowerCase() === channelName.toLowerCase(),
 		);
 	};
@@ -234,7 +245,11 @@ export function CompositionView({ composition }: { composition: Composition }) {
 		setIsEditing(false);
 	};
 
-	const getStatusColor = (status: string) => {
+	const getStatusColor = (status: string | null | undefined) => {
+		if (status == null) {
+			return "bg-blue-500";
+		}
+
 		switch (status.toLowerCase()) {
 			case "pending":
 				return "bg-yellow-500";
@@ -281,15 +296,15 @@ export function CompositionView({ composition }: { composition: Composition }) {
 					add_unsubscribe: updatedComposition.add_unsubscribe || false,
 					reference_prompt: updatedComposition.reference_prompt || "",
 					reference_result: updatedComposition.reference_result || "",
-					composition_items: updatedComposition.composition_items.map(
-						(item) => ({
-							documentId: item.documentId,
-							additional_prompt: item.additional_prompt || "",
-							result: item.result,
-							channel: item.channel,
-							attached_files: item.attached_files || null,
-						}),
-					),
+					composition_items: getCompositionItemsWithChannels(
+						updatedComposition.composition_items,
+					).map((item) => ({
+						documentId: item.documentId,
+						additional_prompt: item.additional_prompt || "",
+						result: item.result,
+						channel: item.channel,
+						attached_files: item.attached_files || null,
+					})),
 				};
 				form.reset(updatedFormValues);
 				const newChannelId = channelName.toLowerCase();
@@ -321,7 +336,7 @@ export function CompositionView({ composition }: { composition: Composition }) {
 			add_unsubscribe: composition.add_unsubscribe || false,
 			reference_prompt: composition.reference_prompt || "",
 			reference_result: composition.reference_result || "",
-			composition_items: composition.composition_items.map((item) => ({
+			composition_items: compositionItems.map((item) => ({
 				documentId: item.documentId,
 				additional_prompt: item.additional_prompt || "",
 				result: item.result,
@@ -366,8 +381,8 @@ export function CompositionView({ composition }: { composition: Composition }) {
 							)}
 						/>
 						<div className="ml-2 flex items-center">
-							<Badge className={getStatusColor(composition.composition_status)}>
-								{composition.composition_status}
+							<Badge className={getStatusColor(compositionStatus)}>
+								{compositionStatus}
 							</Badge>
 						</div>
 					</div>
